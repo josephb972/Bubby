@@ -1407,6 +1407,14 @@ function start(data) {
   $('#chain').innerHTML = `<g stroke="#7f8894" stroke-width="5.4">${ch}</g>${ch}`;
 })();
 
+/* ---- Test hook: only with ?debug in the URL, used by the screenshot harness ---- */
+if (/[?&]debug\b/.test(location.search)) {
+  window.__bubby = {
+    get S() { return S; }, set S(v) { S = v; }, get A() { return A; }, set A(v) { A = v; },
+    get G() { return G; }, set G(v) { G = v; }, PET, act, feed, startGame, guess, evolve, end, toast, showOv, renderGame, syncControls,
+  };
+}
+
 /* ---- Boot (keeps state across live updates) ---- */
 const hot = window.claude && window.claude.hot;
 if (hot && hot.snapshot) { try { hot.snapshot(() => ({ S, PET })); } catch (e) {} }
