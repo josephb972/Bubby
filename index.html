@@ -98,7 +98,27 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   content: ""; position: absolute; right: 7%; top: 9%; width: 1.4cqw; height: 1.4cqw;
   background: #ffcf3a; box-shadow: 0 0 0 .4cqw #3b2f4a;
 }
-.scene { position: relative; min-height: 0; overflow: hidden; background: #9ad67f; }
+.scene { position: relative; min-height: 0; overflow: hidden; background: #a6dc6a; }
+/* LCD pixel grid aligned to art pixels (only when an art pixel is ≥3 device px) and a backlight that dims at night. */
+.scene::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background: radial-gradient(ellipse at 50% 45%, rgba(255, 250, 220, .10), transparent 70%);
+  transition: background .6s, box-shadow .6s; box-shadow: inset 0 0 calc(var(--px) * 6) rgba(20, 30, 40, .18);
+}
+.device.lcd .scene::after {
+  background:
+    linear-gradient(to right, rgba(20, 30, 30, .07) var(--hair), transparent var(--hair)) 0 0 / var(--px) var(--px),
+    linear-gradient(to bottom, rgba(20, 30, 30, .07) var(--hair), transparent var(--hair)) 0 0 / var(--px) var(--px),
+    radial-gradient(ellipse at 50% 45%, rgba(255, 250, 220, .10), transparent 70%);
+}
+.scene.night::after { box-shadow: inset 0 0 calc(var(--px) * 10) rgba(5, 8, 25, .5); }
+/* Glass: a soft diagonal sheen and an inner shadow where the LCD sits in the recess. */
+.screen::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 8; border-radius: inherit;
+  background: linear-gradient(118deg, rgba(255, 255, 255, .2) 0 16%, rgba(255, 255, 255, .06) 16.4% 30%, transparent 30.4%),
+              linear-gradient(118deg, transparent 72%, rgba(255, 255, 255, .06) 72.4% 78%, transparent 78.4%);
+  box-shadow: inset 0 var(--px) calc(var(--px) * 2) rgba(0, 0, 0, .35), inset 0 calc(var(--px) * -1) 0 rgba(255, 255, 255, .08);
+}
 .scene canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; touch-action: none; }
 
 /* screen overlays: everything on the LCD sits on the art-pixel grid (multiples of --px).
@@ -220,12 +240,22 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 }
 .hw .cap {
   position: absolute; inset: 0; border-radius: 50%;
-  background: radial-gradient(circle at 36% 30%, var(--hl) 0 18%, var(--c) 55%, var(--d) 100%);
-  box-shadow: 0 1.4cqw 0 var(--d), 0 1.4cqw 0 .55cqw #5e978c, 0 0 0 .55cqw #5e978c, 0 2.6cqw 2cqw rgba(30, 70, 62, .25);
-  display: grid; place-items: center; transition: transform .06s, box-shadow .06s;
+  background: radial-gradient(circle at 38% var(--hy, 30%), var(--hl) 0 16%, var(--c) 56%, var(--d) 100%);
+  box-shadow: inset 0 .5cqw .6cqw rgba(255, 255, 255, .55), inset 0 -1cqw 1.4cqw rgba(0, 0, 0, .12),
+    0 1.4cqw 0 var(--d), 0 1.4cqw 0 .55cqw #4f877c, 0 0 0 .55cqw #4f877c, 0 2.8cqw 2.4cqw rgba(30, 70, 62, .3);
+  display: grid; place-items: center; transition: transform .07s cubic-bezier(.3, .7, .4, 1), box-shadow .07s;
 }
-.hw .cap svg { width: 52%; height: 52%; }
-.hw:active .cap { transform: translateY(1.1cqw); box-shadow: 0 .3cqw 0 var(--d), 0 .3cqw 0 .55cqw #5e978c, 0 0 0 .55cqw #5e978c; }
+.hw .cap::before {
+  content: ""; position: absolute; left: 22%; top: 12%; width: 34%; height: 20%; border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 255, 255, .9), rgba(255, 255, 255, 0) 70%); transform: rotate(-24deg);
+  transition: opacity .07s, transform .07s;
+}
+.hw:active .cap::before { opacity: .45; transform: rotate(-24deg) translateY(.8cqw); }
+.hw:active .cap { --hy: 44%; }
+.hw .cap svg { width: 52%; height: 52%; position: relative; filter: drop-shadow(0 1px 0 rgba(255, 255, 255, .55)); }
+.hw:active .cap { transform: translateY(1.1cqw); box-shadow: inset 0 .5cqw .8cqw rgba(0, 0, 0, .14), 0 .3cqw 0 var(--d), 0 .3cqw 0 .55cqw #4f877c, 0 0 0 .55cqw #4f877c; }
+.hw:focus-visible { outline: none; }
+.hw:focus-visible .cap { outline: 3px solid #d9504a; outline-offset: 3px; }
 .hw .lbl {
   position: absolute; top: 114%; left: 50%; transform: translateX(-50%); white-space: nowrap; pointer-events: none;
   font: 600 3.9cqw/1 var(--font-display); color: #33605f; letter-spacing: .3cqw;
@@ -303,22 +333,44 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
           <radialGradient id="cream" gradientUnits="userSpaceOnUse" cx="150" cy="200" r="280">
             <stop offset="0" stop-color="#fffcf3"/><stop offset=".6" stop-color="#f6eedb"/><stop offset="1" stop-color="#e7dcbf"/>
           </radialGradient>
+          <linearGradient id="rimG" gradientUnits="userSpaceOnUse" x1="40" y1="120" x2="260" y2="520">
+            <stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".55" stop-color="#fff" stop-opacity=".25"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="recessG" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#2b303b"/><stop offset=".12" stop-color="#3c424f"/><stop offset="1" stop-color="#4c5361"/>
+          </linearGradient>
+          <!-- soft-touch matte: sparse speckle from fractal noise, clipped to the shape -->
+          <filter id="grain" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+            <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="4" result="n"/>
+            <feColorMatrix in="n" type="matrix" values="0 0 0 0 .1  0 0 0 0 .3  0 0 0 0 .27  0 0 0 1.6 -.72" result="a"/>
+            <feComposite in="a" in2="SourceAlpha" operator="in"/>
+          </filter>
+          <filter id="ao" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="6"/></filter>
+          <mask id="bodyRim" maskUnits="userSpaceOnUse" x="0" y="0" width="360" height="600"><g id="bodyRimA" fill="#fff"></g><g id="bodyRimB" fill="#000" transform="translate(5 7)"></g></mask>
+          <mask id="bodyShade" maskUnits="userSpaceOnUse" x="0" y="0" width="360" height="600"><g id="bodyShA" fill="#fff"></g><g id="bodyShB" fill="#000" transform="translate(-6 -8)"></g></mask>
+          <mask id="bezRim" maskUnits="userSpaceOnUse" x="0" y="0" width="360" height="600"><g id="bezRimA" fill="#fff"></g><g id="bezRimB" fill="#000" transform="translate(3 4)"></g></mask>
         </defs>
         <g id="chain" fill="none" stroke="url(#silver)" stroke-width="3.4"></g>
         <path d="M180 120 C 181 100, 196 90, 226 100" fill="none" stroke="#7f8894" stroke-width="11" stroke-linecap="round"/>
         <path d="M180 120 C 181 100, 196 90, 226 100" fill="none" stroke="url(#silver)" stroke-width="7" stroke-linecap="round"/>
         <path d="M181 108 C 162 74, 122 66, 100 86 C 124 108, 156 116, 181 108 Z" fill="url(#silver)" stroke="#7f8894" stroke-width="3"/>
         <path d="M178 106 C 156 94, 130 88, 108 87" fill="none" stroke="#8d96a3" stroke-width="2" stroke-linecap="round"/>
+        <path d="M168 92 C 150 80, 128 78, 112 84" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".85"/>
         <circle cx="231" cy="104" r="7" fill="none" stroke="#7f8894" stroke-width="5"/>
         <circle cx="231" cy="104" r="7" fill="none" stroke="url(#silver)" stroke-width="2.6"/>
         <g id="bodySh" fill="#7fb8ab" transform="translate(0 9)"></g>
         <g id="bodyLn" fill="#5e978c" stroke="#5e978c" stroke-width="6"></g>
         <g id="bodyFl" fill="url(#mint)"></g>
-        <g id="bezSh" fill="#9ccabd" transform="translate(0 7)"></g>
+        <g id="bodyGr" fill="#000" filter="url(#grain)" opacity=".2"></g>
+        <rect width="360" height="600" fill="#2f6e62" opacity=".22" mask="url(#bodyShade)"/>
+        <rect width="360" height="600" fill="url(#rimG)" mask="url(#bodyRim)"/>
+        <g id="bezSh" fill="#245a4f" opacity=".42" filter="url(#ao)" transform="translate(0 6)"></g>
         <g id="bezLn" fill="#c7ba98" stroke="#c7ba98" stroke-width="4"></g>
         <g id="bezFl" fill="url(#cream)"></g>
-        <rect id="recess" x="78" y="172" width="204" height="236" rx="18" fill="#454b58" stroke="#2f3440" stroke-width="3"/>
-        <rect id="recessIn" x="81.5" y="175.5" width="197" height="229" rx="15" fill="none" stroke="#6b7282" stroke-width="1.5"/>
+        <g id="bezGr" fill="#000" filter="url(#grain)" opacity=".12"></g>
+        <rect width="360" height="600" fill="#fff" opacity=".85" mask="url(#bezRim)"/>
+        <rect id="recess" x="78" y="172" width="204" height="236" rx="16" fill="url(#recessG)" stroke="#262a33" stroke-width="3"/>
+        <rect id="recessIn" x="81.5" y="175.5" width="197" height="229" rx="13" fill="none" stroke="#6b7282" stroke-width="1.5" stroke-dasharray="0" opacity=".8"/>
       </svg>
 
       <div class="screen" id="screen">
@@ -2017,6 +2069,7 @@ function frame(now) {
   if (uiT > .4) {
     uiT = 0;
     $('[data-act="lights"]')?.classList.toggle('on', S.lights);
+    $('#sceneWrap').classList.toggle('night', !S.lights && !S.ended);
     $('#subtitle').textContent = `Gen ${S.gen} · ${S.ended ? 'New seed' : stageName()} · Day ${Math.floor(S.age / DAY)}`;
     renderStatus();
   }
@@ -2043,12 +2096,12 @@ function start(data) {
     return s;
   };
   const body = ring(180, 349, 112, 180, 61, 16, 152, 220);
-  ['#bodySh', '#bodyLn', '#bodyFl'].forEach(id => { $(id).innerHTML = body; });
+  ['#bodySh', '#bodyLn', '#bodyFl', '#bodyGr', '#bodyRimA', '#bodyRimB', '#bodyShA', '#bodyShB'].forEach(id => { $(id).innerHTML = body; });
   const bc = [180, 290];
   let bez = `<rect x="${bc[0] - 120}" y="${bc[1] - 134}" width="240" height="268" rx="40"/>`;
   const lobes = [[94, 110, 36], [-94, 110, 36], [94, -110, 36], [-94, -110, 36], [34, 124, 32], [-34, 124, 32], [34, -124, 32], [-34, -124, 32], [106, 40, 30], [-106, 40, 30], [106, -40, 30], [-106, -40, 30]];
   lobes.forEach(([dx, dy, r]) => { bez += `<circle cx="${bc[0] + dx}" cy="${bc[1] + dy}" r="${r}"/>`; });
-  ['#bezSh', '#bezLn', '#bezFl'].forEach(id => { $(id).innerHTML = bez; });
+  ['#bezSh', '#bezLn', '#bezFl', '#bezGr', '#bezRimA', '#bezRimB'].forEach(id => { $(id).innerHTML = bez; });
   let ch = '';
   const N = 22, a0 = 170 * Math.PI / 180, a1 = 370 * Math.PI / 180, cx = 168, cy = 92, r = 64;
   for (let i = 0; i <= N; i++) {
@@ -2056,7 +2109,9 @@ function start(data) {
     ch += i % 2 ? `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="6.5" ry="1.6" transform="rotate(${rot} ${x.toFixed(1)} ${y.toFixed(1)})" stroke-width="2.6"/>`
                 : `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="6.5" ry="4" transform="rotate(${rot} ${x.toFixed(1)} ${y.toFixed(1)})"/>`;
   }
-  $('#chain').innerHTML = `<g stroke="#7f8894" stroke-width="5.4">${ch}</g>${ch}`;
+  let gl = '';
+  for (let i = 0; i <= N; i += 2) { const a = a0 + (a1 - a0) * i / N; gl += `<circle cx="${(cx + Math.cos(a) * r - 2).toFixed(1)}" cy="${(cy + Math.sin(a) * r - 2).toFixed(1)}" r="1.3"/>`; }
+  $('#chain').innerHTML = `<g stroke="#5f6873" stroke-width="5.8" transform="translate(.8 1.2)" opacity=".6">${ch}</g><g stroke="#7f8894" stroke-width="5.4">${ch}</g>${ch}<g fill="#fff" stroke="none" opacity=".9">${gl}</g>`;
 })();
 
 /* ---- Screen layout: snap the scene to whole device pixels per art pixel ---- */
@@ -2084,6 +2139,7 @@ function layout() {
   rc.setAttribute('x', x0.toFixed(2)); rc.setAttribute('y', y0.toFixed(2)); rc.setAttribute('width', w0.toFixed(2)); rc.setAttribute('height', h0.toFixed(2));
   ri.setAttribute('x', (x0 + 3.5).toFixed(2)); ri.setAttribute('y', (y0 + 3.5).toFixed(2)); ri.setAttribute('width', (w0 - 7).toFixed(2)); ri.setAttribute('height', (h0 - 7).toFixed(2));
   Object.assign(LAYOUT, { px, k, dpr, snapped });
+  dev.classList.toggle('lcd', snapped && k >= 3);
 }
 function watchLayout() {
   layout();
