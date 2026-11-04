@@ -42,6 +42,10 @@ const STATES = [
   ['evolve-bud-mid', base({ stage: 'baby', stageT: 179.9, age: 220 }), idle, 800],
   ['evolve-blossom-mid', base({ stage: 'child', stageT: 299.9, age: 520, weight: 10, mistakes: 0, discipline: 100 }), idle, 800],
   ['evolve-blossom-end', base({ stage: 'child', stageT: 299.9, age: 520, weight: 10, mistakes: 0, discipline: 100 }), idle, 1700],
+  ['evolve-blossom-burst', base({ stage: 'child', stageT: 299.9, age: 520, weight: 10, mistakes: 0, discipline: 100 }), idle, 1950],
+  ['evolve-blossom-reveal', base({ stage: 'child', stageT: 299.9, age: 520, weight: 10, mistakes: 0, discipline: 100 }), idle, 2700],
+  ['hatch-reveal', base({ stage: 'seed', stageT: 17.9, age: 17.9, weight: 1 }), '', 2600],
+  ['evolve-elder-reveal', adult('daisy', { stageT: 419.9 }), idle, 2700],
   ['evolve-elder-mid', adult('daisy', { stageT: 419.9 }), idle, 800],
   ['bulb', base(), idle, 400],
   ['bud', base({ stage: 'child', weight: 10 }), idle, 400],
@@ -90,7 +94,7 @@ const STATES = [
   ['pause', adult('radiant', { paused: true }), idle, 300],
   ['end-away', base({ ended: { kind: 'away', age: 400, stage: 'child', name: 'Bud', mistakes: 7, gen: 2 } }), '', 400],
   ['end-garden', base({ ended: { kind: 'garden', age: 1500, stage: 'senior', name: 'Elder Radiant', mistakes: 1, gen: 2 } }), '', 400],
-  ['toast-long', adult('radiant'), idle + `__bubby.toast('Bubby blossomed into a Radiant Blossom!');`, 300],
+  ['toast-long', adult('radiant'), idle + `__bubby.toast('It sulked and got away with it');`, 300],
   ['toast-bulb', base(), idle + `__bubby.toast('Bubby is calling: its tummy is empty');`, 300],
 ];
 

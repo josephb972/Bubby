@@ -101,80 +101,108 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .scene { position: relative; min-height: 0; overflow: hidden; background: #9ad67f; }
 .scene canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; touch-action: none; }
 
-/* screen overlays */
-.ov { position: absolute; inset: 0; font-family: var(--font-pixel); color: #3b2f4a; font-size: 3.1cqw; line-height: 1.2; }
+/* screen overlays: everything on the LCD sits on the art-pixel grid (multiples of --px).
+   z-order: scene 0 · game HUD 2 · toast + name card 3 · menus 4 · end card 5 · pause 6 */
+.ov { position: absolute; inset: 0; font-family: var(--font-pixel); color: #2a2038; font-size: var(--fs); line-height: 1.2; }
+.pframe { border: calc(var(--px) * 3) solid transparent; border-image: var(--frame-cream) 3 fill stretch; }
 .ov-card {
-  background: rgba(255, 251, 238, .96); display: flex; flex-direction: column; gap: 1.2cqw;
-  padding: 1.8cqw 2.6cqw; overflow: auto;
+  inset: var(--px); z-index: 4; display: flex; flex-direction: column; gap: calc(var(--px) * 2);
+  padding: var(--px) calc(var(--px) * 2); overflow: hidden;
+  border: calc(var(--px) * 3) solid transparent; border-image: var(--frame-cream) 3 fill stretch;
 }
-.ov-title { margin: 0; font-weight: 600; font-size: 3.5cqw; display: flex; justify-content: space-between; gap: 2cqw; }
-.ov-title small { font-weight: 400; font-size: 2.7cqw; color: #6b5d78; align-self: center; }
-.pbtn {
-  font-family: var(--font-pixel); font-size: 2.9cqw; line-height: 1; cursor: pointer;
-  border: .5cqw solid #3b2f4a; background: #fff; color: #3b2f4a; padding: 1.2cqw 2cqw; border-radius: 1cqw;
-  box-shadow: 0 .6cqw 0 #3b2f4a;
+.ov-card:not([hidden]) { animation: ovIn .22s cubic-bezier(.34, 1.56, .64, 1); }
+@keyframes ovIn { from { transform: scale(.9) translateY(calc(var(--px) * 3)); opacity: 0; } to { transform: none; opacity: 1; } }
+.ov-title { margin: 0; font-weight: 600; font-size: var(--fs-l); display: flex; justify-content: space-between; align-items: center; gap: calc(var(--px) * 2); line-height: 1; }
+.ov-title small { font-weight: 400; font-size: var(--fs-s); color: #5e4f72; }
+.ov-meta { margin: calc(var(--px) * -1.5) 0 0; font-size: var(--fs-s); color: #5e4f72; }
+.pbtn, .opt, .g-btn {
+  position: relative; font-family: var(--font-pixel); color: #2a2038; cursor: pointer; background: none;
+  border: calc(var(--px) * 3) solid transparent; border-image: var(--frame-white) 3 fill stretch; border-radius: 0;
 }
-.pbtn:active { transform: translateY(.5cqw); box-shadow: 0 .1cqw 0 #3b2f4a; }
-.pbtn.primary { background: #ffd34a; }
-.stat-grid { display: grid; grid-template-columns: auto 1fr; gap: .35cqw 2cqw; font-size: 2.8cqw; align-items: center; margin: 0; }
-.stat-grid dt { color: #6b5d78; }
-.stat-grid dd { margin: 0; display: flex; gap: .5cqw; align-items: center; font-variant-numeric: tabular-nums; }
-.stat-grid dd img { width: 3.2cqw; height: auto; image-rendering: pixelated; }
-.bar { flex: 1; height: 2.2cqw; border: .45cqw solid #3b2f4a; background: #eee6f3; position: relative; max-width: 22cqw; }
-.bar i { position: absolute; inset: 0 auto 0 0; background: #8f78cf; }
-.callout { margin: 0; font-size: 2.7cqw; padding: .8cqw 1.4cqw; background: #ffe1df; border: .45cqw solid #3b2f4a; border-radius: 1cqw; }
-.callout.ok { background: #e4f5d8; }
-.feed-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 2cqw; flex: 1; min-height: 0; }
-.opt {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .6cqw;
-  border: .5cqw solid #3b2f4a; border-radius: 1.4cqw; background: #fff; cursor: pointer; padding: 1.2cqw;
-  font-family: var(--font-pixel); font-size: 3.2cqw; color: #3b2f4a; box-shadow: 0 .6cqw 0 #3b2f4a;
+.pbtn { font-size: var(--fs); line-height: 1; padding: 0 calc(var(--px) * 2); min-height: calc(var(--px) * 10); }
+.pbtn.primary, .g-btn { border-image-source: var(--frame-gold); }
+.pbtn:active, .opt:active, .g-btn:active { transform: translateY(var(--px)); border-image-source: var(--frame-press); }
+.pbtn:hover, .opt:hover { filter: brightness(1.04); }
+/* Selection cursor: a pixel arrow that bobs beside the focused or hovered choice. */
+.pbtn::before, .opt::before {
+  content: ""; position: absolute; left: calc(var(--px) * -6); top: 50%; width: calc(var(--px) * 3); height: calc(var(--px) * 5);
+  margin-top: calc(var(--px) * -2.5); background: #2a2038; clip-path: polygon(0 0, 100% 50%, 0 100%); opacity: 0; pointer-events: none;
 }
-.opt:active { transform: translateY(.5cqw); box-shadow: 0 .1cqw 0 #3b2f4a; }
-.opt canvas { width: 9cqw; height: auto; aspect-ratio: 1; image-rendering: pixelated; }
-.opt small { font-size: 2.5cqw; color: #6b5d78; text-align: center; }
-.row-end { display: flex; justify-content: flex-end; gap: 2cqw; }
+.opt::before { left: calc(var(--px) * -1); top: calc(var(--px) * 3); margin: 0; }
+.pbtn:focus-visible::before, .opt:focus-visible::before, .opt:hover::before { opacity: 1; animation: cursor .6s steps(2) infinite; }
+@keyframes cursor { 50% { transform: translateX(calc(var(--px) * -1)); } }
+.ov button:focus-visible { outline: var(--px) solid #ee6a5c; outline-offset: var(--px); }
 
-.ov-game { display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
+/* Status dashboard */
+.dash { display: grid; grid-template-columns: auto 1fr; gap: var(--px) calc(var(--px) * 3); align-items: center; margin: 0; }
+.dash dt { color: #5e4f72; font-size: var(--fs-s); }
+.dash dd { margin: 0; display: flex; gap: var(--px); align-items: center; font-variant-numeric: tabular-nums; min-height: calc(var(--px) * 8); }
+.dash dd img { width: calc(var(--px) * 9); height: calc(var(--px) * 8); image-rendering: pixelated; }
+.dash dd img.pop { animation: heartPop .34s cubic-bezier(.34, 1.56, .64, 1) both; }
+@keyframes heartPop { from { transform: scale(0); } to { transform: scale(1); } }
+.dash canvas { image-rendering: pixelated; display: block; flex: none; }
+#stVine { width: calc(var(--px) * 36); height: calc(var(--px) * 8); }
+#stScale { width: calc(var(--px) * 9); height: calc(var(--px) * 8); }
+.dash dd { white-space: nowrap; }
+.dash .heavy { color: #c0414e; }
+.dash .split { display: flex; justify-content: space-between; width: 100%; gap: calc(var(--px) * 2); }
+.dash .split > span:last-child { color: #5e4f72; font-size: var(--fs-s); }
+.dash .split b { color: #2a2038; font-weight: 400; font-size: var(--fs); }
+.dash .wv { display: flex; align-items: center; gap: var(--px); }
+.callout { margin: 0; font-size: var(--fs-s); padding: var(--px) calc(var(--px) * 2); background: #ffe0d8; box-shadow: 0 0 0 var(--px) #2a2038; margin-inline: var(--px); }
+.callout.ok { background: #e3f4cf; }
+
+/* Feed / Play */
+.feed-opts { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--px) * 3); flex: 1; min-height: 0; padding-inline: var(--px); }
+.opt { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--px); padding: 0 var(--px); font-size: var(--fs); }
+.opt canvas { width: calc(var(--px) * 16); height: calc(var(--px) * 16); image-rendering: pixelated; }
+.opt small { font-size: var(--fs-s); color: #5e4f72; text-align: center; line-height: 1.1; }
+.row-end { display: flex; justify-content: flex-end; gap: calc(var(--px) * 2); }
+
+/* Minigame HUD */
+.ov-game { z-index: 2; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
 .g-top {
-  background: rgba(255, 251, 238, .94); padding: 1.2cqw 2cqw; display: flex; justify-content: space-between;
-  gap: 2cqw; border-bottom: .45cqw solid #3b2f4a;
+  background: #fff7e8; padding: var(--px) calc(var(--px) * 2); display: flex; justify-content: space-between; align-items: center;
+  gap: calc(var(--px) * 2); box-shadow: 0 var(--px) 0 #2a2038, inset 0 calc(var(--px) * -1) 0 #f0d8b8; line-height: 1;
+  min-height: calc(var(--px) * 7);
 }
-.g-bot { display: flex; justify-content: space-between; align-items: center; padding: 1.6cqw 2cqw; }
-.g-btn {
-  pointer-events: auto; width: 11cqw; height: 9cqw; display: grid; place-items: center; cursor: pointer;
-  border: .5cqw solid #3b2f4a; background: #ffd34a; border-radius: 1.4cqw; box-shadow: 0 .6cqw 0 #3b2f4a; padding: 0;
-}
-#ovGame.catch .g-btn { opacity: .8; width: 9cqw; height: 7.5cqw; }
-.g-btn:active { transform: translateY(.5cqw); box-shadow: 0 .1cqw 0 #3b2f4a; }
-.g-btn svg { width: 50%; height: 50%; }
-.g-score { background: rgba(255, 251, 238, .94); padding: .6cqw 1.6cqw; border: .45cqw solid #3b2f4a; border-radius: 1cqw; font-variant-numeric: tabular-nums; }
+.g-top .g-right { display: flex; gap: calc(var(--px) * 3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.g-top #gScore { color: #3a8a48; }
+.g-bot { display: flex; justify-content: space-between; align-items: flex-end; padding: calc(var(--px) * 2); }
+.g-btn { pointer-events: auto; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; }
+#ovGame.catch .g-btn { opacity: .85; }
+.g-btn:disabled { opacity: .45; cursor: default; }
+.g-btn svg { width: calc(var(--px) * 5); height: calc(var(--px) * 5); }
 
-.ov-pause { display: grid; place-items: center; background: rgba(30, 34, 52, .55); color: #fff; font-size: 4.6cqw; letter-spacing: .4cqw; text-align: center; }
-.ov-pause small { display: block; font-size: 2.6cqw; letter-spacing: 0; opacity: .85; margin-top: 1cqw; }
-.ov-end { display: flex; flex-direction: column; justify-content: flex-end; }
-.ov-end .ov-card { flex: 0 0 auto; border-top: .45cqw solid #3b2f4a; }
+.ov-pause { z-index: 6; display: grid; place-items: center; background: rgba(20, 18, 40, .74); text-align: center; }
+.ov-pause > div { font-size: var(--fs-l); letter-spacing: .12em; padding: calc(var(--px) * 2) calc(var(--px) * 4); border: calc(var(--px) * 3) solid transparent; border-image: var(--frame-cream) 3 fill stretch; }
+.ov-pause small { display: block; font-size: var(--fs-s); letter-spacing: 0; color: #5e4f72; margin-top: var(--px); }
+.ov-end { z-index: 5; display: flex; flex-direction: column; justify-content: flex-end; padding: var(--px); }
+.ov-end .ov-card { position: relative; inset: auto; flex: 0 0 auto; gap: var(--px); padding-bottom: 0; }
 .ov-end p { margin: 0; }
+.ov-end #endText { font-size: var(--fs-s); line-height: 1.25; color: #3d2b5a; }
 
 .toast {
-  position: absolute; left: 50%; top: 2.4cqw; transform: translateX(-50%); max-width: 88%;
-  font-family: var(--font-pixel); font-size: 2.9cqw; line-height: 1.2; text-align: center; color: #3b2f4a;
-  background: #fffbee; border: .45cqw solid #3b2f4a; border-radius: 1.2cqw; padding: .8cqw 1.8cqw;
-  pointer-events: none; white-space: normal; width: max-content; z-index: 5;
+  position: absolute; left: 50%; top: var(--px); transform: translateX(-50%); max-width: calc(100% - var(--px) * 2);
+  font-family: var(--font-pixel); font-size: var(--fs); line-height: 1; text-align: center; color: #2a2038;
+  padding: 0 calc(var(--px) * 1.5); min-height: calc(var(--px) * 4); display: flex; align-items: center;
+  border: calc(var(--px) * 2) solid transparent; border-image: var(--frame-toast) 2 fill stretch;
+  pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: max-content; z-index: 3;
 }
-.toast.show { animation: pop .22s ease-out; }
+.scene.gaming .toast { top: calc(var(--px) * 10); }
+.toast.show { animation: pop .26s cubic-bezier(.34, 1.56, .64, 1); }
 .namecard {
-  position: absolute; left: 50%; bottom: calc(var(--px) * 2); z-index: 3; pointer-events: none; text-align: center;
-  font-family: var(--font-pixel); color: #2a2038; background: #fff6d6; padding: calc(var(--px) * 1.5) calc(var(--px) * 5);
-  border: var(--px) solid #2a2038; box-shadow: inset 0 calc(var(--px) * -1) 0 #e09a2e, 0 var(--px) 0 #2a2038; white-space: nowrap;
+  position: absolute; left: 50%; top: var(--px); z-index: 3; pointer-events: none; text-align: center;
+  font-family: var(--font-pixel); color: #2a2038; padding: 0 calc(var(--px) * 4); line-height: 1.15; white-space: nowrap;
+  border: calc(var(--px) * 3) solid transparent; border-image: var(--frame-gold) 3 fill stretch;
   transform: translateX(-50%);
 }
-.namecard small { display: block; font-size: var(--fs-s); color: #a8582a; letter-spacing: .06em; text-transform: uppercase; }
+.namecard small { display: block; font-size: var(--fs-s); color: #6e3418; letter-spacing: .06em; text-transform: uppercase; }
 .namecard b { display: block; font-size: var(--fs-l); font-weight: 600; }
 .namecard.show { animation: card 2.8s cubic-bezier(.34, 1.56, .64, 1) both; }
 @keyframes card {
-  0% { transform: translate(-50%, 160%); } 14% { transform: translate(-50%, 0); }
-  86% { transform: translate(-50%, 0); opacity: 1; } 100% { transform: translate(-50%, 160%); opacity: 0; }
+  0% { transform: translate(-50%, -140%); } 14% { transform: translate(-50%, 0); }
+  86% { transform: translate(-50%, 0); opacity: 1; } 100% { transform: translate(-50%, -140%); opacity: 0; }
 }
 .tile.bump canvas, .hw.bump .cap svg { animation: bump .28s cubic-bezier(.34, 1.56, .64, 1); }
 @keyframes bump { 0% { transform: scale(.82, .9); } 55% { transform: scale(1.1, 1.04); } 100% { transform: scale(1); } }
@@ -302,16 +330,15 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
 
           <div class="ov ov-card" id="ovStatus" hidden>
             <p class="ov-title"><span id="stName">Bubby</span><button class="pbtn" data-close>Back</button></p>
-            <dl class="stat-grid">
-              <dt>Age</dt><dd><span id="stAge">0 days</span>&nbsp;· <span id="stGen">Gen 1</span></dd>
-              <dt>Weight</dt><dd id="stWeight">5g</dd>
+            <p class="ov-meta"><span id="stAge">0 days</span> · <span id="stGen">Gen 1</span></p>
+            <dl class="dash">
               <dt>Hunger</dt><dd id="stHunger"></dd>
               <dt>Happy</dt><dd id="stHappy"></dd>
-              <dt>Discipline</dt><dd><span class="bar"><i id="stDisc"></i></span><span id="stDiscN">0%</span></dd>
-              <dt>Mistakes</dt><dd id="stMist">0</dd>
+              <dt>Discipline</dt><dd><canvas id="stVine" width="36" height="8" aria-hidden="true"></canvas><span id="stDiscN">0%</span></dd>
+              <dt>Weight</dt><dd class="split"><span class="wv"><canvas id="stScale" width="9" height="8" aria-hidden="true"></canvas><b id="stWeight">5g</b></span><span>Mistakes <b id="stMist">0</b></span></dd>
             </dl>
             <p class="callout" id="stCall" hidden></p>
-            </div>
+          </div>
 
           <div class="ov ov-card" id="ovFeed" hidden>
             <p class="ov-title"><span>Feed Bubby</span><small>pick one</small></p>
@@ -332,16 +359,15 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
           </div>
 
           <div class="ov ov-game" id="ovGame" hidden>
-            <div class="g-top"><span id="gPrompt">Which way will Bubby look?</span><span id="gRound">1/5</span></div>
+            <div class="g-top"><span id="gPrompt">Which way will Bubby look?</span><span class="g-right"><span id="gScore">0 right</span><span id="gRound">1/5</span></span></div>
             <div class="g-bot">
-              <button class="g-btn" data-g="-1" id="gLeft" aria-label="Guess left"><svg viewBox="0 0 10 10"><path d="M7 1 L2 5 L7 9 Z" fill="#3b2f4a"/></svg></button>
-              <span class="g-score" id="gScore">0 right</span>
-              <button class="g-btn" data-g="1" id="gRight" aria-label="Guess right"><svg viewBox="0 0 10 10"><path d="M3 1 L8 5 L3 9 Z" fill="#3b2f4a"/></svg></button>
+              <button class="g-btn" data-g="-1" id="gLeft" aria-label="Left"><svg viewBox="0 0 5 5" shape-rendering="crispEdges"><path d="M3 0h1v5H3zM2 1h1v3H2zM1 2h1v1H1z" fill="#2a2038"/></svg></button>
+              <button class="g-btn" data-g="1" id="gRight" aria-label="Right"><svg viewBox="0 0 5 5" shape-rendering="crispEdges"><path d="M1 0h1v5H1zM2 1h1v3H2zM3 2h1v1H3z" fill="#2a2038"/></svg></button>
             </div>
           </div>
 
           <div class="ov ov-end" id="ovEnd" hidden>
-            <div class="ov ov-card" style="position:relative; inset:auto;">
+            <div class="ov ov-card">
               <p class="ov-title"><span id="endTitle">Bubby moved away</span></p>
               <p id="endText"></p>
               <div class="row-end"><button class="pbtn primary" id="btnReplant">Plant the new seed</button></div>
@@ -449,10 +475,10 @@ const STAGE = {
 const NAMES = { seed: 'Seed', baby: 'Bulb', child: 'Bud', adult: 'Blossom', senior: 'Elder' };
 const FORMS = { radiant: 'Radiant Blossom', daisy: 'Daisy Blossom', thistle: 'Thistle' };
 const CALL_TEXT = {
-  hungry: 'Bubby is calling: its tummy is empty. Feed it a meal.',
-  sad: 'Bubby is calling: it feels lonely. Play a game or give a snack.',
-  sleep: 'Bubby is calling: it fell asleep with the lights on. Press SLEEP.',
-  tantrum: 'Bubby is calling, but its hearts look full. Is it acting out?',
+  hungry: 'Tummy empty. Feed a meal.',
+  sad: 'Lonely. Play or give a snack.',
+  sleep: 'Asleep, lights on. Press SLEEP.',
+  tantrum: 'Hearts full, still calling. Scold?',
 };
 const DAY = 60;
 
@@ -493,13 +519,13 @@ function getSick(cause) {
   S.sick = true; S.sickT = 0; S.sickCounted = false; S.sickMeter = 0;
   S.doses = Math.round(rand(st.doses[0], st.doses[1]));
   S.stats.sick++;
-  toast(cause === 'sweets' ? 'Too many sweets! Bubby has a toothache' : 'Bubby feels sick…');
+  toast(cause === 'sweets' ? 'Toothache! Too many sweets' : 'Bubby feels sick…');
   beep(330, .12); setTimeout(() => beep(260, .18), 140);
 }
 function fallAsleep() {
   S.asleep = true; S.sleepT = 0;
   if (S.call && S.call.reason === 'tantrum') S.call = null;
-  if (S.lights) toast('Bubby fell asleep. Lights off, please');
+  if (S.lights) toast('Zzz… lights off, please');
 }
 function wake() {
   S.asleep = false; S.awakeT = 0; S.lights = true;
@@ -598,7 +624,7 @@ function tick(dt) {
     S.call.t += dt;
     if (S.call.t >= 30 && !S.call.counted) {
       S.call.counted = true; mistake(S.call.reason);
-      if (S.call.reason === 'tantrum') { S.call = null; toast('Bubby sulked and got away with it'); }
+      if (S.call.reason === 'tantrum') { S.call = null; toast('It sulked and got away with it'); }
     }
   }
 
@@ -621,7 +647,7 @@ function act(a) {
   if (a === 'pause') { togglePause(); return; }
   if (S.ended) return;
   if (a === 'status' || a === 'attn') { sfx('status'); if (OV === 'status') closeOverlays(); else openStatus(); return; }
-  if (S.paused) { toast('Paused. Press power to resume'); return; }
+  if (S.paused) { toast('Paused · press power'); return; }
   if (G) return;
   if (A) return;
   closeOverlays();
@@ -635,10 +661,10 @@ function toggleLights() {
   S.lights = !S.lights;
   sfx(S.lights ? 'lightsOn' : 'lightsOff');
   if (!S.lights) {
-    if (!S.asleep && st && st.awake && S.awakeT >= st.awake * 0.6 && S.stage !== 'seed') { fallAsleep(); toast('Bubby went to bed early. Sweet dreams'); }
+    if (!S.asleep && st && st.awake && S.awakeT >= st.awake * 0.6 && S.stage !== 'seed') { fallAsleep(); toast('Early night. Sweet dreams'); }
     else toast(S.asleep ? 'Lights off. Sweet dreams' : 'Lights off');
   } else {
-    toast(S.asleep ? 'Lights on. Bubby is still sleeping' : 'Lights on');
+    toast(S.asleep ? 'Lights on · still asleep' : 'Lights on');
   }
   save();
 }
@@ -670,7 +696,7 @@ function doMed() {
   A = { type: 'med', t: 0, dur: 1.1 }; JUICE.glow = 1.8; sfx('med');
   if (S.doses <= 0) {
     A.after = () => { S.sick = false; S.sickT = 0; S.sickCounted = false; S.neglectT = 0; S.sickMeter = 0; S.happy = clamp(S.happy - .5, 0, 4); toast('All better!'); A = { type: 'happy', t: 0, dur: .8 }; heartsFx(PET.x, GROUND - 30, 2); burst(PET.x, GROUND - 22, [WHITE, RAMP.te[3]], 10); save(); };
-  } else toast(`Gulp. ${S.doses} more dose${S.doses > 1 ? 's' : ''} needed`);
+  } else toast(`Gulp! ${S.doses} more dose${S.doses > 1 ? 's' : ''}`);
   save();
 }
 function doScold() {
@@ -678,11 +704,11 @@ function doScold() {
   if (S.call && S.call.reason === 'tantrum') {
     S.discipline = clamp(S.discipline + 25, 0, 100); S.call = null; S.stats.scolds++;
     A = { type: 'scold', t: 0, dur: 1.1 };
-    toast(`Bubby behaves now. Discipline ${S.discipline}%`);
+    toast(`Good! Discipline ${S.discipline}%`);
   } else {
     S.happy = clamp(S.happy - 1, 0, 4);
     A = { type: 'scold', t: 0, dur: 1.1 };
-    toast('That wasn\'t fair. Bubby is upset');
+    toast('Unfair! Bubby is upset');
   }
   save();
 }
@@ -699,14 +725,14 @@ function togglePause() {
 
 /* ---- Minigames ---- */
 function openPlay() {
-  if (S.sick) { A = { type: 'no', t: 0, dur: .9 }; toast('Bubby feels too sick to play'); return; }
+  if (S.sick) { A = { type: 'no', t: 0, dur: .9 }; toast('Too sick to play'); return; }
   $('#optCatch small').textContent = S.stats.bestCatch ? `Best: ${S.stats.bestCatch} pts` : '20s · gold = 3 pts';
   showOv('play');
 }
 function startGame(kind) {
   closeOverlays();
   if (!canCare() || A || G) return;
-  if (S.sick) { A = { type: 'no', t: 0, dur: .9 }; toast('Bubby feels too sick to play'); return; }
+  if (S.sick) { A = { type: 'no', t: 0, dur: .9 }; toast('Too sick to play'); return; }
   if (kind === 'catch') {
     G = { type: 'catch', phase: 'play', t: 0, left: 20, score: 0, caught: 0, items: [], spawn: .6, px: 50, dir: 1, moving: false, hold: 0, target: null, stun: 0, joy: 0, sec: -1 };
   } else {
@@ -748,7 +774,7 @@ function renderGame() {
   $('#gScore').textContent = `${G.score} right`;
   $('#gPrompt').textContent = G.phase === 'guess' ? 'Which way will Bubby look?'
     : G.phase === 'reveal' ? (G.last ? 'Yes! You got it' : 'Nope, other way')
-    : (G.score >= 3 ? `You won ${G.score}/5!` : `Only ${G.score}/5. Try again later`);
+    : (G.score >= 3 ? `You won ${G.score}/5!` : `${G.score}/5. Try again later`);
   $('#gLeft').disabled = $('#gRight').disabled = G.phase !== 'guess';
 }
 
@@ -761,7 +787,7 @@ function updateCatch(rdt) {
       const gain = g.score >= 20 ? 2 : g.score >= 10 ? 1 : 0;
       const best = g.score > (S.stats.bestCatch || 0);
       if (best) S.stats.bestCatch = g.score;
-      finishGame(gain, (best ? 'New best! ' : '') + (gain ? `+${gain} happy, -1g` : 'Good exercise anyway. -1g'));
+      finishGame(gain, (best ? 'New best! ' : '') + (gain ? `+${gain} happy · -1g` : 'Good exercise · -1g'));
     }
     return;
   }
@@ -814,7 +840,7 @@ function updateGame(rdt) {
     renderGame();
   } else if (G.phase === 'done' && G.t > 1.6) {
     const win = G.score >= 3;
-    finishGame(win ? 1 : 0, win ? 'Bubby had fun! +1 happy, -1g' : 'Good exercise anyway. -1g');
+    finishGame(win ? 1 : 0, win ? 'Fun! +1 happy · -1g' : 'Good exercise · -1g');
   }
 }
 
@@ -1484,9 +1510,12 @@ function draw(time) {
   shadow(POT_AT[0] + bx + 4 + 6.5, POT_AT[1] + 15.5, 5.5, .4); blit(POT, POT_AT[0] + bx + 4, POT_AT[1]);
 
   if (S.ended) {
-    shadow(50, GROUND - 1, 12, .3);
-    blit(petSprite('seed', {}), 50 - 24, GROUND - 44);
-    sparkles(50, GROUND - 16, time, 14);
+    const ey = 32;
+    shadow(50, ey + 1, 12, .3);
+    blit(petSprite('seed', {}), 50 - 24, ey - 45);
+    if (S.ended.kind === 'away') for (let i = 0; i < 6; i++) P(sx, [62 + i * 6, ey + (i % 2), 63 + i * 6, ey + (i % 2)], RAMP.gr[1]);
+    else if (!RM) for (let i = 0; i < 5; i++) { const a = time * .8 + i * 1.26; P(sx, [Math.round(50 + Math.cos(a) * 16), Math.round(ey - 10 + Math.sin(a) * 6)], [RAMP.pk[2], RAMP.ye[3], WHITE][i % 3]); }
+    sparkles(50, ey - 10, time, 12);
     drawGrass(time); drawAmbient(time); gradeScene(sky); drawStarsMoon(time, sky);
     return;
   }
@@ -1599,6 +1628,7 @@ function buildTiles() {
     (i < 4 ? $('#tilesTop') : $('#tilesBot')).appendChild(b);
   });
   $$('canvas[data-icon]').forEach(c => c.getContext('2d').drawImage(ICONS[c.dataset.icon], 0, 0));
+  $('#stScale').getContext('2d').drawImage(SCALE_ICON, 0, 0);
 }
 // Crop a sprite to its opaque pixels (plus a 1px margin) and show it at an exact 2× CSS scale.
 function cropped(c, scale = 2) {
@@ -1634,60 +1664,110 @@ function buildGuide() {
   });
 }
 
+// 9-slice pixel frames, drawn as tiny crisp SVGs and used through border-image.
+function frameSVG(rows, map) {
+  let r = '';
+  rows.forEach((row, y) => [...row].forEach((ch, x) => { if (map[ch]) r += `<rect x='${x}' y='${y}' width='1' height='1' fill='${map[ch]}'/>`; }));
+  return `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='${rows[0].length}' height='${rows.length}' shape-rendering='crispEdges'>${r}</svg>`)}")`;
+}
+const BEVEL = ['..IIII..', '.IhhhhI.', 'IhppppsI', 'IhppppsI', 'IhppppsI', 'IhppppsI', '.IssssI.', '..IIII..'];
+const PRESS = ['..IIII..', '.IssssI.', 'IsppppsI', 'IsppppsI', 'IsppppsI', 'IsppppsI', '.IppppI.', '..IIII..'];
+const FRAMES = {
+  cream: frameSVG(BEVEL, { I: INK, h: WHITE, p: '#fff7e8', s: '#f0d8b8' }),
+  white: frameSVG(BEVEL, { I: INK, h: WHITE, p: RAMP.gy[3], s: RAMP.gy[2] }),
+  gold: frameSVG(BEVEL, { I: INK, h: RAMP.ye[3], p: RAMP.ye[2], s: RAMP.ye[1] }),
+  press: frameSVG(PRESS, { I: INK, p: RAMP.gy[3], s: RAMP.gy[2] }),
+  toast: frameSVG(['.IIII.', 'IhhhhI', 'IppppI', 'IppppI', 'IssssI', '.IIII.'], { I: INK, h: WHITE, p: '#fff7e8', s: '#f0d8b8' }),
+  panel: frameSVG(BEVEL, { I: '#86c3d2', h: '#f4fbfd', p: '#e8f6fa', s: '#cde8ef' }),
+  panelDark: frameSVG(BEVEL, { I: '#0b1a21', h: '#24505d', p: '#183641', s: '#122a33' }),
+};
+function applyFrames() { for (const k in FRAMES) document.documentElement.style.setProperty('--frame-' + k.replace(/[A-Z]/g, m => '-' + m.toLowerCase()), FRAMES[k]); }
+
 let OV = null;
 const OVS = { status: '#ovStatus', feed: '#ovFeed', play: '#ovPlay', game: '#ovGame' };
 function showOv(name) {
   for (const k in OVS) $(OVS[k]).hidden = k !== name;
   OV = name;
+  $('#sceneWrap').classList.toggle('gaming', name === 'game');
+  if (name !== 'game') { $toast.hidden = true; TQ.length = 0; }
+  if (name === 'status') HEARTS_SHOWN = null;
   if (name === 'status') renderStatus();
   const first = name && $(OVS[name]).querySelector('button:not([disabled])');
   if (first && document.activeElement && document.activeElement.closest('#device')) first.focus({ preventScroll: true });
 }
-function closeOverlays() { for (const k in OVS) $(OVS[k]).hidden = true; OV = null; }
+function closeOverlays() { for (const k in OVS) $(OVS[k]).hidden = true; OV = null; $('#sceneWrap').classList.remove('gaming'); }
 function openStatus() { showOv('status'); }
-function hearts(v) {
+let HEARTS_SHOWN = null;
+function hearts(v, pop) {
   const n = Math.ceil(v - 1e-3);
-  let h = ''; for (let i = 0; i < 4; i++) h += `<img src="${i < n ? HEART_FULL : HEART_EMPTY}" alt="">`;
+  let h = ''; for (let i = 0; i < 4; i++) h += `<img src="${i < n ? HEART_FULL : HEART_EMPTY}" alt=""${pop && i < n ? ` class="pop" style="animation-delay:${i * 70}ms"` : ''}>`;
   return h;
 }
+// Discipline as a vine that grows a leaf every 12% and opens a flower at 100%.
+function drawVine(c, pct) {
+  const x = c.getContext('2d'), w = c.width, len = Math.round(pct / 100 * (w - 3));
+  x.clearRect(0, 0, w, 8);
+  R(x, 0, 6, w, 2, RAMP.br[3]); R(x, 0, 7, w, 1, RAMP.br[2]);
+  for (let i = 0; i <= len; i++) { const y = 4 + Math.round(Math.sin(i * .7) * .8); P(x, [i, y], RAMP.gr[1]); if (i % 4 === 2 && i < len) P(x, [i, y - 1, i + 1, y - 2], RAMP.gr[2]); if (i % 4 === 0 && i < len && i) P(x, [i, y + 1], RAMP.gr[3]); }
+  if (pct >= 100) { P(x, [w - 3, 1, w - 1, 1, w - 2, 0, w - 2, 2], RAMP.pk[2]); P(x, [w - 2, 1], RAMP.ye[2]); }
+  else if (len > 0) P(x, [len, 3 + Math.round(Math.sin(len * .7) * .8)], RAMP.gr[3]);
+}
+const SCALE_ICON = sprite(9, 8, x => { R(x, 1, 5, 7, 2, RAMP.gy[2]); R(x, 1, 5, 7, 1, RAMP.gy[3]); R(x, 3, 2, 3, 3, RAMP.bl[3]); P(x, [4, 3], RAMP.rd[2]); R(x, 2, 1, 5, 1, RAMP.gy[1]); });
 function renderStatus() {
   if (OV !== 'status') return;
   $('#stName').textContent = stageName();
   $('#stGen').textContent = `Gen ${S.gen}`;
   $('#stAge').textContent = `${Math.floor(S.age / DAY)} day${Math.floor(S.age / DAY) === 1 ? '' : 's'}`;
   const hm = healthyMax(S.stage);
-  $('#stWeight').textContent = S.stage === 'seed' ? '–' : `${S.weight}g ${S.weight > hm ? '(heavy)' : '(healthy)'}`;
-  $('#stHunger').innerHTML = hearts(S.hunger); $('#stHunger').setAttribute('aria-label', `${Math.ceil(S.hunger - 1e-3)} of 4`);
-  $('#stHappy').innerHTML = hearts(S.happy); $('#stHappy').setAttribute('aria-label', `${Math.ceil(S.happy - 1e-3)} of 4`);
-  $('#stDisc').style.width = S.discipline + '%'; $('#stDiscN').textContent = S.discipline + '%';
+  const wEl = $('#stWeight');
+  wEl.textContent = S.stage === 'seed' ? '–' : `${S.weight}g ${S.weight > hm ? 'heavy' : 'ok'}`; wEl.classList.toggle('heavy', S.weight > hm);
+  const hk = Math.ceil(S.hunger - 1e-3) + '/' + Math.ceil(S.happy - 1e-3), pop = HEARTS_SHOWN === null && !RM;
+  if (hk !== HEARTS_SHOWN) {
+    $('#stHunger').innerHTML = hearts(S.hunger, pop); $('#stHunger').setAttribute('aria-label', `${Math.ceil(S.hunger - 1e-3)} of 4`);
+    $('#stHappy').innerHTML = hearts(S.happy, pop); $('#stHappy').setAttribute('aria-label', `${Math.ceil(S.happy - 1e-3)} of 4`);
+    HEARTS_SHOWN = hk;
+  }
+  const vine = $('#stVine');
+  if (vine.dataset.v !== String(S.discipline)) { drawVine(vine, S.discipline); vine.dataset.v = S.discipline; }
+  $('#stDiscN').textContent = S.discipline + '%';
   $('#stMist').textContent = S.mistakes;
   const c = $('#stCall');
   let msg = '', ok = false;
-  if (S.stage === 'seed') { msg = 'The seed is about to sprout.'; ok = true; }
+  if (S.stage === 'seed') { msg = 'About to sprout…'; ok = true; }
   else if (S.call) msg = CALL_TEXT[S.call.reason];
-  else if (S.sick) msg = `Bubby is sick. ${S.doses} dose${S.doses > 1 ? 's' : ''} of medicine needed.`;
-  else if (S.poops.length) msg = 'There is poop to clean up.';
-  else if (S.asleep) { msg = 'Bubby is sleeping soundly.'; ok = true; }
-  else { msg = 'Bubby is doing fine.'; ok = true; }
+  else if (S.sick) msg = `Sick. ${S.doses} dose${S.doses > 1 ? 's' : ''} of medicine needed.`;
+  else if (S.poops.length) msg = 'Poop to clean up.';
+  else if (S.asleep) { msg = 'Sleeping soundly.'; ok = true; }
+  else { msg = 'Doing great!'; ok = true; }
   c.textContent = msg; c.classList.toggle('ok', ok); c.hidden = false;
 }
 function showEnd() {
   const e = S.ended; if (!e) return;
-  $('#endTitle').textContent = e.kind === 'garden' ? 'Bubby returned to the garden' : 'Bubby packed up and moved away';
+  $('#endTitle').textContent = e.kind === 'garden' ? 'Returned to the garden' : 'Bubby moved away';
   const days = Math.floor(e.age / DAY);
   $('#endText').textContent = (e.kind === 'garden'
-    ? `A full life of ${days} days as a ${e.name}. It left a seed behind for you.`
-    : `After ${days} days as a ${e.name}, Bubby went looking for a better garden. It left a seed behind.`)
-    + ` Care mistakes: ${e.mistakes}.`;
+    ? `A full life: ${days} days, ending as ${e.name}. It left you a seed.`
+    : `After ${days} days as a ${e.name}, Bubby went to find a better garden. It left a seed.`)
+    + ` Mistakes: ${e.mistakes}.`;
   $('#ovEnd').hidden = false;
 }
 
-let toastT = 0;
-const $toast = $('#toast');
+// Toasts show one at a time: a new one waits until the current one has been up for 0.9s (queue of 2).
+let toastT = 0, toastUp = 0;
+const $toast = $('#toast'), TQ = [];
 function toast(msg) {
-  $toast.textContent = msg; $toast.hidden = false;
+  if (!$toast.hidden && $toast.textContent === msg) { toastT = 2.2; return; }
+  if (!$toast.hidden && toastUp < .9) { if (TQ[TQ.length - 1] !== msg) TQ.push(msg); if (TQ.length > 2) TQ.shift(); return; }
+  showToast(msg);
+}
+function showToast(msg) {
+  $toast.textContent = msg; $toast.hidden = false; toastUp = 0; toastT = 2.2;
   $toast.classList.remove('show'); void $toast.offsetWidth; $toast.classList.add('show');
-  toastT = 2.4;
+}
+function updateToast(rdt) {
+  if ($toast.hidden) { if (TQ.length) showToast(TQ.shift()); return; }
+  toastUp += rdt; toastT -= rdt;
+  if (TQ.length && toastUp >= .9) showToast(TQ.shift()); else if (toastT <= 0) $toast.hidden = true;
 }
 
 /* ---- Sound ---- */
@@ -1927,7 +2007,7 @@ function frame(now) {
   if (!S.paused && !frozen) { updateGame(rdt); updatePet(rdt); }
   if (!S.paused) { updateWorld(rdt); updateFX(rdt); }
   if (nameT > 0) { nameT -= rdt; if (nameT <= 0) $('#nameCard').hidden = true; }
-  if (toastT > 0) { toastT -= rdt; if (toastT <= 0) $toast.hidden = true; }
+  updateToast(rdt);
   const t = now / 1000;
   draw(t);
 
@@ -1950,7 +2030,7 @@ function start(data) {
   if (S.soundOn === undefined) S.soundOn = true;
   if (![1, 2, 4].includes(S.speed)) S.speed = 1;
   if (data && data.PET) Object.assign(PET, data.PET);
-  buildTiles(); buildGuide(); wire(); syncControls(); watchLayout(); recordForm();
+  applyFrames(); buildTiles(); buildGuide(); wire(); syncControls(); watchLayout(); recordForm();
   if (!restored) toast('A seed! Watch it sprout');
   requestAnimationFrame(t => { last = t; frame(t); });
 }
