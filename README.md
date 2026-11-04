@@ -1,0 +1,14 @@
+# Bubby
+
+A small virtual-pet game in a single HTML file. Open `index.html` in a browser to play.
+
+Bubby grows from a **Seed** into a **Bulb** (baby), a **Bud** (child), a **Blossom** (adult) and finally an **Elder**.
+Keep its hunger and happiness hearts up, clean up poop, give medicine when it is sick, turn the lights off at bedtime
+and scold tantrums. Your care mistakes, discipline and weight while it is a Bulb and a Bud decide which adult form it becomes:
+
+- **Radiant Blossom**: 0–2 care mistakes and 75%+ discipline
+- **Daisy Blossom**: a few slips
+- **Thistle**: many mistakes, or overweight
+
+A full life lasts about 20 minutes at 1× speed (2× and 4× are available). Time only passes while the page is open,
+the power button pauses, and progress is saved in the browser's localStorage.
