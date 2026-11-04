@@ -261,7 +261,7 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   font: 600 3.9cqw/1 var(--font-display); color: #33605f; letter-spacing: .3cqw;
 }
 .hw.power { width: 6.6%; }
-.hw.power::before { content: ""; position: absolute; inset: -9px; border-radius: 50%; } /* 44px hit area */
+.hw.power::before { content: ""; position: absolute; inset: -11px; border-radius: 50%; } /* ≥44px hit area */
 .hw.power .cap { background: radial-gradient(circle at 36% 30%, #f4f5f7 0 20%, #c9cdd3 60%, #9fa5ae 100%); box-shadow: 0 .8cqw 0 #8c939c, 0 0 0 .45cqw #7f878f; }
 .hw.power[aria-pressed="true"] .cap { background: radial-gradient(circle at 36% 30%, #fff3c4 0 20%, #ffd34a 60%, #d9a520 100%); }
 .hw.power .cap svg { width: 58%; height: 58%; }
@@ -279,7 +279,7 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   transition: left .22s cubic-bezier(.34, 1.56, .64, 1);
 }
 .seg button {
-  position: relative; border: 0; background: transparent; min-height: 40px; cursor: pointer; border-radius: 10px;
+  position: relative; border: 0; background: transparent; min-height: 44px; cursor: pointer; border-radius: 10px;
   font: 600 14px/1 var(--font-pixel); color: #33605f; font-variant-numeric: tabular-nums;
 }
 .seg button[aria-pressed="true"] { color: #2a2038; }
@@ -1562,6 +1562,7 @@ function showNameCard() {
 
 /* ================= Scene rendering ================= */
 const scene = $('#scene'), sx = scene.getContext('2d');
+let LASTBOX = null;
 function blit(img, x, y) { sx.drawImage(img, Math.round(x), Math.round(y)); }
 function sparkles(cx, cy, t, r = 16) {
   for (let i = 0; i < 6; i++) {
@@ -1620,6 +1621,7 @@ function draw(time) {
   shadow(px, GROUND + 1, (stage === 'seed' ? 13 : 9) + Math.min(0, pose.dy) * .6, pose.dy < -2 ? .22 : .34);
   blit(spr, px - 24 + pose.dx, GROUND - 46 + pose.dy);
   const top = GROUND - 46 + HEADTOP[stage] + pose.dy + Math.max(0, o.sq || 0);
+  LASTBOX = [px - 13, top, px + 13, GROUND + 1];
 
   // Action effects
   if (A) {
@@ -2206,7 +2208,7 @@ function watchLayout() {
 if (/[?&]debug\b/.test(location.search)) {
   window.__bubby = {
     get S() { return S; }, set S(v) { S = v; }, get A() { return A; }, set A(v) { A = v; },
-    get G() { return G; }, set G(v) { G = v; }, PET, LAYOUT, blinkNow() { PET.blinkUntil = NOW + .3; PET.blinkNext = NOW + 5; }, act, feed, startGame, guess, evolve, end, toast, showOv, renderGame, syncControls,
+    get G() { return G; }, set G(v) { G = v; }, PET, LAYOUT, blinkNow() { PET.blinkUntil = NOW + .3; PET.blinkNext = NOW + 5; }, petBox: () => LASTBOX, draw, act, feed, startGame, guess, evolve, end, toast, showOv, renderGame, syncControls,
   };
 }
 

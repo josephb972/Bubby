@@ -75,7 +75,7 @@ const STATES = [
   ['clean-done', adult('daisy', { poops: [{ t: 1 }, { t: 1 }, { t: 1 }] }), idle + `__bubby.act('clean');`, 1500],
   ['eat-meal', base({ hunger: 1 }), idle + `__bubby.feed('meal');`, 700],
   ['eat-snack', adult('radiant', { happy: 1 }), idle + `__bubby.feed('snack');`, 700],
-  ['refuse', base({ hunger: 4 }), idle + `__bubby.feed('meal');`, 350],
+  ['refuse', base({ hunger: 4 }), idle + `__bubby.S.hunger = 4; __bubby.feed('meal');`, 350],
   ['medicine', base({ stage: 'child', weight: 10, sick: true, doses: 2 }), idle + `__bubby.act('med');`, 500],
   ['scold', adult('daisy', { call: { reason: 'tantrum', t: 2, counted: false } }), idle + `__bubby.act('discipline');`, 300],
   ['menu-status', adult('radiant', { hunger: 2.5, happy: 3.5, discipline: 75 }), idle + `__bubby.act('status');`, 300],
@@ -143,6 +143,17 @@ function serve() {
       if (only && !only.test(name)) continue;
       await run(name, save, setup, ms, async page => {
         await page.locator('#device').screenshot({ path: path.join(out, combo, `${name}.png`) });
+        // Overlap check: nothing that floats over the scene may cover Bubby's head and face.
+        const hit = await page.evaluate(() => {
+          const b = window.__bubby && __bubby.petBox && __bubby.petBox(); if (!b || __bubby.S.ended || __bubby.S.paused) return [];
+          const sc = document.querySelector('#scene').getBoundingClientRect(), k = sc.width / 100;
+          const face = { l: sc.left + b[0] * k, t: sc.top + b[1] * k, r: sc.left + b[2] * k, b: sc.top + Math.min(b[3], b[1] + 24) * k };
+          const sel = ['#toast', '#nameCard', '.g-top', '#gLeft', '#gRight'];
+          return sel.map(q => document.querySelector(q)).filter(e => e && e.getClientRects().length && !e.closest('[hidden]') && getComputedStyle(e).opacity !== '0')
+            .map(e => [e, e.getBoundingClientRect()]).filter(([, r]) => r.left < face.r - 1 && face.l < r.right - 1 && r.top < face.b - 1 && face.t < r.bottom - 1)
+            .map(([e]) => e.id || e.className);
+        });
+        if (hit.length) report.overlaps.push(`${combo}/${name}: covers Bubby: ${hit.join(', ')}`);
       });
     }
     if (!only || only.test('page')) {
@@ -158,7 +169,10 @@ function serve() {
             if (a.contains(b) || b.contains(a)) continue;
             if (A.left < B.right - 1 && B.left < A.right - 1 && A.top < B.bottom - 1 && B.top < A.bottom - 1) res.push(`${c}: ${a.className || a.tagName} × ${b.className || b.tagName}`);
           }
-          const small = q('.hw, .tile, .seg button, .chip').map(e => [e, e.getBoundingClientRect()]).filter(([, r]) => r.width < 44 || r.height < 44)
+          // Targets whose hit area is extended by a pseudo-element are tested by hit-testing 22px out from the centre.
+          const reach = e => { const r = e.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+            return [[cx - 22, cy], [cx + 22, cy], [cx, cy - 22], [cx, cy + 22]].every(([x, y]) => document.elementFromPoint(x, y)?.closest('button') === e); };
+          const small = q('.hw, .tile, .seg button, .chip').filter(e => !(e.matches('.hw.power') && reach(e))).map(e => [e, e.getBoundingClientRect()]).filter(([, r]) => r.width < 43.5 || r.height < 43.5)
             .map(([e, r]) => `${c}: small target ${e.getAttribute('aria-label') || e.textContent.trim()} ${r.width.toFixed(0)}×${r.height.toFixed(0)}`);
           return res.concat(small);
         }, combo)));

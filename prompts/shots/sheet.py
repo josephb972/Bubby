@@ -65,8 +65,13 @@ if __name__ == '__main__':
         cols = int(sys.argv[6]) if len(sys.argv) > 6 else 4
         crop = sys.argv[7] if len(sys.argv) > 7 else 'device'
         w = 240 if crop == 'device' else 300
-        ns = [n for n in names(a, combo) if os.path.exists(os.path.join(b, combo, n + '.png'))]
-        cells = [(n + '   before | after', [load(os.path.join(b, combo, n + '.png'), crop, w), load(os.path.join(a, combo, n + '.png'), crop, w)]) for n in ns]
+        ns = names(a, combo)
+        def pic(d, n):
+            f = os.path.join(d, combo, n + '.png')
+            if os.path.exists(f): return load(f, crop, w)
+            ref = load(os.path.join(a, combo, n + '.png'), crop, w); im = Image.new('RGB', ref.size, (226, 222, 214))
+            ImageDraw.Draw(im).text((12, ref.height // 2 - 10), 'new state', fill=(120, 116, 110), font=font(18)); return im
+        cells = [(n + ('   before | after' if os.path.exists(os.path.join(b, combo, n + '.png')) else '   (new) | after'), [pic(b, n), pic(a, n)]) for n in ns]
         grid(cells, cols, f'Before / after · {combo}', out)
 
 

@@ -49,3 +49,56 @@ Impact runs 1–5 and effort is S/M/L. The table is sorted by priority (impact �
 | P2 | Reduced motion | Only the toast and cap transitions respect it. | Accessibility. | An RM flag disables shake, parallax, particles and ambient life, and keeps state changes visible. | S | 3 |
 | A5 | Pause | White text on a 55 % wash over green is about 4.3:1 contrast. | Readability. | A darker wash inside a pixel frame card. | S | 2 |
 | H5 | Desktop | The device is capped at 380 px, with lots of dead space at 1280. | The hero is undersized. | Allow up to 420 px when the viewport is tall enough, still integer-snapped. | S | 2 |
+
+---
+
+# Outcome (Passes 2 and 3)
+
+## Status of every item
+
+| ID | Impact | Status | Notes |
+|---|---|---|---|
+| A1 | 5 | Fixed | `layout()` snaps the scene to k device px per art pixel: k = 4 at DPR 2, 6 at DPR 3, 2 at DPR 1, 5 at DPR 2.625. The LCD is 200×150 CSS px at common DPRs, and the SVG recess wraps it. |
+| F1 | 5 | Fixed | Sky band, far hills, hedge with the pot, lawn, swaying foreground grass, parallax on the hills and bushes. |
+| C5/C6 | 5 | Fixed | A 3.2 s ceremony with an anticipation wobble, white silhouettes alternating faster and faster, a burst with rays, rising petals (shell fragments when hatching), a reveal hop and a name card in the sky band. |
+| P1 | 4 | Fixed | Pet sprites are cached by pose. `draw()` averages 0.5 ms (p95 1 ms) at 4× CPU throttle and holds 60 fps. |
+| A2 | 4 | Fixed | One-line copy of at most 30 characters, a 2-deep queue, and the toast stays in the sky band. The harness checks every state and finds no toast over Bubby's head or face. |
+| A3 | 4 | Fixed | The score moved into the HUD. |
+| G5 | 4 | Fixed | Compact dashboard with short hint copy. Nothing is clipped. |
+| A7 | 4 | Fixed | Tiles are 50×44, the speed buttons 48×44, sound and reset 44 tall. Power has a 46 px hit area, verified by hit-testing. |
+| B1 | 4 | Fixed | Guide sprites are cropped and shown at exactly 2×. The life strip wraps on narrow phones instead of scaling. |
+| F4 | 4 | Fixed | Night is a multiply grade with a moon, twinkling stars and shooting stars. Bubby stays readable. |
+| D5 | 4 | Fixed | Hearts, crumbs, clean-wave foam and spray plus a grass shimmer, a medicine glow ring and bubbles. |
+| C1/C2 | 4 | Fixed | 2-frame breathing with follow-through, random blinks (some doubled), glances at seeds, food, the pointer and poop, idle fidgets. |
+| B7 | 4 | Fixed | One icon family: fork & spoon, clipboard heart, wagging finger, bottle, shower, bulb, ball, "!" bubble. |
+| B3 | 4 | Fixed | Selective outline: the lit side takes the deepest step of the fill's ramp, the shadow side is ink. |
+| B4/B5 | 4 | Fixed, with a deviation | Top-left form shading (`EB`) and quantization to the master palette. **The palette has 46 colors, not 24–32**: 11 materials × 4 steps, plus ink and white. Getting down to 32 would force the Bulb's teal, the leaves and the lawn to share a ramp, which would kill figure–ground contrast. The sky gradient and the time-of-day grade are lighting on top of the palette, by design. |
+| C3/C7 | 4 | Fixed | The Bulb hops with squash on landing, the Bud waddles, the Blossom bounces with trailing petals, the Elder shuffles with a cane tap. Leaves and petals lag a beat. |
+| D1 | 4 | Fixed | Every press bounces its tile and throws pixels into the scene. Each action has its own chiptune phrase, and the cap highlight shifts when pressed. |
+| D4 | 4 | Fixed | +1/+3/−2 pixel numbers, a gold glint, a combo counter with rising pitch, and confetti plus a fanfare on a new best. |
+| E1/E3 | 4 | Fixed | Matte grain, a specular rim, AO, a recess gradient, glossy caps and shaded chain links. |
+| E2 | 4 | Fixed | Glass sheen, inner shadow, an LCD grid aligned to art pixels (only at k ≥ 3, where a hairline grid doesn't overpower the art), and a night vignette. |
+| F2 | 4 | Fixed, reinterpreted | The sky follows **Bubby's waking day** (morning right after waking, golden evening as bedtime nears) rather than the 60 s in-game `DAY`. A full sky cycle every minute would be frantic, while this version also tells you bedtime is coming. |
+| G1 | 4 | Fixed | 9-slice SVG pixel frames, a bobbing cursor, pressed bevels, ease-out-back pop-ins. |
+| H2 | 4 | Fixed | Six collectible cards (3 Blossoms, 3 Elders). Unraised forms show as silhouettes with "???" and the hint. Stored in the optional `bubby.dex.v1` key; the existing save is not touched. |
+| A4, A6, A8, B6, C4, D3, D6, F3, G2, G3, H1, H4, P2, A5 | 2–3 | Fixed | See the commits. |
+| H5 | 2 | Rejected | Integer snapping gives a 200 CSS px LCD at common DPRs whatever the shell width. A bigger shell would only add bezel. |
+| B3 (hand AA) | n/a | Rejected | Sprites move over a background that is time-graded and parallaxing, so external anti-aliasing pixels would halo. Internal AA on the largest curves is left for a hand-pixelled pass. |
+
+## Verification (Pass 3)
+
+- **Shots:** 63 states × {390×844, 1280×900} × {light, dark} at DPR 2, plus full-page shots. Contact sheets: `before-after-phone-light.jpg`, `before-after-desk-dark.jpg`, `before-after-screens.jpg` (LCD close-ups), `before-after-pages.jpg`. `before-*.jpg` are the Pass 1 sheets. Run `node prompts/shots/capture.js <label> <dir>`, then `python3 prompts/shots/sheet.py pair <before> <after> <combo> <out>`.
+- **Console errors:** 0 across all 252 page loads, plus a 10-state reduced-motion run with 0 errors.
+- **Horizontal scroll:** none at 390 px (also checked at 320 and 360).
+- **Overlaps:** none. The harness tests the toast, name card, game HUD and arrows against Bubby's head and face in every state, and the hardware buttons and labels against each other.
+- **Behavior:** a full life (seed → Thistle → Elder → returned to the garden → replant) at 4× has no errors, and the collection records it. Keyboard play works (F/1, P/2 with arrows, S, Esc). An old-format save and an old hot-reload `PET` load unchanged.
+- **Rules untouched:** `STAGE`, `fresh()`, `load()`, `healthyMax`, `catchY` and the scoring arithmetic are byte-identical to the original. The only changes inside rule functions are copy and presentation calls.
+
+## Known trade-offs and what remains
+
+- Hit-stop freezes the minigame for 70 ms per pebble, so a round with pebbles runs slightly longer in real time. Score and timer rules are unchanged.
+- The evolution ceremony takes 3.2 s instead of 1.8 s. Game time is paused during evolution in both versions, so stage timing is unaffected.
+- When no integer scale fits (unusual zoom levels, DPR 1.25), the LCD falls back to proportional scaling.
+- Sick Radiant/Thistle forms quantize to brownish tones. They read as unwell, but a dedicated sick ramp would look more deliberate.
+- The concept images were not available in this session, so the direction follows the existing art.
+- Still open: internal anti-aliasing on the 48 px sprites, an Elder-specific sit/rest fidget, and music.

@@ -15,4 +15,6 @@ Play has two minigames: **Which way?** (guess where Bubby looks) and **Seed catc
 A full life lasts about 20 minutes at 1× speed (2× and 4× are available). Time only passes while the page is open,
 the power button pauses, and progress is saved in the browser's localStorage.
 
-`prompts/visual-polish-prompt.md` is a ready-to-paste prompt for an art-direction and UI polish pass.
+`prompts/visual-polish-prompt.md` is a ready-to-paste prompt for an art-direction and UI polish pass. `prompts/visual-audit.md` is the audit and outcome of that pass, with before/after contact sheets in `prompts/shots/` (regenerate them with `prompts/shots/capture.js`, which drives `index.html?debug`).
+
+The forms you have raised are remembered in a separate, optional `bubby.dex.v1` key; the save itself (`bubby.save.v1`) is unchanged.
