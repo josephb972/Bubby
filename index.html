@@ -76,18 +76,20 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   -webkit-tap-highlight-color: transparent;
 }
 .device > svg.shell { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.device { --px: 2px; --fs: 10px; --fs-s: 9px; --fs-l: 12px; --hair: 1px; --ic: 32px; }
+/* The scene is snapped to an integer number of device pixels per art pixel (see layout()); these are fallbacks. */
 .screen {
-  position: absolute; left: 23.611%; top: 29.833%; width: 52.778%; height: 37%;
-  display: grid; grid-template-rows: 18fr 64fr 18fr; gap: 1px;
-  background: #2f3440; border-radius: 3cqw; overflow: hidden;
+  position: absolute; left: var(--scr-l, 23.611%); top: var(--scr-t, 29.833%); width: var(--scr-w, 52.778%); height: var(--scr-h, 37%);
+  display: grid; grid-template-rows: var(--tile-h, 18fr) var(--scene-h, 64fr) var(--tile-h, 18fr); gap: var(--gap, 1px);
+  background: #2f3440; border-radius: calc(var(--px) * 3); overflow: hidden;
 }
-.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; min-height: 0; }
+.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gap, 1px); min-height: 0; }
 .tile {
   border: 0; padding: 0; margin: 0; cursor: pointer; background: var(--t);
   display: grid; place-items: center; min-height: 0; position: relative;
   transition: filter .12s, background-color .12s;
 }
-.tile canvas { width: 62%; height: auto; aspect-ratio: 1; image-rendering: pixelated; display: block; max-width: 100%; }
+.tile canvas { width: var(--ic); height: var(--ic); image-rendering: pixelated; display: block; }
 .tile:hover { filter: brightness(1.06); }
 .tile:active canvas { transform: translateY(1px) scale(.94); }
 .tile:focus-visible { outline: 2px solid #3b2f4a; outline-offset: -3px; }
@@ -165,7 +167,7 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
 /* physical buttons */
 .hw {
-  position: absolute; width: 14.444%; aspect-ratio: 1; border: 0; padding: 0; background: none; cursor: pointer;
+  position: absolute; width: 13.333%; aspect-ratio: 1; border: 0; padding: 0; background: none; cursor: pointer;
   border-radius: 50%;
 }
 .hw .cap {
@@ -177,10 +179,11 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .hw .cap svg { width: 52%; height: 52%; }
 .hw:active .cap { transform: translateY(1.1cqw); box-shadow: 0 .3cqw 0 var(--d), 0 .3cqw 0 .55cqw #5e978c, 0 0 0 .55cqw #5e978c; }
 .hw .lbl {
-  position: absolute; top: 112%; left: 50%; transform: translateX(-50%); white-space: nowrap;
-  font: 600 4.4cqw/1 var(--font-display); color: #3a6468; letter-spacing: .25cqw;
+  position: absolute; top: 114%; left: 50%; transform: translateX(-50%); white-space: nowrap; pointer-events: none;
+  font: 600 3.9cqw/1 var(--font-display); color: #33605f; letter-spacing: .3cqw;
 }
 .hw.power { width: 6.6%; }
+.hw.power::before { content: ""; position: absolute; inset: -9px; border-radius: 50%; } /* 44px hit area */
 .hw.power .cap { background: radial-gradient(circle at 36% 30%, #f4f5f7 0 20%, #c9cdd3 60%, #9fa5ae 100%); box-shadow: 0 .8cqw 0 #8c939c, 0 0 0 .45cqw #7f878f; }
 .hw.power[aria-pressed="true"] .cap { background: radial-gradient(circle at 36% 30%, #fff3c4 0 20%, #ffd34a 60%, #d9a520 100%); }
 .hw.power .cap svg { width: 58%; height: 58%; }
@@ -188,12 +191,12 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .under { display: flex; flex-wrap: wrap; gap: 10px 16px; justify-content: center; align-items: center; font-size: 13px; color: var(--muted); }
 .seg { display: inline-flex; border: 2px solid var(--line); border-radius: 999px; overflow: hidden; }
 .seg button {
-  border: 0; background: transparent; padding: 5px 12px; cursor: pointer; font: 600 13px/1 var(--font-display);
+  border: 0; background: transparent; padding: 0 14px; min-height: 40px; min-width: 44px; cursor: pointer; font: 600 13px/1 var(--font-display);
   color: var(--muted); font-variant-numeric: tabular-nums;
 }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--sky); }
 .chip {
-  border: 2px solid var(--line); background: transparent; border-radius: 999px; padding: 5px 12px;
+  border: 2px solid var(--line); background: transparent; border-radius: 999px; padding: 0 16px; min-height: 44px;
   font: 600 13px/1 var(--font-display); color: var(--muted); cursor: pointer;
 }
 .chip:hover, .seg button:hover { color: var(--ink); }
@@ -203,21 +206,20 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .guide h2 { margin: 0 0 10px; font: 600 20px/1.2 var(--font-display); text-wrap: balance; }
 .guide p { margin: 0; color: var(--muted); max-width: 62ch; }
 .legend { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
-.legend li { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: center; min-width: 0; }
-.legend .ic { width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center; background: var(--t); box-shadow: inset 0 0 0 2px rgba(59, 47, 74, .18); }
-.legend canvas { width: 22px; height: 22px; image-rendering: pixelated; }
+.legend li { display: grid; grid-template-columns: 40px 1fr; gap: 10px; align-items: center; min-width: 0; }
+.legend .ic { width: 40px; height: 40px; border-radius: 8px; display: grid; place-items: center; background: var(--t); box-shadow: inset 0 0 0 2px rgba(59, 47, 74, .18); }
+.legend canvas { width: 32px; height: 32px; image-rendering: pixelated; }
 .legend b { display: block; font: 600 14px/1.2 var(--font-display); }
 .legend span { display: block; font-size: 12.5px; line-height: 1.35; color: var(--muted); }
 .life { display: flex; align-items: flex-end; justify-content: space-between; gap: 4px; padding: 14px 12px 10px; background: var(--panel); border-radius: 14px; overflow-x: auto; }
 .life figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 52px; }
-.life canvas { width: 56px; height: 56px; image-rendering: pixelated; }
+.life canvas, .forms canvas { image-rendering: pixelated; display: block; }
 .life figcaption { font: 600 12px/1.15 var(--font-display); text-align: center; }
 .life figcaption small { display: block; font: 400 11px/1.2 var(--font-body); color: var(--muted); }
 .rules { margin: 0; padding-left: 18px; display: grid; gap: 6px; color: var(--muted); font-size: 14px; }
 .rules b { color: var(--ink); font-weight: 700; }
 .forms { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .forms figure { margin: 0; background: var(--panel); border-radius: 12px; padding: 10px 6px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
-.forms canvas { width: 56px; height: 56px; image-rendering: pixelated; }
 .forms figcaption { font: 600 12.5px/1.15 var(--font-display); }
 .forms figcaption small { display: block; font: 400 11px/1.3 var(--font-body); color: var(--muted); margin-top: 2px; }
 .keys { font-size: 13px; color: var(--muted); }
@@ -264,8 +266,8 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
         <g id="bezSh" fill="#9ccabd" transform="translate(0 7)"></g>
         <g id="bezLn" fill="#c7ba98" stroke="#c7ba98" stroke-width="4"></g>
         <g id="bezFl" fill="url(#cream)"></g>
-        <rect x="78" y="172" width="204" height="236" rx="18" fill="#454b58" stroke="#2f3440" stroke-width="3"/>
-        <rect x="81.5" y="175.5" width="197" height="229" rx="15" fill="none" stroke="#6b7282" stroke-width="1.5"/>
+        <rect id="recess" x="78" y="172" width="204" height="236" rx="18" fill="#454b58" stroke="#2f3440" stroke-width="3"/>
+        <rect id="recessIn" x="81.5" y="175.5" width="197" height="229" rx="15" fill="none" stroke="#6b7282" stroke-width="1.5"/>
       </svg>
 
       <div class="screen" id="screen">
@@ -327,19 +329,19 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
         <div class="tiles" id="tilesBot"></div>
       </div>
 
-      <button class="hw" data-act="feed" style="left:17.222%;top:76.333%;--c:#f0a3a3;--hl:#ffd9d6;--d:#c96f72" aria-label="Feed">
+      <button class="hw" data-act="feed" style="left:15.556%;top:75.333%;--c:#f0a3a3;--hl:#ffd9d6;--d:#c96f72" aria-label="Feed">
         <span class="cap"><svg viewBox="0 0 24 24" fill="none" stroke="#a8494f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18c0 5-4 8-9 8s-9-3-9-8z"/><circle cx="8.5" cy="8.5" r="1.4" fill="#a8494f" stroke="none"/><circle cx="12.5" cy="7.2" r="1.4" fill="#a8494f" stroke="none"/><circle cx="16" cy="9" r="1.4" fill="#a8494f" stroke="none"/></svg></span>
         <span class="lbl">FEED</span>
       </button>
-      <button class="hw" data-act="play" style="left:32.222%;top:81.667%;--c:#f2d670;--hl:#fff4c4;--d:#c9a83c" aria-label="Play">
+      <button class="hw" data-act="play" style="left:31.667%;top:80.333%;--c:#f2d670;--hl:#fff4c4;--d:#c9a83c" aria-label="Play">
         <span class="cap"><svg viewBox="0 0 24 24" fill="none" stroke="#9a7a1e" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M5.5 7.5c3 1.5 4 4.5 3.5 9.5M18.5 16.5c-3-1.5-4-4.5-3.5-9.5"/></svg></span>
         <span class="lbl">PLAY</span>
       </button>
-      <button class="hw" data-act="clean" style="left:53.333%;top:81.667%;--c:#93d49a;--hl:#dcf6dc;--d:#5ea867" aria-label="Clean">
+      <button class="hw" data-act="clean" style="left:55%;top:80.333%;--c:#93d49a;--hl:#dcf6dc;--d:#5ea867" aria-label="Clean">
         <span class="cap"><svg viewBox="0 0 24 24" fill="none" stroke="#3d7f48" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4a3 3 0 0 1 3 3v1"/><path d="M7.5 12a5 5 0 0 1 9 0z" fill="#3d7f48"/><path d="M8.5 15.5l-1 2M12 15.5v2.5M15.5 15.5l1 2M10 19.5l-.5 1M14 19.5l.5 1"/></svg></span>
         <span class="lbl">CLEAN</span>
       </button>
-      <button class="hw" data-act="lights" style="left:68.333%;top:76.333%;--c:#a3c9ee;--hl:#e3f0fc;--d:#6c98c8" aria-label="Sleep: lights on or off">
+      <button class="hw" data-act="lights" style="left:71.111%;top:75.333%;--c:#a3c9ee;--hl:#e3f0fc;--d:#6c98c8" aria-label="Sleep: lights on or off">
         <span class="cap"><svg viewBox="0 0 24 24" fill="none" stroke="#3f679a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5a7 7 0 1 0 4 11 6 6 0 0 1-4-11z"/><path d="M15 4h4l-4 4h4" stroke-width="1.8"/></svg></span>
         <span class="lbl">SLEEP</span>
       </button>
@@ -1155,6 +1157,16 @@ function buildTiles() {
   });
   $$('canvas[data-icon]').forEach(c => c.getContext('2d').drawImage(ICONS[c.dataset.icon], 0, 0));
 }
+// Crop a sprite to its opaque pixels (plus a 1px margin) and show it at an exact 2× CSS scale.
+function cropped(c, scale = 2) {
+  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+  let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
+  for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) if (d[(y * c.width + x) * 4 + 3]) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+  if (x1 < 0) return c;
+  const o = mk(x1 - x0 + 3, y1 - y0 + 3); o.getContext('2d').drawImage(c, -x0 + 1, -y0 + 1);
+  o.style.width = o.width * scale + 'px'; o.style.height = o.height * scale + 'px';
+  return o;
+}
 function buildGuide() {
   const lg = $('#legend');
   TILES.forEach(([k, label, col, text]) => {
@@ -1166,14 +1178,14 @@ function buildGuide() {
   const strip = $('#lifeStrip');
   [['seed', 'Seed', 'egg'], ['baby', 'Bulb', 'baby'], ['child', 'Bud', 'child'], ['adult', 'Blossom', 'adult'], ['senior', 'Elder', 'senior']].forEach(([st, n, sub]) => {
     const f = document.createElement('figure');
-    f.appendChild(petSprite(st, { variant: 'radiant' }));
+    f.appendChild(cropped(petSprite(st, { variant: 'radiant' })));
     f.insertAdjacentHTML('beforeend', `<figcaption>${n}<small>${sub}</small></figcaption>`);
     strip.appendChild(f);
   });
   const forms = $('#forms');
   [['radiant', 'Radiant Blossom', '0–2 mistakes, well disciplined'], ['daisy', 'Daisy Blossom', 'A few slips along the way'], ['thistle', 'Thistle', 'Lots of mistakes or overweight']].forEach(([v, n, sub]) => {
     const f = document.createElement('figure');
-    f.appendChild(petSprite('adult', { variant: v }));
+    f.appendChild(cropped(petSprite('adult', { variant: v })));
     f.insertAdjacentHTML('beforeend', `<figcaption>${n}<small>${sub}</small></figcaption>`);
     forms.appendChild(f);
   });
@@ -1378,7 +1390,7 @@ function start(data) {
   if (S.soundOn === undefined) S.soundOn = true;
   if (![1, 2, 4].includes(S.speed)) S.speed = 1;
   if (data && data.PET) Object.assign(PET, data.PET);
-  buildTiles(); buildGuide(); wire(); syncControls();
+  buildTiles(); buildGuide(); wire(); syncControls(); watchLayout();
   if (!restored) toast('A seed! Watch it sprout');
   requestAnimationFrame(t => { last = t; frame(t); });
 }
@@ -1407,11 +1419,44 @@ function start(data) {
   $('#chain').innerHTML = `<g stroke="#7f8894" stroke-width="5.4">${ch}</g>${ch}`;
 })();
 
+/* ---- Screen layout: snap the scene to whole device pixels per art pixel ---- */
+// The art is 100×75. We pick the largest integer scale k (device px per art px) whose scene width fits
+// 46–58.5 % of the shell, size the LCD to exactly that, and wrap the SVG recess around it. If no integer
+// scale fits (unusual zoom levels), we fall back to the old proportional size.
+const LAYOUT = { px: 2, k: 4, dpr: 2, snapped: true };
+function layout() {
+  const dev = $('#device'), W = dev.getBoundingClientRect().width; if (!W) return;
+  const dpr = window.devicePixelRatio || 1, u = W / 360, snap = v => Math.round(v * dpr) / dpr;
+  let k = Math.floor(W * .585 * dpr / SW), sw = SW * k / dpr, snapped = true;
+  if (sw < W * .46) { sw = snap(W * .53); snapped = false; k = sw * dpr / SW; }
+  const sh = sw * SH / SW, px = sw / SW, gap = snap(Math.max(1, Math.round(px / 2)));
+  const th = Math.max(44, snap(sh * .29)), H = sh + th * 2 + gap * 2;
+  const r = dev.getBoundingClientRect(), fx = r.left * dpr - Math.round(r.left * dpr), fy = r.top * dpr - Math.round(r.top * dpr);
+  const left = snap(180 * u - sw / 2) - fx / dpr, top = snap(290 * u - H / 2) - fy / dpr;
+  const st = dev.style, set = (k2, v) => st.setProperty(k2, v);
+  set('--scr-l', left + 'px'); set('--scr-t', top + 'px'); set('--scr-w', sw + 'px'); set('--scr-h', H + 'px');
+  set('--scene-h', sh + 'px'); set('--tile-h', th + 'px'); set('--gap', gap + 'px'); set('--px', px + 'px'); set('--hair', (1 / dpr) + 'px');
+  set('--fs', Math.max(10, Math.round(px * 5)) + 'px'); set('--fs-s', Math.max(9, Math.round(px * 4.5)) + 'px'); set('--fs-l', Math.max(12, Math.round(px * 6)) + 'px');
+  const ic = Math.max(1, Math.floor(Math.min(sw / 4, th) * .8 * dpr / 16)) * 16 / dpr; set('--ic', ic + 'px');
+  // Recess in shell units, padded by 7 units around the LCD.
+  const x0 = left / u - 7, y0 = top / u - 7, w0 = sw / u + 14, h0 = H / u + 14;
+  const rc = $('#recess'), ri = $('#recessIn');
+  rc.setAttribute('x', x0.toFixed(2)); rc.setAttribute('y', y0.toFixed(2)); rc.setAttribute('width', w0.toFixed(2)); rc.setAttribute('height', h0.toFixed(2));
+  ri.setAttribute('x', (x0 + 3.5).toFixed(2)); ri.setAttribute('y', (y0 + 3.5).toFixed(2)); ri.setAttribute('width', (w0 - 7).toFixed(2)); ri.setAttribute('height', (h0 - 7).toFixed(2));
+  Object.assign(LAYOUT, { px, k, dpr, snapped });
+}
+function watchLayout() {
+  layout();
+  try { new ResizeObserver(layout).observe($('#device')); } catch (e) {}
+  window.addEventListener('resize', layout);
+  document.fonts && document.fonts.ready.then(layout);
+}
+
 /* ---- Test hook: only with ?debug in the URL, used by the screenshot harness ---- */
 if (/[?&]debug\b/.test(location.search)) {
   window.__bubby = {
     get S() { return S; }, set S(v) { S = v; }, get A() { return A; }, set A(v) { A = v; },
-    get G() { return G; }, set G(v) { G = v; }, PET, act, feed, startGame, guess, evolve, end, toast, showOv, renderGame, syncControls,
+    get G() { return G; }, set G(v) { G = v; }, PET, LAYOUT, act, feed, startGame, guess, evolve, end, toast, showOv, renderGame, syncControls,
   };
 }
 
