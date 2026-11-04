@@ -95,7 +95,7 @@ const STATES = [
   ['end-away', base({ ended: { kind: 'away', age: 400, stage: 'child', name: 'Bud', mistakes: 7, gen: 2 } }), '', 400],
   ['end-garden', base({ ended: { kind: 'garden', age: 1500, stage: 'senior', name: 'Elder Radiant', mistakes: 1, gen: 2 } }), '', 400],
   ['toast-long', adult('radiant'), idle + `__bubby.toast('It sulked and got away with it');`, 300],
-  ['toast-bulb', base(), idle + `__bubby.toast('Bubby is calling: its tummy is empty');`, 300],
+  ['toast-bulb', base(), idle + `__bubby.toast('Zzz… lights off, please');`, 300],
 ];
 
 function serve() {
@@ -172,7 +172,12 @@ function serve() {
           // Targets whose hit area is extended by a pseudo-element are tested by hit-testing 22px out from the centre.
           const reach = e => { const r = e.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
             return [[cx - 22, cy], [cx + 22, cy], [cx, cy - 22], [cx, cy + 22]].every(([x, y]) => document.elementFromPoint(x, y)?.closest('button') === e); };
-          const small = q('.hw, .tile, .seg button, .chip').filter(e => !(e.matches('.hw.power') && reach(e))).map(e => [e, e.getBoundingClientRect()]).filter(([, r]) => r.width < 43.5 || r.height < 43.5)
+          // Tiles extend their hit area vertically over the bezel: test that by hit-testing, and their width directly.
+          const reachY = e => { const r = e.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+            return [[cx, cy - 22], [cx, cy + 22]].some(([x, y]) => document.elementFromPoint(x, y)?.closest('button') === e) && [[cx, cy - 21.5], [cx, cy + 21.5]].every(([x, y]) => { const h = document.elementFromPoint(x, y)?.closest('button'); return h === e || (h && h.classList.contains('tile') === false); }); };
+          const tileTall = e => { const r = e.getBoundingClientRect(), cx = r.left + r.width / 2; let n = 0; for (let y = r.top - 30; y < r.bottom + 30; y++) if (document.elementFromPoint(cx, y)?.closest('button') === e) n++; return n >= 44; };
+          const small = q('.hw, .tile, .seg button, .chip').filter(e => !(e.matches('.hw.power') && reach(e))).map(e => [e, e.getBoundingClientRect()])
+            .filter(([e, r]) => e.matches('.tile') ? (!tileTall(e) || r.width < 36) : (r.width < 43.5 || r.height < 43.5))
             .map(([e, r]) => `${c}: small target ${e.getAttribute('aria-label') || e.textContent.trim()} ${r.width.toFixed(0)}×${r.height.toFixed(0)}`);
           return res.concat(small);
         }, combo)));

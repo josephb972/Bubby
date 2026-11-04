@@ -102,3 +102,15 @@ Impact runs 1–5 and effort is S/M/L. The table is sorted by priority (impact �
 - Sick Radiant/Thistle forms quantize to brownish tones. They read as unwell, but a dedicated sick ramp would look more deliberate.
 - The concept images were not available in this session, so the direction follows the existing art.
 - Still open: internal anti-aliasing on the 48 px sprites, an Elder-specific sit/rest fidget, and music.
+
+---
+
+# Follow-up: the photographed toy pod
+
+The SVG shell is replaced by the supplied product photo. The buttons and the screen are live on top of it.
+
+- **The photo:** keyed out of its blue studio backdrop. Only backdrop-blue connected to the border or enclosed by the chain counts as background, so the blue Sleep cap and pink Feed cap stay intact. Edges are choked and de-fringed. The backdrop's darkening is kept only as a soft contact shadow near the body, so the pod sits on the light and the dark page alike. The baked-in screen art is blanked. The image is embedded once as a 75 KB WebP data URI (`--pod`), so `index.html` stays a single file.
+- **Buttons:** each cap is a circular cut-out of the same photo (`placeButtons()`, coordinates in `POD.btn`) sitting over a dark socket. On hover it catches a highlight. On press it sinks into the socket with a shifted highlight and inner shadow, then bounces back. Power glows amber while paused. The labels are the ones printed on the photo, and every button keeps its `aria-label`.
+- **Screen:** the live LCD fills the photo's glass (`POD.glass`). The 100×75 scene is still snapped to an integer number of device pixels per art pixel, letterboxed by the dark rim: 3× at DPR 2 and 5× at DPR 3 on a 390 px phone (the pod runs nearly edge to edge there), and 2× at DPR 1 or 4× at DPR 2 on desktop (the pod is 470 px wide).
+- **Trade-off:** the photo's screen is about 40 % of the pod's width (the SVG shell's was 53 %). On a 390 px phone the LCD is therefore 150–167 px wide instead of 200, and the tiles are 37–41 px wide by 28–35 px tall. Their hit areas extend invisibly over the bezel to 44 px tall, which the harness checks by hit-testing; their width can't reach 44 without overlapping each other. The Feed and Play menus moved Back into the title row, and the HUD prompts were shortened, so everything fits at the smaller size.
+- **Verification:** 0 console errors in 252 loads plus the reduced-motion pass, no horizontal scroll, no overlay over Bubby's face in any state, and a full life completes. `draw()` stays under about 1 ms (p95) at 4× CPU throttle.

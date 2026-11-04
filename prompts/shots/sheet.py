@@ -10,6 +10,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 # Screen rect inside the device PNG, as fractions (matches .screen in index.html, slightly padded).
 SCREEN = (0.225, 0.290, 0.775, 0.678)
+POD_SCREEN = (0.258, 0.430, 0.725, 0.720)
 
 
 def font(sz):
@@ -23,7 +24,8 @@ def load(path, crop, w):
     im = Image.open(path).convert('RGB')
     if crop == 'screen':
         W, H = im.size
-        im = im.crop((int(W * SCREEN[0]), int(H * SCREEN[1]), int(W * SCREEN[2]), int(H * SCREEN[3])))
+        sc = SCREEN if W / H > .58 else POD_SCREEN  # the SVG shell (360×600) or the pod photo (632×1150)
+        im = im.crop((int(W * sc[0]), int(H * sc[1]), int(W * sc[2]), int(H * sc[3])))
         return im.resize((w, round(im.height * w / im.width)), Image.NEAREST if im.width <= w else Image.LANCZOS)
     return im.resize((w, round(im.height * w / im.width)), Image.LANCZOS)
 
