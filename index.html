@@ -454,7 +454,7 @@ function fresh(gen = 1, speed = 1) {
 let S = fresh();
 let A = null;          // current animation {type, t, dur, ...}
 let G = null;          // minigame state
-const PET = { x: 40, tx: 40, dir: 1, wait: 1, moving: false };
+const PET = { x: 40, tx: 40, dir: 1, wait: 1, moving: false, walkT: 0, blinkNext: 2, blinkUntil: 0, fid: null, fidNext: 3 };
 
 function mistake(reason) {
   S.mistakes++;
@@ -1301,26 +1301,11 @@ function draw(time) {
   S.poops.forEach((p, i) => { const [qx, qy] = SLOTS[i % 4]; if (wave !== null && qx - 6 > wave) return; shadow(qx, qy + .5, 5, .3); blit(POOP, qx - 6, qy - 10); });
 
   // Bubby
-  let o = {}, bob = 0, shake = 0;
-  if (stage === 'seed') {
-    const prog = S.stage === 'seed' ? S.stageT / STAGE.seed.dur : 1;
-    if (prog > .45) o.wobble = (((time * (prog > .8 ? 10 : 4)) | 0) % 2) ? 1 : -1;
-    o.crack = prog > .65;
-  } else {
-    const mn = moodNow();
-    o = { mood: mn.mood, mouth: mn.mouth, variant: S.variant, chubby: S.chubby, sick: S.sick && !S.asleep, blink: (time % 3.4) < .13 };
-    o.look = G ? (G.type === 'catch' ? (G.moving ? G.dir : 0) : (G.phase === 'reveal' ? G.look * 2 : 0)) : (PET.moving ? PET.dir : 0);
-    if (S.asleep) bob = ((time * 1.1) | 0) % 2;
-    else if (A && A.type === 'happy') bob = -(((time * 8) | 0) % 2) * 2;
-    else if (S.call && S.call.reason === 'tantrum') bob = -(((time * 7) | 0) % 2);
-    else if (PET.moving || (G && G.moving)) bob = -(((time * 6) | 0) % 2);
-    else bob = -(((time * 1.6) | 0) % 2);
-    if (A && A.type === 'no') shake = (((A.t * 12) | 0) % 2) ? 1 : -1;
-  }
+  const pose = petPose(stage, time, px), o = pose.o;
   const spr = petSprite(stage, o);
-  shadow(px, GROUND + 1, stage === 'seed' ? 13 : 9, .34);
-  blit(spr, px - 24 + shake, GROUND - 46 + bob);
-  const top = GROUND - 46 + HEADTOP[stage] + bob;
+  shadow(px, GROUND + 1, (stage === 'seed' ? 13 : 9) + Math.min(0, pose.dy) * .6, pose.dy < -2 ? .22 : .34);
+  blit(spr, px - 24 + pose.dx, GROUND - 46 + pose.dy);
+  const top = GROUND - 46 + HEADTOP[stage] + pose.dy + Math.max(0, o.sq || 0);
 
   // Action effects
   if (A) {
@@ -1576,20 +1561,112 @@ function wire() {
     G.target = clamp((e.clientX - r.left) / r.width * SW, 13, 87);
   };
   scene.addEventListener('pointerdown', e => { if (G && G.type === 'catch') { steering = true; steer(e); try { scene.setPointerCapture(e.pointerId); } catch (_) {} } });
-  scene.addEventListener('pointermove', e => { if (steering) steer(e); });
+  scene.addEventListener('pointermove', e => { if (steering) steer(e); const r = scene.getBoundingClientRect(); POINTER.x = (e.clientX - r.left) / r.width * SW; POINTER.t = NOW; });
   ['pointerup', 'pointercancel'].forEach(ev => scene.addEventListener(ev, () => { steering = false; if (G && G.type === 'catch') G.target = null; }));
   document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
   window.addEventListener('pagehide', save);
 }
 
+/* ---- Bubby's body language ---- */
+// Everything here is presentation only: it never changes game state.
+const POINTER = { x: 50, t: -99 };
+let NOW = 0;
+const sgn = v => v > 0 ? 1 : v < 0 ? -1 : 0;
+function lookAt(px, tx) { return clamp(Math.round((tx - px) / 9), -1, 1); }
+function petPose(stage, time, px) {
+  const o = {}; let dx = 0, dy = 0;
+  if (stage === 'seed') {
+    const prog = S.stage === 'seed' && !S.ended ? S.stageT / STAGE.seed.dur : 0;
+    if (prog > .45 && !RM) o.wobble = (((time * (prog > .8 ? 10 : 4)) | 0) % 2) ? 1 : -1;
+    o.crack = prog > .85 ? 2 : prog > .65 ? 1 : 0;
+    if (!RM) o.sq = Math.sin(time * 2) > .3 ? 1 : 0;
+    return { o, dx, dy };
+  }
+  const mn = moodNow();
+  Object.assign(o, { mood: mn.mood, mouth: mn.mouth, variant: S.variant, chubby: S.chubby, sick: S.sick && !S.asleep });
+  o.blink = NOW < PET.blinkUntil && !S.asleep;
+  const moving = PET.moving || (G && G.type === 'catch' && G.moving);
+  const still = RM;
+
+  // Where the eyes go: falling seeds, food, the guess reveal, the pointer, poop, then the walking direction.
+  let look = moving ? (G ? G.dir : PET.dir) : 0, lookY = 0;
+  if (G && G.type === 'guess') look = G.phase === 'reveal' ? G.look * 2 : 0;
+  else if (G && G.type === 'catch') {
+    let best = null;
+    for (const it of G.items) if (!it.fx && (!best || it.y > best.y)) best = it;
+    if (best) { look = lookAt(px, best.x); lookY = best.y < GROUND - 36 ? -1 : 0; }
+  } else if (A && A.type === 'eat') look = 1;
+  else if (!moving && NOW - POINTER.t < 2.5) look = lookAt(px, POINTER.x);
+  else if (!moving && PET.fid && PET.fid.type === 'poop' && S.poops.length) look = lookAt(px, SLOTS[0][0]);
+  else if (!moving && PET.fid && PET.fid.type === 'look') look = PET.fid.t < .7 ? -1 : 1;
+  o.look = look; o.lookY = lookY;
+
+  // Breathing: two frames, with the petals and leaves following a beat later (follow-through).
+  const br = still ? 0 : (Math.sin(time * (S.asleep ? 1.3 : 2.2)) > .15 ? 1 : 0);
+  const brLate = still ? 0 : (Math.sin(time * (S.asleep ? 1.3 : 2.2) - .7) > .15 ? 1 : 0);
+  o.sq = br; o.lag = brLate - br;
+
+  if (still) { /* reduced motion: hold the pose, keep the expression */ }
+  else if (A && A.type === 'happy') {
+    const p = (time * 2.6) % 1; dy = -Math.round(Math.sin(p * Math.PI) * 4); o.sq = p < .1 || p > .9 ? 2 : (dy < -2 ? -1 : 0); o.lag = dy < -1 ? (p < .5 ? 1 : -1) : 0;
+  } else if (A && A.type === 'eat') {
+    const ch = ((A.t * 5) | 0) % 2; o.sq = ch ? 1 : 0; o.mouth = ch ? 'chomp' : 'small';
+  } else if (A && A.type === 'no') {
+    dx = (((A.t * 12) | 0) % 2) ? 1 : -1; o.look = dx;
+  } else if (A && A.type === 'scold') {
+    o.sq = 1; o.lookY = 1; dx = A.t < .12 ? (((A.t * 50) | 0) % 2 ? 1 : -1) : 0;
+  } else if (A && A.type === 'med') {
+    o.sq = A.t > .5 && A.t < .7 ? 2 : br;
+  } else if (S.call && S.call.reason === 'tantrum' && !S.asleep && !G) {
+    const p = time * 6; o.step = Math.sin(p) > 0 ? 1 : -1; dy = Math.abs(Math.sin(p)) > .85 ? -1 : 0; o.sq = dy ? -1 : 1;
+  } else if (moving) {
+    const w = PET.walkT;
+    if (stage === 'baby') {               // hops, squashing on landing
+      const p = (w * 2.4) % 1; dy = -Math.round(Math.sin(p * Math.PI) * 4);
+      o.sq = p < .1 || p > .92 ? 2 : (p > .3 && p < .7 ? -1 : 0); o.lag = p < .5 ? 1 : -1;
+    } else if (stage === 'child') {       // waddles foot to foot
+      const p = w * 5; o.step = Math.sin(p) > 0 ? 1 : -1; dy = Math.abs(Math.sin(p)) > .8 ? -1 : 0; o.lag = o.step > 0 ? 1 : 0; dx = 0;
+    } else if (stage === 'adult') {       // bounces, petals trailing
+      const p = (w * 3) % 1; dy = -Math.round(Math.sin(p * Math.PI) * 2); o.sq = dy === 0 ? 1 : 0; o.lag = p < .5 ? 1 : -1; o.step = p < .5 ? -1 : 1;
+    } else {                              // the Elder shuffles, tapping the cane
+      const p = w * 1.7; o.step = (p | 0) % 2 ? 1 : -1; o.cane = (p % 1) < .25 ? 1 : 0; o.sq = 0; o.lag = 0;
+    }
+  } else if (PET.fid) {
+    const f = PET.fid;
+    if (f.type === 'hop') { dy = -Math.round(Math.sin(clamp(f.t / .45, 0, 1) * Math.PI) * 3); o.sq = f.t < .08 || (f.t > .4 && f.t < .5) ? 2 : (dy < -1 ? -1 : o.sq); o.lag = dy < -1 ? 1 : o.lag; }
+    else if (f.type === 'wiggle') { o.lag = ((f.t * 12) | 0) % 2 ? 1 : -1; dx = ((f.t * 6) | 0) % 2 ? 1 : 0; }
+    else if (f.type === 'stretch') { o.sq = f.t < .35 ? -1 : (f.t < .55 ? 2 : o.sq); o.mouth = f.t < .35 ? 'open' : undefined; }
+    else if (f.type === 'yawn') { o.blink = true; o.mouth = 'open'; o.sq = -1; }
+  }
+  if (o.mood === 'sad' && !A) o.tear = !still && (time % 3.2) < 1.6;
+  if (S.sick && !S.asleep && !moving && !A) { o.sq = still ? 0 : (Math.sin(time * 1.4) > 0 ? 1 : 0); }
+  return { o, dx, dy };
+}
+const FIDGETS = { baby: ['hop', 'look', 'hop', 'poop'], child: ['look', 'wiggle', 'hop', 'poop'], adult: ['wiggle', 'look', 'stretch', 'poop'], senior: ['yawn', 'look', 'stretch', 'poop'] };
 function updatePet(rdt) {
   PET.moving = false;
-  if (S.stage === 'seed' || S.ended || A || G || S.asleep || S.paused || (S.call && S.call.reason === 'tantrum')) return;
-  if (PET.wait > 0) { PET.wait -= rdt; return; }
+  NOW += rdt;
+  // Randomised blinks, sometimes doubled.
+  if (NOW >= PET.blinkNext) {
+    PET.blinkUntil = NOW + .12;
+    PET.blinkNext = NOW + (Math.random() < .2 ? .3 : 2 + Math.random() * 4);
+  }
+  if (PET.fid) { PET.fid.t += rdt; if (PET.fid.t >= PET.fid.dur) PET.fid = null; }
+  if (S.stage === 'seed' || S.ended || A || G || S.asleep || S.paused || (S.call && S.call.reason === 'tantrum')) { PET.fid = null; return; }
+  if (PET.wait > 0) {
+    PET.wait -= rdt;
+    if (!PET.fid && (PET.fidNext -= rdt) <= 0) {
+      const list = FIDGETS[S.stage] || FIDGETS.adult, type = list[(Math.random() * list.length) | 0];
+      if (type !== 'poop' || S.poops.length) PET.fid = { type, t: 0, dur: { hop: .5, look: 1.4, wiggle: .6, stretch: .9, yawn: 1, poop: 1.6 }[type] };
+      PET.fidNext = 3 + Math.random() * 4;
+    }
+    return;
+  }
+  PET.fid = null;
   const sp = S.stage === 'senior' ? 5 : (S.sick ? 3 : (S.stage === 'baby' ? 7 : 9));
   const d = PET.tx - PET.x;
   if (Math.abs(d) < .5) { PET.wait = .8 + Math.random() * 2.6; PET.tx = 16 + Math.random() * 44; }
-  else { PET.dir = Math.sign(d); PET.x += PET.dir * Math.min(Math.abs(d), sp * rdt); PET.moving = true; }
+  else { PET.dir = Math.sign(d); PET.x += PET.dir * Math.min(Math.abs(d), sp * rdt); PET.moving = true; PET.walkT += rdt; }
 }
 
 let last = performance.now(), uiT = 0, saveT = 0, prevCall = false;
@@ -1688,7 +1765,7 @@ function watchLayout() {
 if (/[?&]debug\b/.test(location.search)) {
   window.__bubby = {
     get S() { return S; }, set S(v) { S = v; }, get A() { return A; }, set A(v) { A = v; },
-    get G() { return G; }, set G(v) { G = v; }, PET, LAYOUT, act, feed, startGame, guess, evolve, end, toast, showOv, renderGame, syncControls,
+    get G() { return G; }, set G(v) { G = v; }, PET, LAYOUT, blinkNow() { PET.blinkUntil = NOW + .3; PET.blinkNext = NOW + 5; }, act, feed, startGame, guess, evolve, end, toast, showOv, renderGame, syncControls,
   };
 }
 
