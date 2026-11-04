@@ -10,5 +10,9 @@ and scold tantrums. Your care mistakes, discipline and weight while it is a Bulb
 - **Daisy Blossom**: a few slips
 - **Thistle**: many mistakes, or overweight
 
+Play has two minigames: **Which way?** (guess where Bubby looks) and **Seed catch** (steer Bubby under falling seeds for 20 seconds; gold seeds are worth 3, pebbles cost 2).
+
 A full life lasts about 20 minutes at 1× speed (2× and 4× are available). Time only passes while the page is open,
 the power button pauses, and progress is saved in the browser's localStorage.
+
+`prompts/visual-polish-prompt.md` is a ready-to-paste prompt for an art-direction and UI polish pass.

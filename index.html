@@ -97,7 +97,7 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   background: #ffcf3a; box-shadow: 0 0 0 .4cqw #3b2f4a;
 }
 .scene { position: relative; min-height: 0; overflow: hidden; background: #9ad67f; }
-.scene canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.scene canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; touch-action: none; }
 
 /* screen overlays */
 .ov { position: absolute; inset: 0; font-family: var(--font-pixel); color: #3b2f4a; font-size: 3.1cqw; line-height: 1.2; }
@@ -143,6 +143,7 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   pointer-events: auto; width: 11cqw; height: 9cqw; display: grid; place-items: center; cursor: pointer;
   border: .5cqw solid #3b2f4a; background: #ffd34a; border-radius: 1.4cqw; box-shadow: 0 .6cqw 0 #3b2f4a; padding: 0;
 }
+#ovGame.catch .g-btn { opacity: .8; width: 9cqw; height: 7.5cqw; }
 .g-btn:active { transform: translateY(.5cqw); box-shadow: 0 .1cqw 0 #3b2f4a; }
 .g-btn svg { width: 50%; height: 50%; }
 .g-score { background: rgba(255, 251, 238, .94); padding: .6cqw 1.6cqw; border: .45cqw solid #3b2f4a; border-radius: 1cqw; font-variant-numeric: tabular-nums; }
@@ -295,6 +296,15 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
             <div class="row-end"><button class="pbtn" data-close>Back</button></div>
           </div>
 
+          <div class="ov ov-card" id="ovPlay" hidden>
+            <p class="ov-title"><span>Play a game</span><small>pick one</small></p>
+            <div class="feed-opts">
+              <button class="opt" data-game="guess" id="optGuess"><canvas width="16" height="16" data-icon="play"></canvas>Which way?<small>Guess where Bubby looks</small></button>
+              <button class="opt" data-game="catch" id="optCatch"><canvas width="16" height="16" data-icon="catch"></canvas>Seed catch<small>20s · gold = 3 pts</small></button>
+            </div>
+            <div class="row-end"><button class="pbtn" data-close>Back</button></div>
+          </div>
+
           <div class="ov ov-game" id="ovGame" hidden>
             <div class="g-top"><span id="gPrompt">Which way will Bubby look?</span><span id="gRound">1/5</span></div>
             <div class="g-bot">
@@ -381,7 +391,7 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
     </section>
 
     <section class="keys">
-      <p>Keyboard: <kbd>F</kbd> feed · <kbd>P</kbd> play · <kbd>C</kbd> clean · <kbd>L</kbd> lights · <kbd>M</kbd> medicine · <kbd>D</kbd> discipline · <kbd>S</kbd> status · <kbd>←</kbd><kbd>→</kbd> in the game · <kbd>Space</kbd> pause · <kbd>Esc</kbd> back. Time only passes while this page is open, and progress is saved in this browser.</p>
+      <p>Keyboard: <kbd>F</kbd> feed · <kbd>P</kbd> play · <kbd>C</kbd> clean · <kbd>L</kbd> lights · <kbd>M</kbd> medicine · <kbd>D</kbd> discipline · <kbd>S</kbd> status · <kbd>←</kbd><kbd>→</kbd> in games · <kbd>Space</kbd> pause · <kbd>Esc</kbd> back. Time only passes while this page is open, and progress is saved in this browser.</p>
     </section>
 
     <section class="confirm" id="resetBox">
@@ -596,7 +606,7 @@ function act(a) {
   beep(880, .03);
   if (a === 'lights') return toggleLights();
   if (!canCare()) return;
-  ({ feed: openFeed, play: startGame, clean: doClean, med: doMed, discipline: doScold })[a]?.();
+  ({ feed: openFeed, play: openPlay, clean: doClean, med: doMed, discipline: doScold })[a]?.();
 }
 function toggleLights() {
   const st = STAGE[S.stage];
@@ -662,14 +672,35 @@ function togglePause() {
   save();
 }
 
-/* ---- Minigame: which way will Bubby look? ---- */
-function startGame() {
+/* ---- Minigames ---- */
+function openPlay() {
   if (S.sick) { A = { type: 'no', t: 0, dur: .9 }; toast('Bubby feels too sick to play'); return; }
-  G = { round: 1, score: 0, phase: 'guess', look: 0, t: 0, last: false };
-  showOv('game'); renderGame();
+  $('#optCatch small').textContent = S.stats.bestCatch ? `Best: ${S.stats.bestCatch} pts` : '20s · gold = 3 pts';
+  showOv('play');
 }
+function startGame(kind) {
+  closeOverlays();
+  if (!canCare() || A || G) return;
+  if (S.sick) { A = { type: 'no', t: 0, dur: .9 }; toast('Bubby feels too sick to play'); return; }
+  if (kind === 'catch') {
+    G = { type: 'catch', phase: 'play', t: 0, left: 20, score: 0, caught: 0, items: [], spawn: .6, px: 50, dir: 1, moving: false, hold: 0, target: null, stun: 0, joy: 0, sec: -1 };
+  } else {
+    G = { type: 'guess', round: 1, score: 0, phase: 'guess', look: 0, t: 0, last: false };
+  }
+  showOv('game'); $('#ovGame').classList.toggle('catch', G.type === 'catch'); renderGame();
+}
+function finishGame(happyGain, msg) {
+  S.stats.games++;
+  S.weight = Math.max(Math.round(STAGE[S.stage].base * 0.8), S.weight - 1);
+  if (happyGain) { S.happy = clamp(S.happy + happyGain, 0, 4); S.stats.wins++; A = { type: 'happy', t: 0, dur: 1 }; }
+  G = null; closeOverlays();
+  toast(msg);
+  save();
+}
+
+/* Which way will Bubby look? */
 function guess(d) {
-  if (!G || G.phase !== 'guess') return;
+  if (!G || G.type !== 'guess' || G.phase !== 'guess') return;
   G.look = Math.random() < 0.5 ? -1 : 1;
   G.last = G.look === d;
   if (G.last) G.score++;
@@ -679,6 +710,15 @@ function guess(d) {
 }
 function renderGame() {
   if (!G) return;
+  if (G.type === 'catch') {
+    $('#gPrompt').textContent = G.phase === 'play' ? `Catch seeds · ${Math.ceil(G.left)}s`
+      : G.score >= 20 ? 'Super harvest!' : G.score >= 10 ? 'Nice catch!' : 'Aim for 10 next time';
+    $('#gRound').textContent = `${G.score} pts`;
+    $('#gScore').hidden = true;
+    $('#gLeft').disabled = $('#gRight').disabled = G.phase !== 'play';
+    return;
+  }
+  $('#gScore').hidden = false;
   $('#gRound').textContent = `${Math.min(G.round, 5)}/5`;
   $('#gScore').textContent = `${G.score} right`;
   $('#gPrompt').textContent = G.phase === 'guess' ? 'Which way will Bubby look?'
@@ -686,21 +726,60 @@ function renderGame() {
     : (G.score >= 3 ? `You won ${G.score}/5!` : `Only ${G.score}/5. Try again later`);
   $('#gLeft').disabled = $('#gRight').disabled = G.phase !== 'guess';
 }
+
+/* Seed catch: move Bubby under falling seeds. Gold seeds are worth 3, pebbles cost 2 and stun. */
+function catchY() { return GROUND - 46 + HEADTOP[S.stage] + 3; }
+function updateCatch(rdt) {
+  const g = G;
+  if (g.phase === 'done') {
+    if (g.t > 1.8) {
+      const gain = g.score >= 20 ? 2 : g.score >= 10 ? 1 : 0;
+      const best = g.score > (S.stats.bestCatch || 0);
+      if (best) S.stats.bestCatch = g.score;
+      finishGame(gain, (best ? 'New best! ' : '') + (gain ? `+${gain} happy, -1g` : 'Good exercise anyway. -1g'));
+    }
+    return;
+  }
+  g.left -= rdt; g.joy = Math.max(0, g.joy - rdt); g.stun = Math.max(0, g.stun - rdt);
+  g.moving = false;
+  if (g.stun <= 0) {
+    let dir = g.hold;
+    if (!dir && g.target != null) { const d = g.target - g.px; dir = Math.abs(d) < 1.5 ? 0 : Math.sign(d); }
+    if (dir) { g.px = clamp(g.px + dir * 58 * rdt, 13, 87); g.dir = dir; g.moving = true; }
+  }
+  const elapsed = 20 - g.left;
+  g.spawn -= rdt;
+  if (g.spawn <= 0 && g.left > 1.2) {
+    const r = Math.random(), kind = r < .12 ? 'gold' : r < .32 ? 'pebble' : 'seed';
+    g.items.push({ x: rand(10, 90), y: -6, vy: rand(20, 30) + elapsed * 1.2, kind, fx: 0 });
+    g.spawn = Math.max(.4, .8 - elapsed * .022) * rand(.8, 1.2);
+  }
+  const cy = catchY();
+  for (const it of g.items) {
+    if (it.fx) { it.fx += rdt; continue; }
+    it.y += it.vy * rdt;
+    if (it.y >= cy - 3 && it.y <= cy + 8 && Math.abs(it.x - g.px) <= 9) {
+      it.fx = .001; it.hit = true;
+      if (it.kind === 'pebble') { g.score = Math.max(0, g.score - 2); g.stun = .8; beep(160, .16); }
+      else { g.score += it.kind === 'gold' ? 3 : 1; g.caught++; g.joy = .35; beep(it.kind === 'gold' ? 1318 : 988, .05); }
+    } else if (it.y >= GROUND - 1) { it.fx = .001; it.y = GROUND - 1; }
+  }
+  g.items = g.items.filter(it => !it.fx || it.fx < .45);
+  if (g.left <= 0) { g.phase = 'done'; g.t = 0; g.items = []; g.moving = false; beep(784, .1); setTimeout(() => beep(1046, .16), 120); renderGame(); return; }
+  const sec = Math.ceil(g.left);
+  if (sec !== g.sec || g.lastScore !== g.score) { g.sec = sec; g.lastScore = g.score; renderGame(); }
+}
 function updateGame(rdt) {
   if (!G) return;
   G.t += rdt;
+  if (G.type === 'catch') { updateCatch(rdt); return; }
   if (G.phase === 'reveal' && G.t > 1.1) {
     if (G.round >= 5) { G.phase = 'done'; G.t = 0; }
     else { G.round++; G.phase = 'guess'; G.look = 0; }
     renderGame();
   } else if (G.phase === 'done' && G.t > 1.6) {
     const win = G.score >= 3;
-    S.stats.games++;
-    S.weight = Math.max(Math.round(STAGE[S.stage].base * 0.8), S.weight - 1);
-    if (win) { S.happy = clamp(S.happy + 1, 0, 4); S.stats.wins++; A = { type: 'happy', t: 0, dur: 1 }; }
-    G = null; closeOverlays();
-    toast(win ? 'Bubby had fun! +1 happy, -1g' : 'Good exercise anyway. -1g');
-    save();
+    finishGame(win ? 1 : 0, win ? 'Bubby had fun! +1 happy, -1g' : 'Good exercise anyway. -1g');
   }
 }
 
@@ -880,6 +959,11 @@ const ICONS = {
     P(x, [6, 5], INK); P(x, [5, 4], '#fff3b0'); E(x, 10, 10, 2.6, 1.5, '#f2b72a'); P(x, [14, 8, 15, 7], '#ffd23f');
     R(x, 2, 13, 13, 2, '#7fc6f0'); P(x, [4, 13, 9, 13, 13, 13], '#bfe6fb');
   }),
+  catch: sprite(16, 16, x => {
+    E(x, 4, 4, 1.8, 2.6, '#a8693a'); E(x, 11, 2.8, 1.8, 2.4, '#ffc93c'); E(x, 8.5, 8.5, 1.8, 2.6, '#a8693a');
+    P(x, [4, 8, 11, 6, 8, 12], '#ffffff');
+    E(x, 8, 14, 6, 1.6, '#6fb35e');
+  }),
   attn: sprite(16, 16, x => {
     E(x, 8, 7, 6.6, 5.4, '#ffffff'); P(x, [4, 11, 5, 11, 4, 12, 3, 13], '#ffffff');
     R(x, 7, 3, 2, 5, '#e8524a'); R(x, 7, 9, 2, 2, '#e8524a');
@@ -896,6 +980,9 @@ const ICONS = {
     E(x, 8, 4.2, 1.7, 1.7, '#e8524a'); P(x, [7, 3], '#ff9a9a');
   }),
 };
+const SEEDI = sprite(7, 9, x => { E(x, 3.5, 4.5, 2.2, 3.2, '#a8693a'); R(x, 3, 2, 1, 5, '#7a4a24'); P(x, [2, 3], '#d9a06a'); });
+const GOLDSEED = sprite(7, 9, x => { E(x, 3.5, 4.5, 2.2, 3.2, '#ffc93c'); R(x, 3, 2, 1, 5, '#e09a1c'); P(x, [2, 3, 2, 4], '#fff6c2'); });
+const PEBBLE = sprite(9, 8, x => { E(x, 4.5, 4, 3.4, 2.6, '#8e959e'); E(x, 4, 3.4, 2, 1.3, '#b3b9c1'); P(x, [3, 3], '#e3e6ea'); });
 const POOP = sprite(12, 11, x => {
   E(x, 6, 8.5, 5, 2.2, '#e9679f'); E(x, 6, 6, 3.8, 1.9, '#ff8fc0'); E(x, 6, 3.6, 2.4, 1.5, '#ffacd2'); P(x, [6, 1, 7, 1], '#ffacd2');
   P(x, [4, 6, 8, 6], INK); P(x, [5, 8, 6, 8], INK);
@@ -954,6 +1041,7 @@ function moodNow() {
   else if (A && A.type === 'no') { mood = 'angry'; mouth = 'flat'; }
   else if (A && A.type === 'scold') mood = 'sad';
   else if (A && A.type === 'happy') mood = 'happy';
+  else if (G && G.type === 'catch') mood = G.stun > 0 ? 'angry' : (G.joy > 0 || (G.phase === 'done' && G.score >= 10)) ? 'happy' : (G.phase === 'done' ? 'sad' : 'normal');
   else if (G && G.phase !== 'guess') mood = G.last || G.phase === 'done' && G.score >= 3 ? 'happy' : 'sad';
   else if (S.call && S.call.reason === 'tantrum') mood = 'angry';
   else if (S.sick) mood = 'sick';
@@ -977,7 +1065,7 @@ function draw(time) {
   // Bubby
   let stage = S.stage;
   if (A && A.type === 'evolve' && A.t < 1.3 && ((A.t * 8) | 0) % 2 === 0) stage = A.from;
-  const px = stage === 'seed' ? 50 : (G ? 50 : PET.x);
+  const px = stage === 'seed' ? 50 : (G ? (G.type === 'catch' ? G.px : 50) : PET.x);
   let o = {}, bob = 0, shake = 0;
   if (stage === 'seed') {
     const prog = S.stage === 'seed' ? S.stageT / STAGE.seed.dur : 1;
@@ -986,11 +1074,11 @@ function draw(time) {
   } else {
     const mn = moodNow();
     o = { mood: mn.mood, mouth: mn.mouth, variant: S.variant, chubby: S.chubby, sick: S.sick && !S.asleep, blink: (time % 3.4) < .13 };
-    o.look = G ? (G.phase === 'reveal' ? G.look * 2 : 0) : (PET.moving ? PET.dir : 0);
+    o.look = G ? (G.type === 'catch' ? (G.moving ? G.dir : 0) : (G.phase === 'reveal' ? G.look * 2 : 0)) : (PET.moving ? PET.dir : 0);
     if (S.asleep) bob = ((time * 1.1) | 0) % 2;
     else if (A && A.type === 'happy') bob = -(((time * 8) | 0) % 2) * 2;
     else if (S.call && S.call.reason === 'tantrum') bob = -(((time * 7) | 0) % 2);
-    else if (PET.moving) bob = -(((time * 6) | 0) % 2);
+    else if (PET.moving || (G && G.moving)) bob = -(((time * 6) | 0) % 2);
     else bob = -(((time * 1.6) | 0) % 2);
     if (A && A.type === 'no') shake = (((A.t * 12) | 0) % 2) ? 1 : -1;
   }
@@ -1014,6 +1102,17 @@ function draw(time) {
     if (A.type === 'scold') { if (((A.t * 6) | 0) % 2 === 0) blit(BANG, px + 10, top - 4); }
     if (A.type === 'evolve') { sparkles(px, GROUND - 22, time, 18 + Math.sin(time * 6) * 2); if (A.t < .2) { R(sx, 0, 0, SW, SH, 'rgba(255,255,255,.8)'); } }
     if (A.type === 'sparkle' || A.type === 'happy') sparkles(px, GROUND - 20, time, 15);
+  }
+
+  // Seed-catch items fall in front of Bubby
+  if (G && G.type === 'catch') {
+    for (const it of G.items) {
+      const img = it.kind === 'gold' ? GOLDSEED : it.kind === 'pebble' ? PEBBLE : SEEDI;
+      if (!it.fx) blit(img, it.x - img.width / 2, it.y - img.height / 2);
+      else if (it.hit && it.kind !== 'pebble') sparkles(it.x, it.y, time + it.fx * 6, 3 + it.fx * 10);
+      else if (it.hit) { if (((it.fx * 10) | 0) % 2 === 0) blit(BANG, px + 10, top - 4); }
+      else P(sx, [Math.round(it.x) - 2, GROUND - 1, Math.round(it.x) + 2, GROUND - 1, Math.round(it.x), GROUND - 2], '#e9f6dd');
+    }
   }
 
   // Night
@@ -1044,7 +1143,7 @@ const TILES = [
   ['med', 'Medicine', '#ddd2f2', 'Cure sickness. May take a few doses.'],
   ['clean', 'Clean', '#ecd5f3', 'Flush poop before it makes Bubby sick.'],
   ['lights', 'Lights', '#fbd8b6', 'Turn off when Bubby sleeps.'],
-  ['play', 'Play', '#c9e2f4', 'Guess which way Bubby looks.'],
+  ['play', 'Play', '#c9e2f4', 'Guess its turn, or catch falling seeds.'],
   ['attn', 'Attention', '#fde3c6', 'Flashes when Bubby calls you.'],
 ];
 function buildTiles() {
@@ -1081,7 +1180,7 @@ function buildGuide() {
 }
 
 let OV = null;
-const OVS = { status: '#ovStatus', feed: '#ovFeed', game: '#ovGame' };
+const OVS = { status: '#ovStatus', feed: '#ovFeed', play: '#ovPlay', game: '#ovGame' };
 function showOv(name) {
   for (const k in OVS) $(OVS[k]).hidden = k !== name;
   OV = name;
@@ -1176,6 +1275,7 @@ function wire() {
     if (e.target.closest('[data-close]')) { closeOverlays(); return; }
     const f = e.target.closest('[data-food]'); if (f) { feed(f.dataset.food); return; }
     const g = e.target.closest('[data-g]'); if (g) { guess(+g.dataset.g); return; }
+    const pg = e.target.closest('[data-game]'); if (pg) { startGame(pg.dataset.game); return; }
   });
   $('#btnReplant').addEventListener('click', () => {
     const gen = S.ended ? S.ended.gen + 1 : S.gen + 1;
@@ -1203,12 +1303,37 @@ function wire() {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.target.closest && e.target.closest('input, textarea')) return;
     const k = e.key.toLowerCase();
-    if (G && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); guess(e.key === 'ArrowLeft' ? -1 : 1); return; }
+    if (G && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+      e.preventDefault();
+      if (G.type === 'catch') { G.hold = e.key === 'ArrowLeft' ? -1 : 1; G.target = null; } else guess(e.key === 'ArrowLeft' ? -1 : 1);
+      return;
+    }
+    if (OV === 'play' && (k === '1' || k === '2')) { startGame(k === '1' ? 'guess' : 'catch'); return; }
     if (e.key === 'Escape') { if (OV && OV !== 'game') closeOverlays(); return; }
     if (e.key === ' ' && !(e.target.closest && e.target.closest('button'))) { e.preventDefault(); act('pause'); return; }
     if (OV === 'feed' && (k === '1' || k === '2')) { feed(k === '1' ? 'meal' : 'snack'); return; }
     if (KEYS[k]) act(KEYS[k]);
   });
+  document.addEventListener('keyup', e => {
+    if (G && G.type === 'catch' && ((e.key === 'ArrowLeft' && G.hold < 0) || (e.key === 'ArrowRight' && G.hold > 0))) G.hold = 0;
+  });
+  // Seed catch: hold the arrow buttons, or touch / drag on the garden to steer Bubby
+  const holdOn = (d) => e => { if (G && G.type === 'catch') { e.preventDefault(); G.hold = d; G.target = null; } };
+  const holdOff = () => { if (G && G.type === 'catch') G.hold = 0; };
+  [['#gLeft', -1], ['#gRight', 1]].forEach(([id, d]) => {
+    const b = $(id);
+    b.addEventListener('pointerdown', holdOn(d));
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, holdOff));
+  });
+  let steering = false;
+  const steer = e => {
+    if (!G || G.type !== 'catch') return;
+    const r = scene.getBoundingClientRect();
+    G.target = clamp((e.clientX - r.left) / r.width * SW, 13, 87);
+  };
+  scene.addEventListener('pointerdown', e => { if (G && G.type === 'catch') { steering = true; steer(e); try { scene.setPointerCapture(e.pointerId); } catch (_) {} } });
+  scene.addEventListener('pointermove', e => { if (steering) steer(e); });
+  ['pointerup', 'pointercancel'].forEach(ev => scene.addEventListener(ev, () => { steering = false; if (G && G.type === 'catch') G.target = null; }));
   document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
   window.addEventListener('pagehide', save);
 }
