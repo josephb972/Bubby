@@ -145,7 +145,7 @@ function serve() {
         await page.locator('#device').screenshot({ path: path.join(out, combo, `${name}.png`) });
       });
     }
-    if (!only) {
+    if (!only || only.test('page')) {
       // Full page shots + layout checks
       await run('page', adult('radiant', { poops: [{ t: 1 }] }), idle, 400, async page => {
         await page.screenshot({ path: path.join(out, combo, `_page.png`), fullPage: true });

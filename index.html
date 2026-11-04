@@ -266,40 +266,75 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .hw.power[aria-pressed="true"] .cap { background: radial-gradient(circle at 36% 30%, #fff3c4 0 20%, #ffd34a 60%, #d9a520 100%); }
 .hw.power .cap svg { width: 58%; height: 58%; }
 
-.under { display: flex; flex-wrap: wrap; gap: 10px 16px; justify-content: center; align-items: center; font-size: 13px; color: var(--muted); }
-.seg { display: inline-flex; border: 2px solid var(--line); border-radius: 999px; overflow: hidden; }
-.seg button {
-  border: 0; background: transparent; padding: 0 14px; min-height: 40px; min-width: 44px; cursor: pointer; font: 600 13px/1 var(--font-display);
-  color: var(--muted); font-variant-numeric: tabular-nums;
+/* Speed and sound: built like a slide switch and a button on the toy (fixed toy colours in both themes). */
+.under { display: flex; flex-wrap: wrap; gap: 10px 14px; justify-content: center; align-items: center; }
+.ctl { display: inline-flex; align-items: center; gap: 8px; font: 600 12px/1 var(--font-pixel); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.seg {
+  position: relative; display: inline-grid; grid-template-columns: repeat(3, 48px); padding: 4px; border-radius: 14px;
+  background: linear-gradient(#9fd2c4, #bfe6db); box-shadow: inset 0 2px 3px rgba(30, 80, 70, .45), 0 1px 0 rgba(255, 255, 255, .6), 0 0 0 2px #4f877c;
 }
-.seg button[aria-pressed="true"] { background: var(--ink); color: var(--sky); }
+.seg::before {
+  content: ""; position: absolute; top: 4px; bottom: 4px; left: calc(4px + var(--i, 0) * 48px); width: 48px; border-radius: 10px;
+  background: radial-gradient(circle at 40% 28%, #fffcf3 0 30%, #f2e7cc 75%, #e1d3ad); box-shadow: 0 2px 0 #c7ba98, 0 3px 4px rgba(30, 70, 62, .3);
+  transition: left .22s cubic-bezier(.34, 1.56, .64, 1);
+}
+.seg button {
+  position: relative; border: 0; background: transparent; min-height: 40px; cursor: pointer; border-radius: 10px;
+  font: 600 14px/1 var(--font-pixel); color: #33605f; font-variant-numeric: tabular-nums;
+}
+.seg button[aria-pressed="true"] { color: #2a2038; }
 .chip {
-  border: 2px solid var(--line); background: transparent; border-radius: 999px; padding: 0 16px; min-height: 44px;
+  display: inline-flex; align-items: center; gap: 8px; border: 2px solid var(--line); background: transparent; border-radius: 999px; padding: 0 16px; min-height: 44px;
   font: 600 13px/1 var(--font-display); color: var(--muted); cursor: pointer;
 }
-.chip:hover, .seg button:hover { color: var(--ink); }
+.chip:hover { color: var(--ink); }
+.chip.toy {
+  border: 0; border-radius: 14px; padding: 0 14px 0 10px; color: #2a2038; font: 600 13px/1 var(--font-pixel); letter-spacing: .04em;
+  background: radial-gradient(circle at 40% 25%, #fffcf3 0 30%, #f2e7cc 75%, #e1d3ad);
+  box-shadow: 0 3px 0 #c7ba98, 0 0 0 2px #4f877c, 0 5px 6px rgba(30, 70, 62, .25); transition: transform .07s, box-shadow .07s;
+}
+.chip.toy:active { transform: translateY(2px); box-shadow: 0 1px 0 #c7ba98, 0 0 0 2px #4f877c; }
+.chip.toy svg { width: 20px; height: 20px; }
+.chip.toy[aria-pressed="false"] .wave { display: none; }
+.chip.toy[aria-pressed="true"] .mute { display: none; }
 
-/* ---------- Guide ---------- */
-.guide { display: flex; flex-direction: column; gap: 22px; min-width: 0; padding-top: 6px; }
-.guide h2 { margin: 0 0 10px; font: 600 20px/1.2 var(--font-display); text-wrap: balance; }
+/* ---------- Guide: same palette and pixel framing as the toy ---------- */
+:root { --pf: var(--frame-panel); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --pf: var(--frame-panel-dark); } }
+:root[data-theme="dark"] { --pf: var(--frame-panel-dark); }
+.guide { display: flex; flex-direction: column; gap: 24px; min-width: 0; padding-top: 6px; }
+.guide h2 { margin: 0 0 10px; font: 600 20px/1.2 var(--font-display); text-wrap: balance; display: flex; align-items: center; gap: 10px; }
+.guide h2::before { content: ""; width: 16px; height: 16px; flex: none; background: var(--leaf) center / 16px 16px no-repeat; image-rendering: pixelated; }
 .guide p { margin: 0; color: var(--muted); max-width: 62ch; }
+.pcard { border: 6px solid transparent; border-image: var(--pf) 3 fill stretch; }
 .legend { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
-.legend li { display: grid; grid-template-columns: 40px 1fr; gap: 10px; align-items: center; min-width: 0; }
-.legend .ic { width: 40px; height: 40px; border-radius: 8px; display: grid; place-items: center; background: var(--t); box-shadow: inset 0 0 0 2px rgba(59, 47, 74, .18); }
+.legend li { display: grid; grid-template-columns: 44px 1fr; gap: 10px; align-items: center; min-width: 0; }
+.legend .ic { width: 44px; height: 44px; display: grid; place-items: center; background: var(--t); box-shadow: 0 0 0 2px #2a2038, inset 0 2px 0 rgba(255, 255, 255, .6), inset 0 -2px 0 rgba(0, 0, 0, .1); border-radius: 2px; }
 .legend canvas { width: 32px; height: 32px; image-rendering: pixelated; }
 .legend b { display: block; font: 600 14px/1.2 var(--font-display); }
 .legend span { display: block; font-size: 12.5px; line-height: 1.35; color: var(--muted); }
-.life { display: flex; align-items: flex-end; justify-content: space-between; gap: 4px; padding: 14px 12px 10px; background: var(--panel); border-radius: 14px; overflow-x: auto; }
-.life figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 52px; }
+.life { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 6px 0; padding: 8px 2px 4px; }
+@media (max-width: 360px) { .life { justify-content: space-evenly; } }
+.life figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; flex: none; position: relative; }
+.life figure + figure::before { content: ""; position: absolute; left: -5px; bottom: 34px; width: 6px; height: 6px; background: var(--line); clip-path: polygon(0 0, 100% 50%, 0 100%); }
 .life canvas, .forms canvas { image-rendering: pixelated; display: block; }
 .life figcaption { font: 600 12px/1.15 var(--font-display); text-align: center; }
 .life figcaption small { display: block; font: 400 11px/1.2 var(--font-body); color: var(--muted); }
 .rules { margin: 0; padding-left: 18px; display: grid; gap: 6px; color: var(--muted); font-size: 14px; }
 .rules b { color: var(--ink); font-weight: 700; }
-.forms { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.forms figure { margin: 0; background: var(--panel); border-radius: 12px; padding: 10px 6px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+.forms { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.forms figure { margin: 0; padding: 8px 4px 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; position: relative; }
+.forms .pic { height: 92px; display: grid; place-items: end center; }
+.forms figure.locked canvas { filter: brightness(0); opacity: .32; }
+:root[data-theme="dark"] .forms figure.locked canvas { filter: brightness(0) invert(1); opacity: .22; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .forms figure.locked canvas { filter: brightness(0) invert(1); opacity: .22; } }
 .forms figcaption { font: 600 12.5px/1.15 var(--font-display); }
 .forms figcaption small { display: block; font: 400 11px/1.3 var(--font-body); color: var(--muted); margin-top: 2px; }
+.forms .tag { font: 600 10px/1 var(--font-pixel); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.forms figure:not(.locked) .tag { color: #3a8a48; }
+:root[data-theme="dark"] .forms figure:not(.locked) .tag { color: #a6dc6a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .forms figure:not(.locked) .tag { color: #a6dc6a; } }
+.forms-note { margin-top: 8px !important; font-size: 13px; }
 .keys { font-size: 13px; color: var(--muted); }
 kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); border-bottom-width: 3px; border-radius: 5px; padding: 2px 5px; color: var(--ink); background: var(--panel); }
 .confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; }
@@ -453,11 +488,12 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
     </div>
 
     <div class="under">
-      <span>Speed</span>
-      <span class="seg" role="group" aria-label="Game speed">
-        <button data-speed="1" aria-pressed="true">1×</button><button data-speed="2" aria-pressed="false">2×</button><button data-speed="4" aria-pressed="false">4×</button>
+      <span class="ctl"><span id="speedLbl">Speed</span>
+        <span class="seg" role="group" aria-labelledby="speedLbl">
+          <button data-speed="1" aria-pressed="true">1×</button><button data-speed="2" aria-pressed="false">2×</button><button data-speed="4" aria-pressed="false">4×</button>
+        </span>
       </span>
-      <button class="chip" id="btnSound" aria-pressed="true">Sound on</button>
+      <button class="chip toy" id="btnSound" aria-pressed="true"><svg viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true"><path d="M1 4h2v2H1zM3 3h1v4H3zM4 2h1v6H4z" fill="#2a2038"/><path class="wave" d="M6 4h1v2H6zM7 2h1v1H7zM8 3h1v4H8zM7 7h1v1H7z" fill="#3a8a48"/><path class="mute" d="M6 3h1v1H6zM8 3h1v1H8zM7 4h1v2H7zM6 6h1v1H6zM8 6h1v1H8z" fill="#c0414e"/></svg><span>Sound on</span></button>
     </div>
   </section>
 
@@ -469,7 +505,7 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
 
     <section>
       <h2>Life cycle</h2>
-      <div class="life" id="lifeStrip"></div>
+      <div class="life pcard" id="lifeStrip"></div>
     </section>
 
     <section>
@@ -492,6 +528,7 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
     <section>
       <h2>Adult forms</h2>
       <div class="forms" id="forms"></div>
+      <p class="forms-note" id="formsNote"></p>
     </section>
 
     <section class="keys">
@@ -1707,13 +1744,29 @@ function buildGuide() {
     f.insertAdjacentHTML('beforeend', `<figcaption>${n}<small>${sub}</small></figcaption>`);
     strip.appendChild(f);
   });
-  const forms = $('#forms');
-  [['radiant', 'Radiant Blossom', '0–2 mistakes, well disciplined'], ['daisy', 'Daisy Blossom', 'A few slips along the way'], ['thistle', 'Thistle', 'Lots of mistakes or overweight']].forEach(([v, n, sub]) => {
+  document.documentElement.style.setProperty('--leaf', `url(${sprite(16, 16, x => { EB(x, 8, 7, 5, 3, RAMP.gr, -.6); R(x, 4, 10, 1, 4, RAMP.gr[1]); P(x, [5, 9, 6, 8], RAMP.gr[1]); }).toDataURL()})`);
+  renderForms();
+}
+// Collectible form cards: forms you haven't raised yet show as silhouettes with the hint visible.
+const FORM_CARDS = [
+  ['radiant', 'adult', 'Radiant Blossom', '0–2 mistakes, well disciplined'], ['daisy', 'adult', 'Daisy Blossom', 'A few slips along the way'], ['thistle', 'adult', 'Thistle', 'Lots of mistakes or overweight'],
+  ['radiant', 'senior', 'Elder Radiant', 'Raise a Radiant to old age'], ['daisy', 'senior', 'Elder Daisy', 'Raise a Daisy to old age'], ['thistle', 'senior', 'Elder Thistle', 'Raise a Thistle to old age'],
+];
+function renderForms() {
+  const forms = $('#forms'); if (!forms) return;
+  const dex = loadDex(); let got = 0;
+  forms.innerHTML = '';
+  FORM_CARDS.forEach(([v, st, n, sub]) => {
+    const k = (st === 'senior' ? 'elder-' : '') + v, gens = Array.isArray(dex[k]) ? dex[k] : [], have = gens.length > 0;
+    if (have) got++;
     const f = document.createElement('figure');
-    f.appendChild(cropped(petSprite('adult', { variant: v })));
-    f.insertAdjacentHTML('beforeend', `<figcaption>${n}<small>${sub}</small></figcaption>`);
+    f.className = 'pcard' + (have ? '' : ' locked');
+    const pic = document.createElement('div'); pic.className = 'pic'; pic.appendChild(cropped(petSprite(st, { variant: v }))); f.appendChild(pic);
+    f.insertAdjacentHTML('beforeend', `<span class="tag">${have ? `Raised ×${gens.length}` : 'Not yet'}</span><figcaption>${have ? n : '???'}<small>${sub}</small></figcaption>`);
+    f.setAttribute('aria-label', have ? `${n}, raised ${gens.length} time${gens.length > 1 ? 's' : ''}` : `Locked form. Hint: ${sub}`);
     forms.appendChild(f);
   });
+  $('#formsNote').textContent = `${got} of ${FORM_CARDS.length} forms raised in this browser.`;
 }
 
 // 9-slice pixel frames, drawn as tiny crisp SVGs and used through border-image.
@@ -1860,7 +1913,8 @@ function load() {
 function syncControls() {
   $$('[data-speed]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.speed === S.speed)));
   $('#btnSound').setAttribute('aria-pressed', String(S.soundOn !== false));
-  $('#btnSound').textContent = S.soundOn !== false ? 'Sound on' : 'Sound off';
+  $('#btnSound span').textContent = S.soundOn !== false ? 'Sound on' : 'Sound off';
+  $('.seg').style.setProperty('--i', [1, 2, 4].indexOf(S.speed));
   $('#btnPower').setAttribute('aria-pressed', String(!!S.paused));
   $('#ovPause').hidden = !S.paused;
   $('#ovEnd').hidden = !S.ended;
