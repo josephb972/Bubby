@@ -1106,24 +1106,151 @@ function heartSprite(full) {
 }
 const HEART_FULL = heartSprite(true).toDataURL(), HEART_EMPTY = heartSprite(false).toDataURL();
 
-/* ---- Background ---- */
-const BG = (() => {
-  const c = mk(SW, SH), x = c.getContext('2d');
-  R(x, 0, 0, SW, SH, '#9ad67f');
-  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  for (let i = 0; i < 170; i++) { const px = rnd() * SW | 0, py = rnd() * SH | 0; R(x, px, py, 1, 1, ['#88c96d', '#acdf8f', '#7fbf66'][i % 3]); }
-  for (let i = 0; i < 22; i++) { const px = rnd() * (SW - 4) | 0, py = 6 + rnd() * (SH - 8) | 0; P(x, [px, py, px + 2, py, px + 1, py + 1], '#6fb35e'); }
-  const pot = sprite(12, 16, y => {
-    R(y, 3, 10, 7, 5, '#c0703f'); R(y, 2, 9, 9, 2, '#d9874f'); R(y, 4, 11, 1, 3, '#e09a68');
-    R(y, 6, 4, 1, 5, '#4c9a4a'); P(y, [5, 6, 4, 5, 7, 7, 8, 6], '#5cc46a');
-    E(y, 6.5, 3, 2.4, 2.4, '#ffffff'); P(y, [6, 2, 7, 3, 6, 3, 7, 2], '#ffd34a');
-  });
-  E(x, 88, 49, 6, 1.4, '#79bb65');
-  x.drawImage(pot, 82, 34);
-  return c;
-})();
-const STARS = [[8, 6], [22, 12], [37, 4], [55, 9], [70, 5], [86, 13], [15, 20], [62, 18], [93, 3], [46, 15]];
-const SLOTS = [[80, 64], [90, 64], [70, 65], [88, 56]];
+/* ---- World: a layered garden whose sky follows Bubby's waking day ---- */
+const RMQ = matchMedia('(prefers-reduced-motion: reduce)');
+let RM = RMQ.matches;
+try { RMQ.addEventListener('change', e => { RM = e.matches; }); } catch (e) {}
+const HORIZON = 21;
+const srnd = (seed => () => (seed = (seed * 16807) % 2147483647) / 2147483647)(7);
+const noOutline = (w, h, fn) => quantize((c => (fn(c.getContext('2d')), c))(mk(w, h)));
+// Far hills: pale and cool (atmospheric perspective), no outline. 8px wider than the screen for parallax.
+const HILLS = noOutline(SW + 8, 16, x => {
+  for (let X = 0; X < SW + 8; X++) {
+    const a = 7 + Math.sin(X * .07 + 1) * 3 + Math.sin(X * .19) * 1.2, b = 10 + Math.sin(X * .05 + 3.6) * 2.4 + Math.sin(X * .23 + 1) * .8;
+    R(x, X, Math.round(a), 1, 16, RAMP.te[3]); P(x, [X, Math.round(a)], RAMP.gy[3]);
+    R(x, X, Math.round(b), 1, 16, RAMP.te[2]); if (X % 3 === 0) P(x, [X, Math.round(b)], RAMP.te[3]);
+  }
+});
+// Mid layer: a hedge of round bushes with a few flowers, and the flower pot standing in front of it.
+const POT = sprite(12, 16, y => {
+  R(y, 3, 10, 7, 5, BR[2]); R(y, 2, 9, 9, 2, BR[3]); R(y, 3, 11, 1, 3, BR[3]); R(y, 8, 11, 2, 4, BR[1]); R(y, 3, 14, 7, 1, BR[1]);
+  R(y, 6, 4, 1, 5, GR[1]); P(y, [5, 6, 4, 5, 7, 7, 8, 6], GR[2]);
+  EB(y, 6.5, 3, 2.4, 2.4, [GY[2], GY[3], WHITE, WHITE]); P(y, [6, 2, 7, 3, 6, 3, 7, 2], YE[2]);
+});
+const BUSHES = noOutline(SW + 8, 18, x => {
+  for (let X = -4; X < SW + 12; X += 7 + (srnd() * 4 | 0)) {
+    const r = 4.5 + srnd() * 2.5, cy = 11 - r * .5 + srnd() * 2;
+    EB(x, X, cy, r + 1, r, RAMP.gr, 0, { hl: .7, dp: -.2 });
+  }
+  R(x, 0, 14, SW + 8, 4, RAMP.gr[1]);
+  for (let i = 0; i < 9; i++) { const fx = 4 + srnd() * (SW) | 0, fy = 5 + srnd() * 7 | 0; P(x, [fx, fy], [RAMP.pk[2], RAMP.ye[2], WHITE][i % 3]); }
+});
+// Lawn: light and calm far away, a little richer near the front edge, with clover and tufts.
+const LAWN_Y = 24;
+const LAWN = noOutline(SW, SH - LAWN_Y, x => {
+  const H = SH - LAWN_Y;
+  R(x, 0, 0, SW, H, RAMP.gr[3]);
+  for (let i = 0; i < 230; i++) {
+    const px = srnd() * SW | 0, py = srnd() * H | 0, near = py / H;
+    if (srnd() < .25 + near * .5) P(x, [px, py], RAMP.gr[2]); else if (srnd() < .3) P(x, [px, py], '#dff29a');
+  }
+  for (let y = H - 6; y < H; y++) for (let X = 0; X < SW; X++) if ((X + y) % 2 === 0 || y > H - 3) P(x, [X, y], RAMP.gr[2]);
+  for (let i = 0; i < 20; i++) { const px = srnd() * (SW - 4) | 0, py = 6 + srnd() * (H - 14) | 0; P(x, [px, py, px + 2, py, px + 1, py + 1], RAMP.gr[1]); }
+  for (let i = 0; i < 6; i++) { const px = 4 + srnd() * (SW - 8) | 0, py = 8 + srnd() * (H - 20) | 0; P(x, [px, py - 1, px - 1, py, px + 1, py], WHITE); P(x, [px, py], RAMP.ye[2]); }
+});
+const CLOUD = noOutline(16, 6, x => { EB(x, 5, 3.5, 4, 2.4, [GY[2], GY[3], WHITE, WHITE]); EB(x, 10, 3, 4.5, 2.8, [GY[2], GY[3], WHITE, WHITE]); R(x, 2, 5, 12, 1, GY[2]); });
+const STARS = [[8, 6], [22, 12], [37, 4], [55, 9], [70, 5], [86, 13], [15, 17], [62, 16], [93, 3], [46, 14], [30, 8], [78, 10]];
+const SLOTS = [[80, 65], [91, 64], [69, 66], [86, 57]];
+const POT_AT = [84, 25];
+
+// Sky keyframes over Bubby's waking day: 0 = just woke (morning) … 1 = bedtime (dusk), 1.15 = asleep (night).
+const SKY = [
+  [0,    ['#aad4f4', '#c9e6f6', '#ffe0c2', '#ffe0c2'], '#ffe6cc', .30],
+  [.22,  ['#6c9de0', '#8dbde9', '#aad4f4', '#d9eef9'], '#ffffff', 0],
+  [.68,  ['#6c9de0', '#8dbde9', '#aad4f4', '#d9eef9'], '#ffffff', 0],
+  [.86,  ['#9a78cf', '#d98ca4', '#ff9e80', '#ffcc3d'], '#ffcf94', .38],
+  [1,    ['#3d2b5a', '#664a94', '#b0709a', '#ec8a76'], '#d6a2c4', .42],
+  [1.15, ['#141a3a', '#1c2452', '#26407e', '#3f5a9a'], '#c4b4e6', .28],
+];
+function skyAt(ph) {
+  let i = 0; while (i < SKY.length - 2 && ph > SKY[i + 1][0]) i++;
+  const [t0, c0, g0, a0] = SKY[i], [t1, c1, g1, a1] = SKY[i + 1], k = clamp((ph - t0) / (t1 - t0), 0, 1);
+  return { bands: c0.map((c, j) => mix(c, c1[j], k)), grade: mix(g0, g1, k), ga: a0 + (a1 - a0) * k, ph };
+}
+function dayPhase() {
+  if (S.stage === 'seed' || S.ended) return .3;
+  if (S.asleep) return 1.15;
+  const st = STAGE[S.stage];
+  return st && st.awake ? clamp(S.awakeT / st.awake, 0, 1) : .3;
+}
+// Ambient life. Real-time timers, all skipped under reduced motion.
+const AMB = { night: 0, bf: null, bfNext: 18, bug: null, bugNext: 75, shoot: null, shootNext: 8, clock: 0 };
+const MOTES = Array.from({ length: 7 }, (_, i) => ({ x: srnd() * SW, y: 26 + srnd() * 30, s: 1.5 + srnd() * 2.5, p: srnd() * 6 }));
+function updateWorld(rdt) {
+  const dark = !S.lights && !S.ended ? 1 : 0;
+  AMB.night += clamp(dark - AMB.night, -rdt * 3, rdt * 3);
+  if (RM) return;
+  AMB.clock += rdt;
+  const day = AMB.night < .5 && !(S.asleep);
+  // Butterfly: crosses every 20–60s in daylight.
+  if (AMB.bf) { const b = AMB.bf; b.t += rdt; b.x += b.dir * 11 * rdt; b.y = b.y0 + Math.sin(b.t * 2.3) * 5; if (b.x < -8 || b.x > SW + 8) AMB.bf = null; }
+  else if ((AMB.bfNext -= rdt) <= 0) { AMB.bfNext = 20 + Math.random() * 40; if (day) { const dir = Math.random() < .5 ? 1 : -1; AMB.bf = { x: dir > 0 ? -6 : SW + 6, y0: 30 + Math.random() * 14, y: 0, dir, t: 0, col: Math.random() < .5 ? 'pk' : 'ye' }; } }
+  // Ladybug: a rare stroll along the front edge.
+  if (AMB.bug) { const g = AMB.bug; g.t += rdt; if ((g.t % 3) < 2.2) g.x -= 5 * rdt; if (g.x < -4) AMB.bug = null; }
+  else if ((AMB.bugNext -= rdt) <= 0) { AMB.bugNext = 70 + Math.random() * 90; if (day) AMB.bug = { x: SW + 3, t: 0 }; }
+  // Shooting star: only at night.
+  if (AMB.shoot) { AMB.shoot.t += rdt; if (AMB.shoot.t > .7) AMB.shoot = null; }
+  else if ((AMB.shootNext -= rdt) <= 0) { AMB.shootNext = 10 + Math.random() * 22; if (AMB.night > .5 || S.asleep) AMB.shoot = { x: 20 + Math.random() * 60, y: 2 + Math.random() * 5, t: 0 }; }
+}
+function drawSky(time, sky, camX) {
+  const b = sky.bands, rows = [0, 6, 12, 17];
+  for (let i = 0; i < 4; i++) R(sx, 0, rows[i], SW, (rows[i + 1] ?? HORIZON + 3) - rows[i], b[i]);
+  for (let i = 1; i < 4; i++) for (let X = (i % 2); X < SW; X += 2) P(sx, [X, rows[i] - 1], b[i]); // dithered seams
+  const ph = sky.ph;
+  if (ph < 1.05 && AMB.night < .5) {
+    const k = clamp(ph, 0, 1), sxp = Math.round(12 + k * 76), syp = Math.round(15 - Math.sin(k * Math.PI) * 10);
+    E(sx, sxp, syp, 3.6, 3.6, k > .8 ? RAMP.rd[3] : RAMP.ye[3]); E(sx, sxp - .5, syp - .5, 2.2, 2.2, k > .8 ? RAMP.ye[2] : WHITE);
+  }
+  if (!RM) for (let i = 0; i < 2; i++) { const cxp = ((time * (1.2 + i * .7) + i * 61) % (SW + 30)) - 18; sx.globalAlpha = ph > 1 ? .35 : .9; blit(CLOUD, cxp, 3 + i * 6); sx.globalAlpha = 1; }
+  else { blit(CLOUD, 14, 4); blit(CLOUD, 66, 9); }
+  sx.drawImage(HILLS, Math.round(-4 - camX * .04), 9);
+}
+function drawStarsMoon(time, sky) {
+  const dusk = clamp((sky.ph - .92) / .1, 0, 1), k = Math.max(AMB.night, dusk);
+  if (k <= .05) return;
+  sx.globalAlpha = k;
+  E(sx, 84, 6, 3.2, 3.2, RAMP.gy[3]); E(sx, 85.6, 5.2, 2.6, 2.6, sky.bands[0]); P(sx, [82, 5, 82, 7], WHITE);
+  for (let i = 0; i < STARS.length; i++) {
+    const [px, py] = STARS[i], tw = RM ? 1 : (Math.sin(time * (1.3 + i * .17) + i * 2.1) + 1) / 2;
+    if (tw < .25) continue;
+    P(sx, [px, py], tw > .7 ? WHITE : RAMP.pu[3]);
+    if (tw > .93) { sx.globalAlpha = k * .6; P(sx, [px - 1, py, px + 1, py, px, py - 1, px, py + 1], RAMP.pu[3]); sx.globalAlpha = k; }
+  }
+  const s = AMB.shoot;
+  if (s) for (let j = 0; j < 5; j++) { sx.globalAlpha = k * (1 - j / 5) * (1 - s.t / .7); P(sx, [Math.round(s.x + s.t * 40 - j * 2), Math.round(s.y + s.t * 14 - j * .7)], WHITE); }
+  sx.globalAlpha = 1;
+}
+function shadow(cx, y, rx, a = .32) { sx.globalAlpha = a; E(sx, cx, y, rx, Math.max(1, rx * .2), RAMP.gr[0]); sx.globalAlpha = 1; }
+function drawGrass(time) {
+  for (let i = 0; i < 30; i++) {
+    const gx = (i * 37 + 5) % SW, h = 2 + (i * 7) % 3, sway = RM ? 0 : Math.round(Math.sin(time * 1.6 + gx * .23) * .8);
+    R(sx, gx, SH - h, 1, h, (i % 3) ? RAMP.gr[1] : RAMP.gr[2]); P(sx, [gx + sway, SH - h - 1], RAMP.gr[2]);
+  }
+}
+const BUTTERFLY = [0, 1].map(f => ['pk', 'ye'].map(col => noOutline(5, 4, x => {
+  const r = RAMP[col];
+  if (f) { P(x, [0, 0, 1, 1, 3, 1, 4, 0, 0, 2, 4, 2], r[2]); P(x, [1, 0, 3, 0], r[3]); } else { P(x, [0, 1, 1, 1, 3, 1, 4, 1, 1, 2, 3, 2], r[2]); }
+  P(x, [2, 1, 2, 2, 2, 3], INK);
+})));
+function drawAmbient(time) {
+  if (RM) return;
+  const b = AMB.bf;
+  if (b) blit(BUTTERFLY[((time * 9) | 0) % 2][b.col === 'pk' ? 0 : 1], b.x, b.y);
+  const g = AMB.bug;
+  if (g) { const gx = Math.round(g.x); P(sx, [gx, 71, gx + 1, 71, gx + 2, 71, gx, 72, gx + 1, 72, gx + 2, 72], RAMP.rd[2]); P(sx, [gx + 1, 71, gx - 1, 72], INK); P(sx, [gx + 2, 72], RAMP.rd[1]); }
+  if (AMB.night < .5) {
+    for (const m of MOTES) {
+      const mx = (m.x + time * m.s) % (SW + 4) - 2, my = m.y + Math.sin(time * .7 + m.p) * 3;
+      sx.globalAlpha = .45 + .35 * Math.sin(time * 1.7 + m.p); P(sx, [Math.round(mx), Math.round(my)], m.p > 3 ? RAMP.ye[3] : WHITE);
+    }
+    sx.globalAlpha = 1;
+  }
+}
+function gradeScene(sky) {
+  if (sky.ga > .01) { sx.globalCompositeOperation = 'multiply'; sx.globalAlpha = sky.ga; R(sx, 0, 0, SW, SH, sky.grade); }
+  if (AMB.night > .01) { sx.globalCompositeOperation = 'multiply'; sx.globalAlpha = AMB.night * .82; R(sx, 0, 0, SW, SH, '#38407e'); }
+  sx.globalCompositeOperation = 'source-over'; sx.globalAlpha = 1;
+}
 
 /* ================= Scene rendering ================= */
 const scene = $('#scene'), sx = scene.getContext('2d');
@@ -1150,23 +1277,30 @@ function moodNow() {
   return { mood, mouth };
 }
 function draw(time) {
+  let stage = S.ended ? 'seed' : S.stage;
+  if (A && A.type === 'evolve' && A.t < 1.3 && ((A.t * 8) | 0) % 2 === 0) stage = A.from;
+  const px = stage === 'seed' ? 50 : (G ? (G.type === 'catch' ? G.px : 50) : PET.x);
+  const sky = skyAt(dayPhase()), camX = RM ? 0 : px - 50;
   sx.clearRect(0, 0, SW, SH);
-  sx.drawImage(BG, 0, 0);
+  drawSky(time, sky, camX);
+  sx.drawImage(LAWN, 0, LAWN_Y);
+  const bx = Math.round(-4 - camX * .09);
+  sx.drawImage(BUSHES, bx, 14);
+  shadow(POT_AT[0] + bx + 4 + 6.5, POT_AT[1] + 15.5, 5.5, .4); blit(POT, POT_AT[0] + bx + 4, POT_AT[1]);
 
   if (S.ended) {
+    shadow(50, GROUND - 1, 12, .3);
     blit(petSprite('seed', {}), 50 - 24, GROUND - 44);
     sparkles(50, GROUND - 16, time, 14);
+    drawGrass(time); drawAmbient(time); gradeScene(sky); drawStarsMoon(time, sky);
     return;
   }
 
   // Poop, hidden progressively by the cleaning wave
   const wave = A && A.type === 'clean' ? SW + 14 - (A.t / A.dur) * (SW + 34) : null;
-  S.poops.forEach((p, i) => { const [px, py] = SLOTS[i % 4]; if (wave !== null && px - 6 > wave) return; blit(POOP, px - 6, py - 10 + ((time * 1.5 + i) | 0) % 2 * 0); });
+  S.poops.forEach((p, i) => { const [qx, qy] = SLOTS[i % 4]; if (wave !== null && qx - 6 > wave) return; shadow(qx, qy + .5, 5, .3); blit(POOP, qx - 6, qy - 10); });
 
   // Bubby
-  let stage = S.stage;
-  if (A && A.type === 'evolve' && A.t < 1.3 && ((A.t * 8) | 0) % 2 === 0) stage = A.from;
-  const px = stage === 'seed' ? 50 : (G ? (G.type === 'catch' ? G.px : 50) : PET.x);
   let o = {}, bob = 0, shake = 0;
   if (stage === 'seed') {
     const prog = S.stage === 'seed' ? S.stageT / STAGE.seed.dur : 1;
@@ -1184,7 +1318,7 @@ function draw(time) {
     if (A && A.type === 'no') shake = (((A.t * 12) | 0) % 2) ? 1 : -1;
   }
   const spr = petSprite(stage, o);
-  if (stage !== 'seed') { sx.fillStyle = 'rgba(64,120,52,.45)'; E(sx, px, GROUND + 1.5, 9, 1.6, 'rgba(64,120,52,.45)'); }
+  shadow(px, GROUND + 1, stage === 'seed' ? 13 : 9, .34);
   blit(spr, px - 24 + shake, GROUND - 46 + bob);
   const top = GROUND - 46 + HEADTOP[stage] + bob;
 
@@ -1216,11 +1350,10 @@ function draw(time) {
     }
   }
 
-  // Night
-  if (!S.lights) {
-    R(sx, 0, 0, SW, SH, 'rgba(18,20,48,.8)');
-    for (let i = 0; i < STARS.length; i++) { if (((time * 1.3 + i * .7) | 0) % 3 !== 0) P(sx, STARS[i], '#fff6c8'); }
-  }
+  drawAmbient(time);
+  drawGrass(time);
+  gradeScene(sky);
+  drawStarsMoon(time, sky);
 
   // Status bubbles
   if (stage !== 'seed') {
@@ -1465,7 +1598,7 @@ function frame(now) {
   const gdt = rdt * (S.speed || 1);
   tick(gdt);
   if (A && !S.paused) { A.t += rdt; if (A.t >= A.dur) { const f = A.after; A = null; if (f) f(); } }
-  if (!S.paused) { updateGame(rdt); updatePet(rdt); }
+  if (!S.paused) { updateGame(rdt); updatePet(rdt); updateWorld(rdt); }
   if (toastT > 0) { toastT -= rdt; if (toastT <= 0) $toast.hidden = true; }
   const t = now / 1000;
   draw(t);
