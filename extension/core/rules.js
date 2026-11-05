@@ -55,7 +55,8 @@ export const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 export const pace = S => PACES[S.cfg && S.cfg.pace] || PACES.chill;
 
 export function defaultCfg() {
-  return { pace: 'chill', bed: 22 * 60, wake: 8 * 60, notify: true, sound: true, look: 'toy' };
+  // bedAsked: bedtime was chosen (welcome page or settings). dev: show the time-skip test buttons (bubby.dev(true)).
+  return { pace: 'chill', bed: 22 * 60, wake: 8 * 60, notify: true, sound: true, look: 'toy', bedAsked: false, dev: false };
 }
 
 export function fresh(gen = 1, cfg = defaultCfg(), now = Date.now()) {

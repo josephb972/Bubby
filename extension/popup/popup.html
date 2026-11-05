@@ -187,7 +187,8 @@
 
     <fieldset class="group">
       <legend>Try it out</legend>
-      <div class="row three">
+      <!-- Time-skip test buttons: hidden unless bubby.dev(true) is run in the service worker console -->
+      <div class="row three" id="devSkip" hidden>
         <button class="chip" data-skip="1">+1 hour</button>
         <button class="chip" data-skip="4">+4 hours</button>
         <button class="chip" data-skip="12">+12 hours</button>

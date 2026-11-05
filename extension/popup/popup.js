@@ -24,7 +24,10 @@ let port = null;
 function connect() {
   try {
     port = chrome.runtime.connect({ name: 'popup' });
-    port.onMessage.addListener(m => { if (m && m.type === 'act') runAction(m.action); });
+    port.onMessage.addListener(m => {
+      if (m && m.type === 'act') runAction(m.action);
+      if (m && m.type === 'cfg' && m.cfg) { Object.assign(S.cfg, m.cfg); persist(); if (!$('#viewSettings').hidden) renderSettings(); }
+    });
     port.onDisconnect.addListener(() => { port = null; setTimeout(connect, 400); });
   } catch (e) { port = null; }
 }
@@ -454,6 +457,7 @@ function renderSettings() {
   const clock = Rules.pace(S).clock;
   $('#grpBed').disabled = !clock;
   $('#inNotify').disabled = !clock;
+  $('#devSkip').hidden = !S.cfg.dev; // test tool only: bubby.dev(true) in the service worker console
   $$('[data-skip]').forEach(b => { b.disabled = !clock || !!S.ended || S.paused; });
 }
 function openSettings() { closeOverlays(); G = null; renderSettings(); $('#viewMain').hidden = true; $('#viewSettings').hidden = false; $('#btnBack').focus(); }
@@ -498,11 +502,11 @@ function wire() {
     Rules.setPace(S, e.target.value); S.lastT = Date.now();
     persist(); renderSettings(); toast(`${Rules.PACES[S.cfg.pace].label} pace`);
   });
-  $('#inBed').addEventListener('change', e => { if (e.target.value) { S.cfg.bed = toMin(e.target.value); persist(); } });
-  $('#inWake').addEventListener('change', e => { if (e.target.value) { S.cfg.wake = toMin(e.target.value); persist(); } });
+  $('#inBed').addEventListener('change', e => { if (e.target.value) { S.cfg.bed = toMin(e.target.value); S.cfg.bedAsked = true; persist(); } });
+  $('#inWake').addEventListener('change', e => { if (e.target.value) { S.cfg.wake = toMin(e.target.value); S.cfg.bedAsked = true; persist(); } });
   $('#inNotify').addEventListener('change', e => { S.cfg.notify = e.target.checked; persist(); });
   $('#inSound').addEventListener('change', e => { S.cfg.sound = e.target.checked; if (S.cfg.sound) { unlockAudio(); beep(880, .05); } persist(); });
-  $$('[data-skip]').forEach(b => b.addEventListener('click', () => skipAhead(+b.dataset.skip)));
+  $$('[data-skip]').forEach(b => b.addEventListener('click', () => { if (S.cfg.dev) skipAhead(+b.dataset.skip); }));
   $('#resetBox').addEventListener('click', e => {
     const id = e.target.id;
     if (id === 'btnTestNote') {

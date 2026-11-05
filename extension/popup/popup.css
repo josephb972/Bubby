@@ -294,6 +294,8 @@ fieldset:disabled { opacity: .55; }
 /* ================= Photo toy pod (default look) =================
    The toy artwork is 468×600 in the popup. Positions below are measured from the artwork. */
 body.toy { width: 468px; background: #85c3d0; }
+body.win.toy { width: auto; }
+body.win.toy .app { width: 468px; } /* the fallback window shows the whole toy pod */
 .app.toy { padding: 0; }
 .app.toy .settings { padding: 10px 14px; }
 .photo-wrap { width: 468px; height: 600px; }

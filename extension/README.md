@@ -113,8 +113,10 @@ cause a toothache), and clean poop quickly or Bubby gets sick.
 1. **Watch it sprout (1 min).** Open the popup. The seed wobbles, cracks, and becomes Bubby the Bulb.
 2. **Care for it.** Press **FEED → Meal**, then **PLAY → Seed catch**: drag on the garden or hold the arrow keys.
    Gold seeds are worth 3 and pebbles cost 2.
-3. **Skip ahead.** ⚙ Settings → **+4 hours**. You'll get a "While you were away" card, and Bubby will probably be
-   hungry or have pooped. Tap the **!** tile, press the button it shows, and watch the toolbar badge clear.
+3. **Skip ahead.** The time-skip buttons are test tools, hidden so players can't cheat. Open the service worker
+   console (step 5 shows how), type `bubby.dev(true)`, then reopen ⚙ Settings and press **+4 hours**. You'll get a
+   "While you were away" card, and Bubby will probably be hungry or have pooped. Tap the **!** tile, press the button
+   it shows, and watch the toolbar badge clear. `bubby.dev(false)` hides the buttons again.
 4. **Check notifications.** ⚙ Settings → **Test notification**. If nothing appears, see Troubleshooting below.
 5. **Try a real background notification.** Close the popup, then:
    1. Go to `chrome://extensions` and click the **service worker** link on the Bubby card (next to "Inspect views"). A console opens.
@@ -128,7 +130,7 @@ cause a toothache), and clean poop quickly or Bubby gets sick.
    Switch back to Chill when you're done.
 
 Other console helpers: `bubby.tick()` runs a background check now, `bubby.act('clean')` does what a notification button
-does, and `bubby.state()` shows the saved game.
+does, `bubby.dev(true)` shows the time-skip buttons, and `bubby.state()` shows the saved game.
 
 ---
 
@@ -175,11 +177,17 @@ extension storage.
 wakes up, `advance()` replays the missed time in small steps using the same rules, so Bubby behaves the same whether
 you watched or not. While the popup is open it runs the game live and the background stays out of the way.
 
-**Developer checks.** These need Node.js; the icon rebuild also needs Playwright.
+**Developer checks.** These need Node.js; the ones marked (Playwright) also need Playwright with Chromium.
 - `node tools/sim-check.mjs` plays 80 simulated lives (players who check in every 30 minutes, every
   2 hours, 3 times a day, morning and evening, or never) and prints how often each ends up Radiant, Daisy or
   Thistle, how sick Bubby got, and how many notifications a day each player would get.
-- `node tools/make-icons.mjs` regenerates the PNG icons from the pixel art.
+- `node tools/check-extension.mjs` (Playwright) loads the extension and checks the welcome page's bedtime fields,
+  the popup, the hidden time-skip buttons, the notification fallback window and the background worker.
+- `node tools/package.mjs` makes `dist/bubby-<version>.zip` to upload to the Chrome Web Store and Edge Add-ons.
+- `node tools/store-images.mjs` (Playwright) makes the store screenshots and promo tiles in `store/`.
+- `node tools/make-icons.mjs` (Playwright) regenerates the PNG icons from the pixel art.
+
+Store listing text and privacy answers: `docs/STORE-LISTING.md`. Privacy policy: `docs/PRIVACY.md`.
 
 The original single-file game (`index.html` at the repository root) still works on its own. It keeps its own save,
 separate from the extension.
