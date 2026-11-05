@@ -12,7 +12,7 @@ and scold tantrums. Your care mistakes, discipline and weight while it is a Bulb
 
 Play has two minigames: **Which way?** (guess where Bubby looks) and **Seed catch** (steer Bubby under falling seeds for 20 seconds; gold seeds are worth 3, pebbles cost 2).
 
-A full life lasts about 3 months of game time at 1× speed: a 2-minute seed, then 14 days as a baby, 24 as a child, 33 as an adult and 19 as a senior (2× and 4× are available). Time only passes while the page is open,
+A full life lasts about 1 month of game time at 1× speed: a 2-minute seed, then 5 days as a baby, 8 as a child, 11 as an adult and 6 as a senior (2× and 4× are available). Time only passes while the page is open,
 the power button pauses, and progress is saved in the browser's localStorage.
 
 `prompts/visual-polish-prompt.md` is a ready-to-paste prompt for an art-direction and UI polish pass.
