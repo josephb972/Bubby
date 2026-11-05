@@ -114,3 +114,12 @@ The SVG shell is replaced by the supplied product photo. The buttons and the scr
 - **Screen:** the live LCD fills the photo's glass (`POD.glass`). The 100×75 scene is still snapped to an integer number of device pixels per art pixel, letterboxed by the dark rim: 3× at DPR 2 and 5× at DPR 3 on a 390 px phone (the pod runs nearly edge to edge there), and 2× at DPR 1 or 4× at DPR 2 on desktop (the pod is 470 px wide).
 - **Trade-off:** the photo's screen is about 40 % of the pod's width (the SVG shell's was 53 %). On a 390 px phone the LCD is therefore 150–167 px wide instead of 200, and the tiles are 37–41 px wide by 28–35 px tall. Their hit areas extend invisibly over the bezel to 44 px tall, which the harness checks by hit-testing; their width can't reach 44 without overlapping each other. The Feed and Play menus moved Back into the title row, and the HUD prompts were shortened, so everything fits at the smaller size.
 - **Verification:** 0 console errors in 252 loads plus the reduced-motion pass, no horizontal scroll, no overlay over Bubby's face in any state, and a full life completes. `draw()` stays under about 1 ms (p95) at 4× CPU throttle.
+
+## Second pod photo
+
+The pod is now the second product photo, with the chain and leaf charm hanging off to the right. It goes through the same cut-out pipeline: connected-region keying, de-fringed edges, a soft contact shadow and a blanked glass, then a 66 KB WebP.
+
+- **Device box:** the box is the pod body (470×850 photo px). The photo is drawn on a `::before` that extends past the box to the right, so the chain hangs outside it. Desktop reserves room for the chain with a right margin; the page clips horizontal overflow.
+- **Phones:** the body runs nearly edge to edge, and the chain and charm run off the right edge of the screen. That keeps the LCD at 150 px wide (DPR 2) or 167 px (DPR 3) rather than about 100 px.
+- **Desktop:** the body is 460 px wide, and the LCD is 200 px at DPR 1 and 2.
+- **Checks:** all states re-rendered with 0 console errors, no horizontal scroll and no overlaps. Every cap and the power button hit correctly, and a full life completes.
