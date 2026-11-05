@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bubby</title>
+<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ============ Main view ============ -->
+  <section id="viewMain" aria-label="Bubby">
+    <header class="top">
+      <div class="brand">
+        <h1>Bub<span>by</span></h1>
+        <p id="sub">Gen 1 · Seed · Day 0</p>
+      </div>
+      <div class="top-btns">
+        <button class="round" id="btnPause" aria-label="Pause" aria-pressed="false" title="Pause (time stops for Bubby)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" /></svg>
+        </button>
+        <button class="round" id="btnSettings" aria-label="Settings" title="Settings">
+          <svg viewBox="0 0 24 24" aria-hidden="true" style="stroke-width:2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="bezel">
+      <div class="screen" id="screen">
+        <canvas id="scene" width="100" height="75" role="img" aria-label="Bubby's garden"></canvas>
+        <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+        <div class="ov card" id="ovFeed" hidden>
+          <p class="ov-title">Feed Bubby</p>
+          <div class="opts">
+            <button class="opt" data-do="meal"><canvas width="16" height="16" data-icon="meal"></canvas><b>Meal</b><small>+1 hunger · +1g</small><kbd>1</kbd></button>
+            <button class="opt" data-do="snack"><canvas width="16" height="16" data-icon="snack"></canvas><b>Snack</b><small>+1 happy · +2g</small><kbd>2</kbd></button>
+          </div>
+          <button class="back" data-close>Back</button>
+        </div>
+
+        <div class="ov card" id="ovPlay" hidden>
+          <p class="ov-title">Play a game</p>
+          <div class="opts">
+            <button class="opt" data-game="guess"><canvas width="16" height="16" data-icon="play"></canvas><b>Which way?</b><small>Guess where it looks</small><kbd>1</kbd></button>
+            <button class="opt" data-game="catch"><canvas width="16" height="16" data-icon="catch"></canvas><b>Seed catch</b><small id="bestCatch">20s · gold = 3</small><kbd>2</kbd></button>
+          </div>
+          <button class="back" data-close>Back</button>
+        </div>
+
+        <div class="ov game" id="ovGame" hidden>
+          <div class="g-top"><span id="gPrompt">Which way will Bubby look?</span><span id="gRound">1/5</span></div>
+          <div class="g-bot">
+            <button class="g-btn" id="gLeft" data-g="-1" aria-label="Left"><svg viewBox="0 0 10 10"><path d="M7 1 L2 5 L7 9 Z"/></svg></button>
+            <span class="g-score" id="gScore">0 right</span>
+            <button class="g-btn" id="gRight" data-g="1" aria-label="Right"><svg viewBox="0 0 10 10"><path d="M3 1 L8 5 L3 9 Z"/></svg></button>
+          </div>
+        </div>
+
+        <div class="ov card away" id="ovAway" hidden>
+          <p class="ov-title">While you were away <small id="awayFor"></small></p>
+          <ul id="awayList"></ul>
+          <button class="back primary" id="btnAwayOk">OK</button>
+        </div>
+
+        <div class="ov card" id="ovEnd" hidden>
+          <p class="ov-title" id="endTitle">Bubby moved away</p>
+          <p class="end-text" id="endText"></p>
+          <button class="back primary" id="btnReplant">Plant the new seed</button>
+        </div>
+
+        <div class="ov pause" id="ovPause" hidden><div>PAUSED<small>Time is stopped for Bubby</small></div></div>
+      </div>
+    </div>
+
+    <div class="meters">
+      <div class="meter"><span class="lbl">Hunger</span><span class="hearts" id="mHunger" role="img" aria-label="Hunger"></span></div>
+      <div class="meter"><span class="lbl">Happy</span><span class="hearts" id="mHappy" role="img" aria-label="Happy"></span></div>
+      <div class="mini">
+        <span title="Scold tantrums to raise discipline">Discipline <i class="bar"><i id="mDisc"></i></i><b id="mDiscN">0%</b></span>
+        <span title="Meals add 1g, snacks 2g, games burn 1g">Weight <b id="mWeight">–</b></span>
+        <span title="Missed calls and long sickness count as mistakes">Mistakes <b id="mMist">0</b></span>
+      </div>
+    </div>
+
+    <button class="smart" id="smart" data-tone="ok">
+      <span class="smart-ic"><canvas width="16" height="16" id="smartIcon"></canvas></span>
+      <span class="smart-txt"><b id="smartLabel">Play with Bubby</b><small id="smartHint">Enter</small></span>
+    </button>
+
+    <nav class="actions" aria-label="Care">
+      <button class="act" data-act="feed" title="Feed (F)"><canvas width="16" height="16" data-icon="feed"></canvas><span>Feed</span></button>
+      <button class="act" data-act="play" title="Play (P)"><canvas width="16" height="16" data-icon="play"></canvas><span>Play</span></button>
+      <button class="act" data-act="clean" title="Clean (C)"><canvas width="16" height="16" data-icon="clean"></canvas><span>Clean</span></button>
+      <button class="act" data-act="lights" title="Lights (L)"><canvas width="16" height="16" data-icon="lights"></canvas><span>Lights</span></button>
+      <button class="act" data-act="med" title="Medicine (M)"><canvas width="16" height="16" data-icon="med"></canvas><span>Medicine</span></button>
+      <button class="act" data-act="scold" title="Scold a tantrum (D)"><canvas width="16" height="16" data-icon="scold"></canvas><span>Scold</span></button>
+    </nav>
+
+    <p class="foot" id="foot"></p>
+  </section>
+
+  <!-- ============ Settings view ============ -->
+  <section id="viewSettings" class="settings" aria-label="Settings" hidden>
+    <header class="top">
+      <div class="brand"><h1>Settings</h1></div>
+      <div class="top-btns">
+        <button class="round" id="btnBack" aria-label="Back to Bubby" title="Back">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <fieldset class="group">
+      <legend>Pace</legend>
+      <div class="paces" id="paces"></div>
+    </fieldset>
+
+    <fieldset class="group" id="grpBed">
+      <legend>Bubby's bedtime</legend>
+      <div class="row two">
+        <label>Goes to bed <input type="time" id="inBed" step="900"></label>
+        <label>Wakes up <input type="time" id="inWake" step="900"></label>
+      </div>
+      <p class="note">Quiet while Bubby sleeps, except one lights-off reminder at bedtime.</p>
+    </fieldset>
+
+    <fieldset class="group">
+      <legend>Alerts</legend>
+      <div class="alerts-row">
+        <label class="switch"><input type="checkbox" id="inNotify"><span>Notifications</span></label>
+        <label class="switch"><input type="checkbox" id="inSound"><span>Sound effects</span></label>
+      </div>
+    </fieldset>
+
+    <fieldset class="group">
+      <legend>Try it out</legend>
+      <div class="row three">
+        <button class="chip" data-skip="1">+1 hour</button>
+        <button class="chip" data-skip="4">+4 hours</button>
+        <button class="chip" data-skip="12">+12 hours</button>
+      </div>
+      <div class="row" id="resetBox"><button class="chip" id="btnTestNote">Test notification</button><button class="chip danger" id="btnReset">Start over</button></div>
+    </fieldset>
+    <p class="foot">Open Bubby from any tab: <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd></p>
+  </section>
+</div>
+<script type="module" src="popup.js"></script>
+</body>
+</html>

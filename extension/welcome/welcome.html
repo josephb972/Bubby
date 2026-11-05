@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Welcome to Bubby</title>
+<link rel="icon" href="../icons/icon-32.png">
+<style>
+@font-face { font-family: "Fredoka"; font-weight: 600; src: url("../fonts/fredoka-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Nunito"; font-weight: 400; src: url("../fonts/nunito-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Nunito"; font-weight: 700; src: url("../fonts/nunito-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Pixelify Sans"; font-weight: 400; src: url("../fonts/pixelify-sans-latin-400-normal.woff2") format("woff2"); }
+:root { --ink: #3b2f4a; --muted: #5d5070; --mint: #bfe6db; --mint-hi: #dcf4ed; --line: #5e978c; --cream: #fffcf3; --red: #d9504a; color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: radial-gradient(ellipse at 30% 0%, var(--mint-hi), transparent 60%), var(--mint); background-color: var(--mint); color: var(--ink); font: 16px/1.55 "Nunito", system-ui, sans-serif; }
+main { max-width: 720px; margin: 0 auto; padding: 40px 16px 64px; }
+.hero { display: flex; align-items: center; gap: 20px; }
+.hero canvas { width: 144px; height: 144px; image-rendering: pixelated; flex: none; }
+h1 { margin: 0; font: 600 44px/1 "Fredoka", sans-serif; }
+h1 span { color: var(--red); }
+.lead { margin: 6px 0 0; font-size: 18px; color: var(--muted); }
+ol { list-style: none; padding: 0; margin: 28px 0 0; display: grid; gap: 12px; counter-reset: s; }
+li { counter-increment: s; background: var(--cream); border: 2px solid rgba(94, 151, 140, .55); border-radius: 16px; padding: 14px 16px 14px 60px; position: relative; }
+li::before { content: counter(s); position: absolute; left: 16px; top: 14px; width: 30px; height: 30px; border-radius: 50%; background: var(--line); color: #fff; display: grid; place-items: center; font: 600 16px "Fredoka", sans-serif; }
+li b { display: block; font: 600 18px/1.3 "Fredoka", sans-serif; }
+li p { margin: 2px 0 0; color: var(--muted); }
+kbd { font: 400 13px/1 "Pixelify Sans", monospace; border: 1.5px solid var(--ink); border-bottom-width: 3px; border-radius: 5px; padding: 2px 6px; background: #fff; }
+.tip { margin-top: 24px; font-size: 14px; color: var(--muted); }
+@media (max-width: 520px) { .hero { flex-direction: column; text-align: center; } h1 { font-size: 36px; } }
+</style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <canvas id="pet" width="48" height="48" aria-label="Bubby as a little seed"></canvas>
+    <div>
+      <h1>Hello from Bub<span>by</span>!</h1>
+      <p class="lead">A seed has been planted in your toolbar. It will sprout in about a minute.</p>
+    </div>
+  </section>
+  <ol>
+    <li><b>Pin Bubby to your toolbar</b><p>Click the puzzle-piece icon at the top right of the browser, then the pin next to Bubby. Now you can see Bubby's face all the time.</p></li>
+    <li><b>Glance at the icon</b><p>Bubby's face shows its mood. A red <b style="display:inline;color:var(--red)">!</b> badge means it is calling you, <b style="display:inline">z</b> means it's asleep.</p></li>
+    <li><b>Click to take care of it</b><p>The big button always shows what Bubby needs most, so most visits are one click. Or press <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd> from any tab.</p></li>
+    <li><b>Set Bubby's bedtime</b><p>Open the gear in the popup. Bubby sleeps when you do, and won't send notifications at night.</p></li>
+  </ol>
+  <p class="tip">Bubby lives in real time, even while the browser is closed (Chill pace: about 10 days per life). Want to see everything quickly? Switch to the Quick pace in settings for the original 20-minute life.</p>
+</main>
+<script type="module" src="welcome.js"></script>
+</body>
+</html>

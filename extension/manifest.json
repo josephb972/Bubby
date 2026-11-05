@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Bubby",
+  "short_name": "Bubby",
+  "version": "0.1.0",
+  "description": "A tiny pixel pet that lives in your browser toolbar. Feed it, play with it, and watch it grow.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "Bubby",
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": ["storage", "alarms", "notifications"],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": { "default": "Alt+Shift+B" },
+      "description": "Open Bubby"
+    }
+  },
+  "minimum_chrome_version": "116"
+}
