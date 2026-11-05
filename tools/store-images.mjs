@@ -59,10 +59,16 @@ const img = {
 };
 const page0 = await ctx.newPage();
 await page0.goto(base + 'welcome/welcome.html');
-img.bulb = await page0.evaluate(async () => {
+// The logo: the egg (seed) with no background, cropped to its outline, 14 screen pixels per sprite pixel.
+img.egg = await page0.evaluate(async () => {
   const { petSprite } = await import('/art/sprites.js');
-  const c = document.createElement('canvas'); c.width = c.height = 384;
-  const x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(petSprite('baby', { mood: 'happy' }), 0, 0, 384, 384);
+  const spr = petSprite('seed', {});
+  const d = spr.getContext('2d').getImageData(0, 0, 48, 48).data;
+  let x0 = 48, y0 = 48, x1 = -1, y1 = -1;
+  for (let y = 0; y < 48; y++) for (let x = 0; x < 48; x++) if (d[(y * 48 + x) * 4 + 3]) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+  const bw = x1 - x0 + 1, bh = y1 - y0 + 1, k = 14;
+  const c = document.createElement('canvas'); c.width = bw * k; c.height = bh * k;
+  const x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(spr, x0, y0, bw, bh, 0, 0, bw * k, bh * k);
   return c.toDataURL();
 });
 await ctx.close();
@@ -99,8 +105,8 @@ await render('screenshot-3.png', 1280, 800, shot('Play <em>Seed catch</em>', 'Ca
 await render('screenshot-4.png', 1280, 800, `<div class="page"><h1>Prefer it simple? Try the <em>compact</em> look</h1><p>Bigger hearts, one big "what to do now" button, and every action one click away.</p>
   <div class="row"><img class="pod" style="width:450px;height:auto" src="${img.compact}"></div></div>`);
 const promo = (w, h, s, t, l) => `<div style="height:100%;display:flex;align-items:center;justify-content:center;gap:${w * .03}px">
-  <img class="pix" src="${img.bulb}" style="width:${s}px;height:${s}px"><div><h1 style="font-size:${t}px;text-align:left">Bub<em>by</em></h1>
+  <img class="pix" src="${img.egg}" style="width:${s}px;height:auto"><div><h1 style="font-size:${t}px;text-align:left">Bub<em>by</em></h1>
   <p style="font-size:${l}px;text-align:left">A tiny pixel pet<br>for your toolbar</p></div></div>`;
-await render('promo-small.png', 440, 280, promo(440, 280, 192, 64, 22));
-await render('promo-marquee.png', 1400, 560, promo(1400, 560, 384, 128, 40));
+await render('promo-small.png', 440, 280, promo(440, 280, 180, 64, 22));      // egg at 6 screen pixels per sprite pixel
+await render('promo-marquee.png', 1400, 560, promo(1400, 560, 420, 128, 40)); // 14 per sprite pixel
 await browser.close();
