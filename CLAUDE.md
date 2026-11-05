@@ -20,7 +20,7 @@ session about the extension, work through open items, and tick them off (`[x]`) 
   loads the extension into Chromium).
 - Keep existing saves working: saved state is versioned; update `migrate()` in `core/rules.js` when the format changes.
 - Don't change Bubby's UI design (layouts, colours, fonts, artwork) unless the owner asks.
-- Store package: `node tools/package.mjs` → `dist/` (gitignored). Store images: `node tools/store-images.mjs` →
+- Store package: `node tools/package.mjs` → `dist/` (gitignored). The version submitted to the stores is committed in `release/` (copy the new zip there for each release). Store images: `node tools/store-images.mjs` →
   `store/` (committed; re-run after visible changes). Listing and privacy text: `docs/STORE-LISTING.md`, `docs/PRIVACY.md`.
 - Time-skip buttons are hidden test tools: `bubby.dev(true)` in the service worker console shows them.
 - `bubby-extension.zip` is a local build artifact (gitignored).
