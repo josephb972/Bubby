@@ -413,12 +413,14 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 /* ================= Game rules ================= */
 // Times are game-seconds (1× speed = real seconds). Rates are hearts lost per second.
+// Life: 2 min seed, then 14 + 24 + 33 + 19 = 90 days (about 3 months) of game time.
+const D = 86400;
 const STAGE = {
-  seed:   { next: 'baby',   dur: 18 },
-  baby:   { next: 'child',  dur: 180, hr: 1/22, pr: 1/28, poop: [30, 45], awake: 85,  sleep: 25, base: 5,  doses: [1, 2] },
-  child:  { next: 'adult',  dur: 300, hr: 1/34, pr: 1/40, poop: [45, 65], awake: 120, sleep: 30, base: 10, doses: [1, 2] },
-  adult:  { next: 'senior', dur: 420, hr: 1/48, pr: 1/52, poop: [55, 85], awake: 150, sleep: 35, base: 20, doses: [1, 3] },
-  senior: { next: null,     dur: 240, hr: 1/58, pr: 1/58, poop: [65, 95], awake: 110, sleep: 45, base: 20, doses: [2, 3] },
+  seed:   { next: 'baby',   dur: 120 },
+  baby:   { next: 'child',  dur: 14 * D, hr: 1/22, pr: 1/28, poop: [30, 45], awake: 85,  sleep: 25, base: 5,  doses: [1, 2] },
+  child:  { next: 'adult',  dur: 24 * D, hr: 1/34, pr: 1/40, poop: [45, 65], awake: 120, sleep: 30, base: 10, doses: [1, 2] },
+  adult:  { next: 'senior', dur: 33 * D, hr: 1/48, pr: 1/52, poop: [55, 85], awake: 150, sleep: 35, base: 20, doses: [1, 3] },
+  senior: { next: null,     dur: 19 * D, hr: 1/58, pr: 1/58, poop: [65, 95], awake: 110, sleep: 45, base: 20, doses: [2, 3] },
 };
 const NAMES = { seed: 'Seed', baby: 'Bulb', child: 'Bud', adult: 'Blossom', senior: 'Elder' };
 const FORMS = { radiant: 'Radiant Blossom', daisy: 'Daisy Blossom', thistle: 'Thistle' };
@@ -428,7 +430,7 @@ const CALL_TEXT = {
   sleep: 'Bubby is calling: it fell asleep with the lights on. Press SLEEP.',
   tantrum: 'Bubby is calling, but its hearts look full. Is it acting out?',
 };
-const DAY = 60;
+const DAY = D;
 
 function stageName(s = S) {
   if (s.stage === 'adult') return FORMS[s.variant] || 'Blossom';
