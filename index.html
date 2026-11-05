@@ -283,6 +283,8 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
               <dt>Happy</dt><dd id="stHappy"></dd>
               <dt>Discipline</dt><dd><span class="bar"><i id="stDisc"></i></span><span id="stDiscN">0%</span></dd>
               <dt>Mistakes</dt><dd id="stMist">0</dd>
+              <dt>Next</dt><dd id="stNext">–</dd>
+              <dt>Streak</dt><dd id="stStreak">1 day</dd>
             </dl>
             <p class="callout" id="stCall" hidden></p>
             </div>
@@ -354,6 +356,7 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
         <button data-speed="1" aria-pressed="true">1×</button><button data-speed="2" aria-pressed="false">2×</button><button data-speed="4" aria-pressed="false">4×</button>
       </span>
       <button class="chip" id="btnSound" aria-pressed="true">Sound on</button>
+      <button class="chip" id="btnStats" aria-pressed="true" title="Anonymous usage stats, sent to PostHog">Stats on</button>
     </div>
   </section>
 
@@ -382,6 +385,7 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
         <li><b>Lights off at bedtime.</b> When Bubby falls asleep, press SLEEP. Bright lights keep it up and make it grumpy.</li>
         <li><b>Scold tantrums.</b> If Bubby calls while its hearts are full, it is acting out. Use Discipline. Scolding a well-behaved Bubby only upsets it.</li>
         <li><b>Neglect has a cost.</b> Leave Bubby starving or sick too long and it packs up and moves away, leaving a new seed behind.</li>
+        <li><b>Come back daily.</b> Bubby gets a gift each new day and keeps a streak going. Time away makes it a little hungry and sad, but never sick or gone.</li>
       </ul>
     </section>
 
@@ -430,6 +434,12 @@ const CALL_TEXT = {
 };
 const DAY = 60;
 
+/* ================= Analytics config (PostHog) =================
+   Paste your project API key (starts with phc_). Leave the placeholder in place and nothing is sent.
+   Use https://eu.i.posthog.com if your project is hosted in the EU. */
+const PH_KEY = 'phc_REPLACE_WITH_YOUR_PROJECT_API_KEY';
+const PH_HOST = 'https://us.i.posthog.com';
+
 function stageName(s = S) {
   if (s.stage === 'adult') return FORMS[s.variant] || 'Blossom';
   if (s.stage === 'senior') return 'Elder ' + (FORMS[s.variant] || 'Blossom').replace(' Blossom', '');
@@ -445,6 +455,7 @@ function fresh(gen = 1, speed = 1) {
     asleep: false, lights: true, awakeT: 0, sleepT: 0,
     call: null, mistakes: 0, snacks: [], variant: null, chubby: false,
     ended: null, paused: false, nextPoop: 30, nextTantrum: 55,
+    savedAt: 0, installedAt: 0, lastCheckIn: '', streak: 0, analytics: true,
     stats: { meals: 0, snacks: 0, games: 0, wins: 0, cleans: 0, meds: 0, scolds: 0, sick: 0 },
   };
 }
@@ -499,6 +510,7 @@ function evolve(to) {
     : 'Bubby is an Elder now. Take it easy';
   toast(msg);
   beep(523, .1); setTimeout(() => beep(659, .1), 120); setTimeout(() => beep(784, .16), 240);
+  track('evolved', { to, variant: S.variant });
   save();
 }
 
@@ -507,6 +519,7 @@ function end(kind) {
   S.call = null; A = null; G = null;
   closeOverlays();
   showEnd();
+  track('bubby_ended', { kind, days: Math.floor(S.age / DAY), mistakes: S.mistakes });
   save();
 }
 
@@ -604,6 +617,7 @@ function act(a) {
   if (A) return;
   closeOverlays();
   beep(880, .03);
+  track('action_tap', { action: a });
   if (a === 'lights') return toggleLights();
   if (!canCare()) return;
   ({ feed: openFeed, play: openPlay, clean: doClean, med: doMed, discipline: doScold })[a]?.();
@@ -687,6 +701,7 @@ function startGame(kind) {
   } else {
     G = { type: 'guess', round: 1, score: 0, phase: 'guess', look: 0, t: 0, last: false };
   }
+  track('game_start', { game: kind });
   showOv('game'); $('#ovGame').classList.toggle('catch', G.type === 'catch'); renderGame();
 }
 function finishGame(happyGain, msg) {
@@ -1206,6 +1221,8 @@ function renderStatus() {
   $('#stHappy').innerHTML = hearts(S.happy); $('#stHappy').setAttribute('aria-label', `${Math.ceil(S.happy - 1e-3)} of 4`);
   $('#stDisc').style.width = S.discipline + '%'; $('#stDiscN').textContent = S.discipline + '%';
   $('#stMist').textContent = S.mistakes;
+  $('#stNext').textContent = S.ended ? '–' : countdowns().map(([l, s]) => `${l} in ${fmtTime(s)}`).join(' · ');
+  $('#stStreak').textContent = `${S.streak || 1} day${(S.streak || 1) === 1 ? '' : 's'}`;
   const c = $('#stCall');
   let msg = '', ok = false;
   if (S.stage === 'seed') { msg = 'The seed is about to sprout.'; ok = true; }
@@ -1253,10 +1270,98 @@ function beep(f, d = .08, vol = .05) {
 function beepCall() { beep(1046, .07); setTimeout(() => beep(1046, .07), 130); setTimeout(() => beep(1318, .1), 260); }
 
 /* ---- Save ---- */
-function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+function save() { S.savedAt = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 function load() {
   try { const t = localStorage.getItem(KEY); if (t) { const o = JSON.parse(t); if (o && o.v === 1) return Object.assign(fresh(), o); } } catch (e) {}
   return null;
+}
+
+/* ---- Clock: countdowns in real seconds (game time runs at the chosen speed) ---- */
+function fmtTime(realSecs) {
+  const s = Math.max(0, Math.ceil(realSecs));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+function countdowns() {
+  const sp = S.speed || 1, st = STAGE[S.stage];
+  if (S.stage === 'seed') return [['Sprouts', (STAGE.seed.dur - S.stageT) / sp]];
+  if (S.asleep) return [['Wakes', (st.sleep - S.sleepT) / sp]];
+  return [
+    ['Bedtime', (st.awake - S.awakeT) / sp],
+    [st.next ? NAMES[st.next] : 'Garden', (st.dur - S.stageT) / sp],
+  ];
+}
+function nearestCountdown() {
+  const [label, secs] = countdowns().reduce((a, b) => (b[1] < a[1] ? b : a));
+  return `${label} in ${fmtTime(secs)}`;
+}
+
+/* ---- Away time and daily check-in ---- */
+const MS_HOUR = 3600e3, MS_DAY = 24 * MS_HOUR;
+// While the page is closed, hunger and happiness ease down by at most maxLoss hearts over `window`.
+// They never fall below `floor`. No poop, sickness, or moving away happens while you are gone.
+const ABSENCE = { minGap: 10 * 60e3, window: 8 * MS_HOUR, maxLoss: 2, floor: 1 };
+function dayKey(ms) {
+  const d = new Date(ms);
+  return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
+}
+function welcomeBack(now) {
+  let away = false, gift = false;
+  const gap = S.savedAt ? now - S.savedAt : 0;
+  if (gap >= ABSENCE.minGap && !S.ended && !S.paused && S.stage !== 'seed') {
+    const loss = Math.min(1, gap / ABSENCE.window) * ABSENCE.maxLoss;
+    S.hunger = Math.max(Math.min(S.hunger, ABSENCE.floor), S.hunger - loss);
+    S.happy = Math.max(Math.min(S.happy, ABSENCE.floor), S.happy - loss);
+    away = true;
+    track('away_return', { hours_away: Math.round(gap / MS_HOUR * 10) / 10 });
+  }
+  const today = dayKey(now);
+  if (S.lastCheckIn !== today) {
+    S.streak = S.lastCheckIn === dayKey(now - MS_DAY) ? (S.streak || 0) + 1 : 1;
+    S.lastCheckIn = today;
+    if (!S.ended && S.stage !== 'seed') {
+      S.hunger = Math.min(4, S.hunger + 1);
+      S.happy = Math.min(4, S.happy + 1);
+      gift = true;
+      track('daily_gift', { streak: S.streak });
+    }
+  }
+  if (gift) toast(`Bubby missed you! Daily gift: +1 heart. Streak: ${S.streak} day${S.streak === 1 ? '' : 's'}`);
+  else if (away) toast('Welcome back! Bubby missed you a little');
+  if (away || gift) save();
+}
+function keepSettings() {
+  return { speed: S.speed, soundOn: S.soundOn, analytics: S.analytics, installedAt: S.installedAt, lastCheckIn: S.lastCheckIn, streak: S.streak };
+}
+
+/* ---- Analytics: PostHog, anonymous random ID, opt-out with the Stats button ---- */
+function anonId() {
+  try {
+    let id = localStorage.getItem('bubby.anon.v1');
+    if (!id) {
+      id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+      localStorage.setItem('bubby.anon.v1', id);
+    }
+    return id;
+  } catch (e) {
+    return 'anon-' + Math.random().toString(36).slice(2);
+  }
+}
+function track(event, props = {}) {
+  if (S.analytics === false || PH_KEY.startsWith('phc_REPLACE')) return;
+  try {
+    fetch(`${PH_HOST}/capture/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        api_key: PH_KEY,
+        event,
+        distinct_id: anonId(),
+        timestamp: new Date().toISOString(),
+        properties: { ...props, stage: S.stage, gen: S.gen, $process_person_profile: false, $lib: 'bubby-web' },
+      }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch (e) {}
 }
 
 /* ---- Wiring ---- */
@@ -1264,6 +1369,8 @@ function syncControls() {
   $$('[data-speed]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.speed === S.speed)));
   $('#btnSound').setAttribute('aria-pressed', String(S.soundOn !== false));
   $('#btnSound').textContent = S.soundOn !== false ? 'Sound on' : 'Sound off';
+  $('#btnStats').setAttribute('aria-pressed', String(S.analytics !== false));
+  $('#btnStats').textContent = S.analytics !== false ? 'Stats on' : 'Stats off';
   $('#btnPower').setAttribute('aria-pressed', String(!!S.paused));
   $('#ovPause').hidden = !S.paused;
   $('#ovEnd').hidden = !S.ended;
@@ -1279,19 +1386,20 @@ function wire() {
   });
   $('#btnReplant').addEventListener('click', () => {
     const gen = S.ended ? S.ended.gen + 1 : S.gen + 1;
-    const keep = { speed: S.speed, soundOn: S.soundOn };
+    const keep = keepSettings();
     S = Object.assign(fresh(gen), keep); A = null; G = null;
     $('#ovEnd').hidden = true; save(); toast('A new seed is planted'); syncControls();
   });
   $$('[data-speed]').forEach(b => b.addEventListener('click', () => { S.speed = +b.dataset.speed; syncControls(); save(); }));
   $('#btnSound').addEventListener('click', () => { S.soundOn = S.soundOn === false; if (S.soundOn) unlockAudio(); syncControls(); save(); beep(880, .05); });
+  $('#btnStats').addEventListener('click', () => { S.analytics = S.analytics === false; syncControls(); save(); });
   const box = $('#resetBox');
   box.addEventListener('click', e => {
     if (e.target.id === 'btnReset') {
       box.innerHTML = '<span>Plant a new seed? Your current Bubby will be gone.</span><button class="chip danger" id="btnResetYes">Start over</button><button class="chip" id="btnResetNo">Keep playing</button>';
       $('#btnResetNo').focus();
     } else if (e.target.id === 'btnResetYes') {
-      const keep = { speed: S.speed, soundOn: S.soundOn };
+      const keep = keepSettings();
       S = Object.assign(fresh(1), keep); A = null; G = null; closeOverlays(); save(); syncControls(); toast('A new seed is planted');
       box.innerHTML = '<button class="chip" id="btnReset">Start over</button>';
     } else if (e.target.id === 'btnResetNo') {
@@ -1365,7 +1473,8 @@ function frame(now) {
   if (uiT > .4) {
     uiT = 0;
     $('[data-act="lights"]')?.classList.toggle('on', S.lights);
-    $('#subtitle').textContent = `Gen ${S.gen} · ${S.ended ? 'New seed' : stageName()} · Day ${Math.floor(S.age / DAY)}`;
+    $('#subtitle').textContent = `Gen ${S.gen} · ${S.ended ? 'New seed' : stageName()} · Day ${Math.floor(S.age / DAY)}`
+      + (S.ended ? '' : ` · ${nearestCountdown()}`);
     renderStatus();
   }
   if (saveT > 3) { saveT = 0; save(); }
@@ -1378,6 +1487,10 @@ function start(data) {
   if (S.soundOn === undefined) S.soundOn = true;
   if (![1, 2, 4].includes(S.speed)) S.speed = 1;
   if (data && data.PET) Object.assign(PET, data.PET);
+  const now = Date.now();
+  if (restored) welcomeBack(now);
+  else { S.installedAt = now; S.lastCheckIn = dayKey(now); S.streak = 1; track('install'); }
+  track('session_start', { days: Math.floor(S.age / DAY) });
   buildTiles(); buildGuide(); wire(); syncControls();
   if (!restored) toast('A seed! Watch it sprout');
   requestAnimationFrame(t => { last = t; frame(t); });
