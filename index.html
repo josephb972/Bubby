@@ -922,7 +922,7 @@ function updateGame(rdt) {
 /* ================= Pixel drawing ================= */
 function hex(c) { const n = parseInt(c.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
 function mix(a, b, t) { const x = hex(a), y = hex(b); return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join(''); }
-function mk(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+function mk(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d', { willReadFrequently: true }); return c; }
 function E(x, cx, cy, rx, ry, col, rot = 0) {
   const Rr = Math.max(rx, ry) + 1, cs = Math.cos(rot), sn = Math.sin(rot), fn = typeof col === 'function';
   if (!fn) x.fillStyle = col;

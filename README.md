@@ -25,3 +25,9 @@ the power button pauses, and progress is saved in the browser's localStorage.
 - `prefers-reduced-motion` turns off screen shake, parallax drift and particles; hearts and score numbers still appear, just without movement.
 - The guide's collectible cards are remembered in the optional `bubby.collection.v1` localStorage key. The game save (`bubby.save.v1`) is unchanged.
 - `prompts/visual-audit.md` is the audit behind this pass; `prompts/shots/` holds before/after contact sheets.
+
+## Browser extension (Chrome / Edge, Manifest V3)
+
+`extension/` is a generated, loadable build of the game (toolbar button opens Bubby in a tab; no permissions; fonts bundled locally).
+Rebuild with `python3 tools/build-extension.py` (fetches the fonts) and `node tools/make-icons.js` (icons), then `--zip-only` to make the upload zip.
+To test: `chrome://extensions` → Developer mode → Load unpacked → pick `extension/`.
