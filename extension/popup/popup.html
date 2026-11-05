@@ -11,7 +11,28 @@
 
   <!-- ============ Main view ============ -->
   <section id="viewMain" aria-label="Bubby">
-    <!-- Toy layout: the original Bubby device -->
+    <!-- Photo toy pod: the device artwork, with the live screen and buttons laid over it -->
+    <div class="photo-wrap" id="photoWrap">
+      <div class="pdev">
+        <img class="pimg" src="../art/photo/toy.webp" alt="" draggable="false">
+        <div class="pbrand">
+          <h1>Bub<span>by</span></h1>
+          <p class="sub" id="photoSub">Gen 1 · Seed · Day 0</p>
+        </div>
+        <div class="pq" id="photoSlot"></div>
+        <button class="hot" data-act="feed" style="left:81.1px;top:465.2px" aria-label="Feed" title="Feed (F)"></button>
+        <button class="hot" data-act="play" style="left:139.8px;top:492.7px" aria-label="Play" title="Play (P)"></button>
+        <button class="hot" data-act="clean" style="left:208.7px;top:494.9px" aria-label="Clean" title="Clean (C)"></button>
+        <button class="hot" data-act="lights" style="left:271.7px;top:467.4px" aria-label="Sleep: lights on or off" title="Sleep: lights on/off (L)"></button>
+        <button class="hot power" data-act="pause" style="left:302.8px;top:415.2px" aria-label="Pause" aria-pressed="false" title="Pause (time stops for Bubby)"></button>
+        <p class="pfoot" id="photoFoot"></p>
+        <button class="corner-gear pgear" id="btnSettingsPhoto" aria-label="Settings" title="Settings">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Toy layout: the original Bubby device, drawn in code -->
     <div class="toy-wrap" id="toyWrap">
       <div class="device" id="device">
       <svg class="shell" viewBox="0 0 360 600" aria-hidden="true">
@@ -198,6 +219,7 @@
       <legend>Look</legend>
       <div class="alerts-row" id="looks">
         <label class="switch"><input type="radio" name="look" value="toy"><span>Toy pod</span></label>
+        <label class="switch"><input type="radio" name="look" value="drawn"><span>Drawn toy</span></label>
         <label class="switch"><input type="radio" name="look" value="compact"><span>Compact</span></label>
       </div>
     </fieldset>

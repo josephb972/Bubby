@@ -334,10 +334,17 @@ function buildTiles() {
     $(i < 4 ? '#tilesTop' : '#tilesBot').appendChild(b);
   });
 }
+// Looks: "toy" = the photo of the toy pod (default), "drawn" = the code-drawn device, "compact" = phone-style layout.
 function applyLook() {
-  const toy = (S.cfg.look || 'toy') === 'toy';
+  const look = ['toy', 'drawn', 'compact'].includes(S.cfg.look) ? S.cfg.look : 'toy';
+  const toy = look !== 'compact', photo = look === 'toy';
   $('#app').classList.toggle('toy', toy);
+  $('#app').classList.toggle('photo', photo);
   document.body.classList.toggle('toy', toy);
+  document.body.classList.toggle('photo', photo);
+  const screen = $('.tscreen');
+  if (photo && screen.parentElement !== $('#photoSlot')) $('#photoSlot').appendChild(screen);
+  if (!photo && screen.parentElement !== $('#device')) $('#device').insertBefore(screen, $('#device .hw'));
   const slot = $(toy ? '#toySlot' : '#compactSlot');
   if ($('#sceneWrap').parentElement !== slot) slot.appendChild($('#sceneWrap'));
 }
@@ -391,7 +398,7 @@ function renderUI() {
   const low = n => n <= 1 && S.stage !== 'seed' && !S.ended;
   $('#mHunger').parentElement.classList.toggle('low', low(hearts($('#mHunger'), S.stage === 'seed' ? 4 : S.hunger, 'Hunger')));
   $('#mHappy').parentElement.classList.toggle('low', low(hearts($('#mHappy'), S.stage === 'seed' ? 4 : S.happy, 'Happy')));
-  $('#toySub').textContent = $('#sub').textContent;
+  $('#toySub').textContent = $('#photoSub').textContent = $('#sub').textContent;
   renderStatus();
   $('#mDisc').style.width = S.discipline + '%'; $('#mDiscN').textContent = S.discipline + '%';
   const hm = Rules.healthyMax(S.stage);
@@ -416,7 +423,7 @@ function renderUI() {
   $$('.act').forEach(b => b.classList.toggle('need', live && !!needs[b.dataset.act]));
   $$('[data-act="lights"]').forEach(b => b.classList.toggle('on', S.lights));
 
-  for (const b of [$('#btnPause'), $('#btnPower')]) {
+  for (const b of [$('#btnPause'), ...$$('[data-act="pause"]')]) {
     b.setAttribute('aria-pressed', String(!!S.paused));
     b.setAttribute('aria-label', S.paused ? 'Resume' : 'Pause');
   }
@@ -435,6 +442,7 @@ function renderUI() {
   }
   $('#foot').textContent = foot;
   $('#toyFoot').textContent = foot;
+  $('#photoFoot').textContent = foot.split(' \u00b7 ').join('\n');
 }
 
 /* ---------------- Settings ---------------- */
@@ -486,6 +494,7 @@ function wire() {
   $('#btnPause').addEventListener('click', () => runAction('pause'));
   $('#btnSettings').addEventListener('click', openSettings);
   $('#btnSettingsToy').addEventListener('click', openSettings);
+  $('#btnSettingsPhoto').addEventListener('click', openSettings);
   $('#stCall').addEventListener('click', () => { const a = $('#stCall').dataset.need; closeOverlays(); if (a) runAction(a); });
   $('#looks').addEventListener('change', e => { if (e.target.name === 'look') { S.cfg.look = e.target.value; applyLook(); persist(); } });
   $('#btnBack').addEventListener('click', closeSettings);

@@ -53,8 +53,8 @@ Hover over the icon to see a sentence explaining what's going on.
 
 ### The popup: the toy pod
 
-Click the icon, or press **Alt + Shift + B** from any tab (Option + Shift + B on a Mac). You get the same toy as the
-original game:
+Click the icon, or press **Alt + Shift + B** from any tab (Option + Shift + B on a Mac). The popup is the toy pod
+itself, built from the Bubby device artwork, with the live game running on its screen:
 
 - **Round buttons:** **FEED**, **PLAY**, **CLEAN** and **SLEEP** (lights on/off). The small grey button is **power**:
   it pauses time for Bubby.
@@ -65,8 +65,9 @@ original game:
   *Give medicine*, and so on. **Enter** does the same without opening it.
 - **While you were away:** when you open Bubby after a while, a card on the screen sums up what happened
   ("Bubby got hungry and called for you", "Bubby pooped twice", "The seed sprouted!").
-- **⚙ (top right):** settings. Under **Look** you can switch to the **Compact** layout, which has bigger hearts, one
-  big "what to do now" button and a row of action buttons.
+- **⚙ (bottom right):** settings. Under **Look** you can pick **Toy pod** (the artwork, default), **Drawn toy** (the
+  same device drawn in code, as in the web game) or **Compact** (bigger hearts, one big "what to do now" button and a
+  row of action buttons).
 
 Keyboard: `F` feed, `P` play, `C` clean, `L` lights, `M` medicine, `D` scold, `S` status, `A` attention,
 `1`/`2` choose in menus, `←` `→` in games, `Enter` do what Bubby needs, `Esc` back.
@@ -161,6 +162,7 @@ extension/
   core/store.js        saving, plus toolbar badge, tooltip and icon
   art/sprites.js       all pixel art, drawn in code (works in the popup and in the background)
   art/icon.js          Bubby's live toolbar face
+  art/photo/toy.webp   the toy pod artwork used as the popup background
   popup/               the popup: toy pod and compact layouts, game loop, minigames, settings
   welcome/             first-run page
   icons/               static icons (rebuild with `node tools/make-icons.mjs`)
