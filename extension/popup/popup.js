@@ -3,7 +3,6 @@ import * as Rules from '../core/rules.js';
 import { loadState, saveState, updateAction } from '../core/store.js';
 import { art, SW, GROUND } from '../art/sprites.js';
 import { drawScene, catchY } from './scene.js';
-import { buildShell } from './shell.js';
 
 const { clamp, rand } = Rules;
 const $ = (s, r = document) => r.querySelector(s);
@@ -334,17 +333,11 @@ function buildTiles() {
     $(i < 4 ? '#tilesTop' : '#tilesBot').appendChild(b);
   });
 }
-// Looks: "toy" = the photo of the toy pod (default), "drawn" = the code-drawn device, "compact" = phone-style layout.
+// Looks: "toy" = the toy pod artwork (default), "compact" = the first extension layout.
 function applyLook() {
-  const look = ['toy', 'drawn', 'compact'].includes(S.cfg.look) ? S.cfg.look : 'toy';
-  const toy = look !== 'compact', photo = look === 'toy';
+  const toy = S.cfg.look !== 'compact';
   $('#app').classList.toggle('toy', toy);
-  $('#app').classList.toggle('photo', photo);
   document.body.classList.toggle('toy', toy);
-  document.body.classList.toggle('photo', photo);
-  const screen = $('.tscreen');
-  if (photo && screen.parentElement !== $('#photoSlot')) $('#photoSlot').appendChild(screen);
-  if (!photo && screen.parentElement !== $('#device')) $('#device').insertBefore(screen, $('#device .hw'));
   const slot = $(toy ? '#toySlot' : '#compactSlot');
   if ($('#sceneWrap').parentElement !== slot) slot.appendChild($('#sceneWrap'));
 }
@@ -398,7 +391,7 @@ function renderUI() {
   const low = n => n <= 1 && S.stage !== 'seed' && !S.ended;
   $('#mHunger').parentElement.classList.toggle('low', low(hearts($('#mHunger'), S.stage === 'seed' ? 4 : S.hunger, 'Hunger')));
   $('#mHappy').parentElement.classList.toggle('low', low(hearts($('#mHappy'), S.stage === 'seed' ? 4 : S.happy, 'Happy')));
-  $('#toySub').textContent = $('#photoSub').textContent = $('#sub').textContent;
+  $('#photoSub').textContent = $('#sub').textContent;
   renderStatus();
   $('#mDisc').style.width = S.discipline + '%'; $('#mDiscN').textContent = S.discipline + '%';
   const hm = Rules.healthyMax(S.stage);
@@ -441,7 +434,6 @@ function renderUI() {
     foot = `${P.label} · ${S.asleep ? `asleep until ${hhmm(S.cfg.wake)}` : `bedtime ${hhmm(S.cfg.bed)}`} · ${grow}`;
   }
   $('#foot').textContent = foot;
-  $('#toyFoot').textContent = foot;
   $('#photoFoot').textContent = foot.split(' \u00b7 ').join('\n');
 }
 
@@ -456,7 +448,7 @@ function renderSettings() {
     l.querySelector('input').checked = S.cfg.pace === id;
     box.appendChild(l);
   }
-  $$('input[name="look"]').forEach(r => { r.checked = r.value === (S.cfg.look || 'toy'); });
+  $$('input[name="look"]').forEach(r => { r.checked = r.value === (S.cfg.look === 'compact' ? 'compact' : 'toy'); });
   $('#inBed').value = hhmm(S.cfg.bed); $('#inWake').value = hhmm(S.cfg.wake);
   $('#inNotify').checked = S.cfg.notify !== false; $('#inSound').checked = S.cfg.sound !== false;
   const clock = Rules.pace(S).clock;
@@ -493,7 +485,6 @@ function wire() {
   $('#smart').addEventListener('click', () => { const a = $('#smart').dataset.do; if (a) runAction(a); });
   $('#btnPause').addEventListener('click', () => runAction('pause'));
   $('#btnSettings').addEventListener('click', openSettings);
-  $('#btnSettingsToy').addEventListener('click', openSettings);
   $('#btnSettingsPhoto').addEventListener('click', openSettings);
   $('#stCall').addEventListener('click', () => { const a = $('#stCall').dataset.need; closeOverlays(); if (a) runAction(a); });
   $('#looks').addEventListener('change', e => { if (e.target.name === 'look') { S.cfg.look = e.target.value; applyLook(); persist(); } });
@@ -597,7 +588,6 @@ async function boot() {
   const a = art();
   HEART = { full: a.HEART_FULL.toDataURL(), empty: a.HEART_EMPTY.toDataURL() };
   $$('canvas[data-icon]').forEach(c => drawIcon(c, c.dataset.icon));
-  buildShell(document);
   buildTiles();
   applyLook();
   wire();
