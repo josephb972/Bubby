@@ -14,11 +14,11 @@ You load it as an "unpacked" extension: the normal way to try an extension befor
 
 1. **Get the files.**
    - Easiest: if you were sent `bubby-extension.zip`, unzip it. You get a folder called `bubby-extension`.
-   - Or from GitHub: open the repository, switch to the branch `claude/determined-davinci-0pd8w7`, then
+   - Or from GitHub: open the repository, switch to the branch `claude/kind-babbage-d0msqa`, then
      **Code → Download ZIP**, unzip, and use the `extension` folder inside.
    - Or with git:
      ```bash
-     git clone -b claude/determined-davinci-0pd8w7 https://github.com/josephb972/Bubby.git
+     git clone -b claude/kind-babbage-d0msqa https://github.com/josephb972/Bubby.git
      ```
      The extension is the `Bubby/extension` folder.
 2. **Open the extensions page.** Type one of these into the address bar:
@@ -31,8 +31,7 @@ You load it as an "unpacked" extension: the normal way to try an extension befor
 5. **Pin Bubby.** Click the puzzle-piece icon next to the address bar, then the pin next to Bubby.
    Pinning matters: Bubby's face on the toolbar *is* the widget.
 
-A welcome tab opens and the seed starts sprouting. The welcome tab asks when you go to bed, so Bubby stays quiet at
-night. Keep the folder where it is: the browser loads Bubby from it.
+A welcome tab opens and the seed starts sprouting. Keep the folder where it is: the browser loads Bubby from it.
 
 ---
 
@@ -114,11 +113,8 @@ cause a toothache), and clean poop quickly or Bubby gets sick.
 1. **Watch it sprout (1 min).** Open the popup. The seed wobbles, cracks, and becomes Bubby the Bulb.
 2. **Care for it.** Press **FEED → Meal**, then **PLAY → Seed catch**: drag on the garden or hold the arrow keys.
    Gold seeds are worth 3 and pebbles cost 2.
-3. **Skip ahead.** The time-skip buttons are hidden developer tools, so players can't cheat. To show them, open
-   ⚙ Settings and tap the **Settings** title 5 times quickly (or type `bubby.dev(true)` in the service worker console,
-   see step 5). Then press **+4 hours**. You'll get a "While you were away" card, and Bubby will probably be
+3. **Skip ahead.** ⚙ Settings → **+4 hours**. You'll get a "While you were away" card, and Bubby will probably be
    hungry or have pooped. Tap the **!** tile, press the button it shows, and watch the toolbar badge clear.
-   Tap the title 5 times again to hide the buttons.
 4. **Check notifications.** ⚙ Settings → **Test notification**. If nothing appears, see Troubleshooting below.
 5. **Try a real background notification.** Close the popup, then:
    1. Go to `chrome://extensions` and click the **service worker** link on the Bubby card (next to "Inspect views"). A console opens.
@@ -132,7 +128,7 @@ cause a toothache), and clean poop quickly or Bubby gets sick.
    Switch back to Chill when you're done.
 
 Other console helpers: `bubby.tick()` runs a background check now, `bubby.act('clean')` does what a notification button
-does, `bubby.dev(true)` / `bubby.dev(false)` shows or hides the time-skip buttons, and `bubby.state()` shows the saved game.
+does, and `bubby.state()` shows the saved game.
 
 ---
 
@@ -146,7 +142,7 @@ does, `bubby.dev(true)` / `bubby.dev(false)` shows or hides the time-skip button
   - Turn off Do Not Disturb / Focus.
   - Bubby is quiet while asleep, waits 40 minutes between notifications, and sends at most 6 a day.
 - **Clicking a notification opens a small window instead of the popup.** Some browsers only open extension popups when
-  you click the icon. The window is the same game, and sizes itself to fit the toy pod or the compact look.
+  you click the icon. The window is the same game.
 - **The browser was closed for a while.** Bubby still lived through that time. It catches up the moment the browser
   starts again, and the summary card tells you what happened. Notifications only arrive while the browser is running.
 - **I changed the code and nothing happened.** On `chrome://extensions`, click the ↻ reload arrow on the Bubby card,
@@ -179,18 +175,11 @@ extension storage.
 wakes up, `advance()` replays the missed time in small steps using the same rules, so Bubby behaves the same whether
 you watched or not. While the popup is open it runs the game live and the background stays out of the way.
 
-**Developer checks and builds.** These need Node.js; the ones marked (Playwright) also need Playwright with Chromium.
+**Developer checks.** These need Node.js; the icon rebuild also needs Playwright.
 - `node tools/sim-check.mjs` plays 80 simulated lives (players who check in every 30 minutes, every
   2 hours, 3 times a day, morning and evening, or never) and prints how often each ends up Radiant, Daisy or
   Thistle, how sick Bubby got, and how many notifications a day each player would get.
-- `node tools/e2e-check.mjs` (Playwright) loads the extension into Chromium and checks the welcome page's bedtime
-  question, the popup, the hidden developer tools, the notification fallback window and the background worker.
-- `node tools/build-store.mjs` makes `dist/bubby-<version>.zip` for the Chrome Web Store and Edge Add-ons
-  (`manifest.json` at the root, no README). Add `--unpacked` to make `bubby-extension.zip` for "Load unpacked".
-- `node tools/store-assets.mjs` (Playwright) renders the store screenshots and promo tiles into `store/`.
-- `node tools/make-icons.mjs` (Playwright) regenerates the PNG icons from the pixel art.
-
-Store listing text and privacy answers: `docs/STORE-LISTING.md`. Privacy policy: `docs/PRIVACY.md`.
+- `node tools/make-icons.mjs` regenerates the PNG icons from the pixel art.
 
 The original single-file game (`index.html` at the repository root) still works on its own. It keeps its own save,
 separate from the extension.

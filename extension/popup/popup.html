@@ -147,7 +147,7 @@
   <!-- ============ Settings view ============ -->
   <section id="viewSettings" class="settings" aria-label="Settings" hidden>
     <header class="top">
-      <div class="brand"><h1 id="settingsTitle">Settings</h1></div>
+      <div class="brand"><h1>Settings</h1></div>
       <div class="top-btns">
         <button class="round" id="btnBack" aria-label="Back to Bubby" title="Back">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
@@ -186,17 +186,15 @@
     </fieldset>
 
     <fieldset class="group">
-      <legend>More</legend>
-      <!-- Developer tools, hidden unless switched on: tap the "Settings" title 5 times, or run bubby.dev(true) in the
-           service worker console. Skipping time is for testing only. -->
-      <div class="row three" id="devTools" hidden>
+      <legend>Try it out</legend>
+      <div class="row three">
         <button class="chip" data-skip="1">+1 hour</button>
         <button class="chip" data-skip="4">+4 hours</button>
         <button class="chip" data-skip="12">+12 hours</button>
       </div>
       <div class="row" id="resetBox"><button class="chip" id="btnTestNote">Test notification</button><button class="chip danger" id="btnReset">Start over</button></div>
     </fieldset>
-    <p class="foot">Open Bubby from any tab: <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd><span id="feedbackBox" hidden><br><a id="feedbackLink" target="_blank" rel="noopener">Send feedback or rate Bubby</a></span></p>
+    <p class="foot">Open Bubby from any tab: <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd></p>
   </section>
 </div>
 <script type="module" src="popup.js"></script>

@@ -87,14 +87,9 @@ async function maybeNotify(S) {
   await show(NOTE, copy, S);
 }
 
-// Fallback window sizes (outer size, including the title bar). The toy pod artwork is 468×600; the compact look is
-// 360 wide. The window then fits itself exactly to its content (see fitWindow in popup.js).
-const WIN_SIZE = { toy: { width: 490, height: 650 }, compact: { width: 382, height: 640 } };
 async function openBubby() {
   try { await chrome.action.openPopup(); return; } catch (e) { /* not available or no focused window */ }
-  const S = await loadState();
-  const size = WIN_SIZE[S.cfg.look === 'compact' ? 'compact' : 'toy'];
-  await chrome.windows.create({ url: chrome.runtime.getURL('popup/popup.html?win=1'), type: 'popup', ...size, focused: true });
+  await chrome.windows.create({ url: chrome.runtime.getURL('popup/popup.html?win=1'), type: 'popup', width: 380, height: 660, focused: true });
 }
 
 async function quickAction(action) {
@@ -139,25 +134,6 @@ chrome.runtime.onConnect.addListener(port => {
   port.onDisconnect.addListener(() => { if (popupPort === port) popupPort = null; });
 });
 
-/* ---------- Settings from other extension pages (the welcome page's bedtime question) ---------- */
-// Saved through the same queue as the background updates. If the popup is open it owns the state, so it is told too.
-function setCfg(patch) {
-  return serial(async () => {
-    const S = await loadState();
-    Object.assign(S.cfg, patch);
-    await saveState(S);
-    await updateAction(S);
-    if (popupPort) popupPort.postMessage({ type: 'cfg', cfg: patch });
-  });
-}
-chrome.runtime.onMessage.addListener((msg, sender, reply) => {
-  if (!msg || msg.type !== 'set-bedtime' || sender.id !== chrome.runtime.id) return;
-  const ok = v => Number.isInteger(v) && v >= 0 && v < 1440;
-  if (!ok(msg.bed) || !ok(msg.wake) || msg.bed === msg.wake) { reply({ ok: false }); return; }
-  setCfg({ bed: msg.bed, wake: msg.wake, bedAsked: true }).then(() => reply({ ok: true }));
-  return true; // reply asynchronously
-});
-
 // Handy from the service worker console (chrome://extensions → Bubby → "service worker"):
 //   bubby.skip(6)           pretend 6 hours passed with the popup closed, then run the background update
 //   bubby.tick()            run the background update now
@@ -175,7 +151,6 @@ self.bubby = {
     return { stage: after.stage, hunger: +after.hunger.toFixed(2), happy: +after.happy.toFixed(2), poops: after.poops.length, sick: after.sick, asleep: after.asleep, call: after.call && after.call.reason };
   }),
   act: a => serial(() => quickAction(a)),
-  dev: (on = true) => setCfg({ dev: !!on }).then(() => `Developer tools ${on ? 'on' : 'off'} (reopen the popup)`),
   state: () => loadState(),
   iconError: () => store.lastIconError,
 };

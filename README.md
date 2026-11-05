@@ -22,4 +22,3 @@ the power button pauses, and progress is saved in the browser's localStorage.
 Bubby also lives in your browser toolbar as a Chrome / Edge / Brave extension, in real time: its face on the toolbar
 shows its mood, a badge and polite notifications tell you when it needs you, and one click opens the toy pod
 right in the toolbar. See [`extension/README.md`](extension/README.md) for the install guide and a 10-minute test drive.
-Launch status: [`docs/LAUNCH-CHECKLIST.md`](docs/LAUNCH-CHECKLIST.md); privacy policy: [`docs/PRIVACY.md`](docs/PRIVACY.md).
