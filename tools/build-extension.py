@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Build the Chrome/Edge (Manifest V3) extension from index.html.
 
+Two pages come out: popup.html (toolbar popup, compact) and bubby.html (full tab with the care guide).
 Why a build step: extension pages forbid inline <script> and the store dislikes remote resources, so
 this extracts the game script into game.js and bundles the Latin subset of the Google Fonts locally.
 
@@ -59,27 +60,20 @@ def build_page():
 </html>
 '''
     open(f'{OUT}/bubby.html', 'w').write(html)
+    open(f'{OUT}/popup.html', 'w').write(html.replace('<html lang="en">', '<html lang="en" class="popup">'))
 
 def build_misc():
     icons = {str(n): f'icons/icon{n}.png' for n in (16, 32, 48, 128)}
     manifest = {
         'manifest_version': 3, 'name': 'Bubby: Pixel Garden Pet', 'version': VERSION,
         'description': 'A cozy pixel virtual pet that grows from a seed. Feed it, play with it and keep its garden clean.',
-        'action': {'default_title': 'Open Bubby', 'default_icon': icons},
+        'action': {'default_title': 'Bubby', 'default_icon': icons, 'default_popup': 'popup.html'},
         'icons': icons,
-        'background': {'service_worker': 'background.js'},
         'content_security_policy': {'extension_pages': "script-src 'self'; object-src 'self'"},
     }
     open(f'{OUT}/manifest.json', 'w').write(json.dumps(manifest, indent=2) + '\n')
-    open(f'{OUT}/background.js', 'w').write('''// Toolbar click: open Bubby in a tab, or focus the one that is already open
-// (two tabs would race on the same saved game). getContexts needs no extra permission.
-chrome.action.onClicked.addListener(async () => {
-  const url = chrome.runtime.getURL('bubby.html');
-  const ctxs = await chrome.runtime.getContexts({ contextTypes: ['TAB'], documentUrls: [url] });
-  if (ctxs.length) { await chrome.tabs.update(ctxs[0].tabId, { active: true }); await chrome.windows.update(ctxs[0].windowId, { focused: true }); }
-  else await chrome.tabs.create({ url });
-});
-''')
+    bg = f'{OUT}/background.js'
+    if os.path.exists(bg): os.remove(bg)
 
 def zip_it():
     z = f'{ROOT}/bubby-extension-{VERSION}.zip'

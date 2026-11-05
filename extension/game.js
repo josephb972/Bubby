@@ -1596,14 +1596,19 @@ function pixFrame(n, o) {
 })();
 /* Pick the art-pixel size so that (css px per art pixel) × devicePixelRatio is a whole number. */
 function fitDevice() {
-  const dpr = window.devicePixelRatio || 1, vw = document.documentElement.clientWidth || 390;
-  const wmax = Math.min(430, (vw - 8) / .844);
+  const dpr = window.devicePixelRatio || 1, popup = document.documentElement.classList.contains('popup');
+  const vw = popup ? 400 : (document.documentElement.clientWidth || 390);
+  let wmax = Math.min(430, (vw - 8) / .844);
+  if (popup) wmax = Math.min(wmax, (600 - 62) / 1.6667);      // device is 5:3 tall; leave room for the controls row
   let k = Math.floor(wmax / 189.474 * dpr + 1e-6);
   let s = k / dpr;
+  if (popup && s < 1.4) s = 1.5;                               // 1× screens: 1.5 beats a tiny 1.0 (pixels become 1/2 px alternating)
   if (s < 1) s = Math.max(.75, wmax / 189.474);
   document.documentElement.style.setProperty('--s', s.toFixed(4) + 'px');
 }
 fitDevice(); addEventListener('resize', fitDevice);
+if (window.chrome && chrome.tabs && chrome.runtime && chrome.runtime.getURL) $('#btnFull').addEventListener('click', () => { chrome.tabs.create({ url: chrome.runtime.getURL('bubby.html') }); });
+else { const b = $('#btnFull'); if (b) b.remove(); }
 
 /* ---- Device shell (scalloped body and bezel) ---- */
 (function buildShell() {

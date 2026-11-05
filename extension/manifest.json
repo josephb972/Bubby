@@ -4,22 +4,20 @@
   "version": "1.0.0",
   "description": "A cozy pixel virtual pet that grows from a seed. Feed it, play with it and keep its garden clean.",
   "action": {
-    "default_title": "Open Bubby",
+    "default_title": "Bubby",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png",
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
-    }
+    },
+    "default_popup": "popup.html"
   },
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  },
-  "background": {
-    "service_worker": "background.js"
   },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"

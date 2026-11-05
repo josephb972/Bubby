@@ -297,6 +297,14 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
 #chainWrap { transform-origin: 180px 112px; }
 #chainWrap.sway { animation: chainsway 1s cubic-bezier(.2, .8, .3, 1); }
 @keyframes chainsway { 0% { transform: rotate(0); } 18% { transform: rotate(2.2deg); } 42% { transform: rotate(-1.6deg); } 66% { transform: rotate(.8deg); } 100% { transform: rotate(0); } }
+/* popup build (browser extension): everything must fit Chrome's 600px popup height */
+.popup-only { display: none; }
+html.popup .popup-only { display: inline-flex; }
+html.popup, html.popup body { width: 400px; height: 600px; overflow: hidden; }
+html.popup .page { display: block; padding: 4px 0 0; }
+html.popup .brand, html.popup .guide, html.popup #speedLbl { display: none; }
+html.popup .play-col { gap: 4px; }
+html.popup .under { gap: 8px; }
 @media (prefers-reduced-motion: reduce) {
   .toast, .namecard, .ov-pause i, .tile.bounce canvas, .st-hearts canvas.pop, #gRound.bump { animation: none !important; }
   .tile.alert { animation: none; background-color: #ff9aa0; }
@@ -450,6 +458,7 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
         <button data-speed="1" aria-pressed="true">1×</button><button data-speed="2" aria-pressed="false">2×</button><button data-speed="4" aria-pressed="false">4×</button>
       </span>
       <button class="chip" id="btnSound" aria-pressed="true" aria-label="Sound"><canvas width="16" height="16" id="sndIcon"></canvas><span id="sndTxt">Sound on</span></button>
+      <button class="chip popup-only" id="btnFull" aria-label="Open the full page with the care guide"><span aria-hidden="true">↗</span> Full page</button>
     </div>
   </section>
 
