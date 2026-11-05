@@ -3,6 +3,7 @@ import * as Rules from '../core/rules.js';
 import { loadState, saveState, updateAction } from '../core/store.js';
 import { art, SW, GROUND } from '../art/sprites.js';
 import { drawScene, catchY } from './scene.js';
+import { buildShell } from './shell.js';
 
 const { clamp, rand } = Rules;
 const $ = (s, r = document) => r.querySelector(s);
@@ -71,10 +72,11 @@ function toast(msg) {
 }
 
 /* ---------------- Overlays ---------------- */
-const OVS = { feed: '#ovFeed', play: '#ovPlay', game: '#ovGame', away: '#ovAway' };
+const OVS = { feed: '#ovFeed', play: '#ovPlay', game: '#ovGame', away: '#ovAway', status: '#ovStatus' };
 function showOv(name) {
   for (const k in OVS) $(OVS[k]).hidden = k !== name;
   OV = name;
+  if (name === 'status') renderStatus();
   const first = name && $(OVS[name]).querySelector('button:not([disabled])');
   if (first && name !== 'game') first.focus({ preventScroll: true });
 }
@@ -94,6 +96,7 @@ function runAction(a) {
   if (a === 'replant') return replant();
   if (a === 'resume' || a === 'pause') return togglePause();
   if (S.ended || G) return;
+  if (a === 'status' || a === 'attn') { beep(880, .03); if (OV === 'status') closeOverlays(); else showOv('status'); return; }
   if (A && A.type !== 'sparkle' && A.type !== 'happy') return;
   closeOverlays();
   beep(880, .03);
@@ -307,13 +310,71 @@ function showEnd() {
 
 /* ---------------- UI rendering ---------------- */
 let HEART = null;
-function hearts(el, v) {
+function hearts(el, v, label) {
   const n = Math.ceil(v - 1e-3);
-  if (el.dataset.n === String(n)) return;
-  el.dataset.n = String(n);
-  el.innerHTML = [0, 1, 2, 3].map(i => `<img src="${i < n ? HEART.full : HEART.empty}" alt="">`).join('');
-  el.setAttribute('aria-label', `${el.id === 'mHunger' ? 'Hunger' : 'Happy'}: ${n} of 4 hearts`);
-  el.parentElement.classList.toggle('low', n <= 1 && S.stage !== 'seed' && !S.ended);
+  if (el.dataset.n !== String(n)) {
+    el.dataset.n = String(n);
+    el.innerHTML = [0, 1, 2, 3].map(i => `<img src="${i < n ? HEART.full : HEART.empty}" alt="">`).join('');
+    el.setAttribute('aria-label', `${label}: ${n} of 4 hearts`);
+  }
+  return n;
+}
+
+/* ---------------- Toy pod: tiles, status screen, layout ---------------- */
+const TILES = [
+  ['feed', 'Feed', '#f7c6d0'], ['status', 'Status', '#fbe6a2'], ['scold', 'Discipline', '#cfe8b8'], ['med', 'Medicine', '#ddd2f2'],
+  ['clean', 'Clean', '#ecd5f3'], ['lights', 'Lights', '#fbd8b6'], ['play', 'Play', '#c9e2f4'], ['attn', 'Attention', '#fde3c6'],
+];
+function buildTiles() {
+  TILES.forEach(([k, label, col], i) => {
+    const b = document.createElement('button');
+    b.className = 'tile'; b.dataset.act = k; b.style.setProperty('--t', col);
+    b.setAttribute('aria-label', label); b.title = label;
+    const c = document.createElement('canvas'); c.width = c.height = 16; drawIcon(c, k); b.appendChild(c);
+    $(i < 4 ? '#tilesTop' : '#tilesBot').appendChild(b);
+  });
+}
+function applyLook() {
+  const toy = (S.cfg.look || 'toy') === 'toy';
+  $('#app').classList.toggle('toy', toy);
+  document.body.classList.toggle('toy', toy);
+  const slot = $(toy ? '#toySlot' : '#compactSlot');
+  if ($('#sceneWrap').parentElement !== slot) slot.appendChild($('#sceneWrap'));
+}
+function renderStatus() {
+  if (OV !== 'status') return;
+  $('#stName').textContent = Rules.stageName(S);
+  const hm = Rules.healthyMax(S.stage);
+  $('#stWeight').textContent = S.stage === 'seed' ? '–' : `${S.weight}g ${S.weight > hm ? '(heavy)' : '(healthy)'}`;
+  hearts($('#stHunger'), S.stage === 'seed' ? 4 : S.hunger, 'Hunger');
+  hearts($('#stHappy'), S.stage === 'seed' ? 4 : S.happy, 'Happy');
+  $('#stDisc').style.width = S.discipline + '%'; $('#stDiscN').textContent = S.discipline + '%';
+  $('#stMist').textContent = S.mistakes;
+  let msg, ok = false;
+  if (S.stage === 'seed') { msg = 'The seed is about to sprout.'; ok = true; }
+  else if (S.call) msg = Rules.CALL_TEXT[S.call.reason];
+  else if (S.sick) msg = `Bubby is sick. ${S.doses} dose${S.doses > 1 ? 's' : ''} of medicine needed.`;
+  else if (S.poops.length) msg = 'There is poop to clean up.';
+  else if (S.asleep) { msg = 'Bubby is sleeping soundly.'; ok = true; }
+  else if (S.hunger <= 1) msg = 'Bubby is getting hungry.';
+  else if (S.happy <= 1) msg = 'Bubby could use some fun.';
+  else { msg = 'Bubby is doing fine.'; ok = true; }
+  // The advice line doubles as the button that does it.
+  const need = Rules.topNeed(S), c = $('#stCall');
+  const go = !!need.act && need.tone !== 'ok' && need.tone !== 'calm';
+  if (go) {
+    const why = {
+      meal: S.hunger <= 0 ? 'Bubby is starving!' : 'Bubby is getting hungry.',
+      clean: 'There is poop to clean up.',
+      med: `Bubby is sick. ${S.doses} dose${S.doses > 1 ? 's' : ''} needed.`,
+      play: S.happy <= 0 ? 'Bubby feels lonely.' : 'Bubby could use some fun.',
+      lights: S.asleep ? 'Bubby fell asleep with the lights on.' : 'It\u2019s dark, but Bubby is awake.',
+    }[need.act];
+    if (why) msg = why;
+  }
+  c.textContent = go ? `${msg} \u25B8 ${need.label}` : msg;
+  c.classList.toggle('ok', ok && !go); c.classList.toggle('go', go);
+  c.disabled = !go; c.dataset.need = go ? need.act : '';
 }
 function hhmm(min) { const h = Math.floor(min / 60) % 24, m = Math.round(min % 60); return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`; }
 function drawIcon(canvas, key) {
@@ -327,8 +388,11 @@ function renderUI() {
   if (!S) return;
   const P = Rules.pace(S);
   $('#sub').textContent = `Gen ${S.gen} · ${S.ended ? 'New seed' : Rules.stageName(S)} · Day ${Rules.dayNumber(S)}`;
-  hearts($('#mHunger'), S.stage === 'seed' ? 4 : S.hunger);
-  hearts($('#mHappy'), S.stage === 'seed' ? 4 : S.happy);
+  const low = n => n <= 1 && S.stage !== 'seed' && !S.ended;
+  $('#mHunger').parentElement.classList.toggle('low', low(hearts($('#mHunger'), S.stage === 'seed' ? 4 : S.hunger, 'Hunger')));
+  $('#mHappy').parentElement.classList.toggle('low', low(hearts($('#mHappy'), S.stage === 'seed' ? 4 : S.happy, 'Happy')));
+  $('#toySub').textContent = $('#sub').textContent;
+  renderStatus();
   $('#mDisc').style.width = S.discipline + '%'; $('#mDiscN').textContent = S.discipline + '%';
   const hm = Rules.healthyMax(S.stage);
   $('#mWeight').textContent = S.stage === 'seed' ? '–' : `${S.weight}g${S.weight > hm ? ' (heavy)' : ''}`;
@@ -350,10 +414,12 @@ function renderUI() {
   const needs = { feed: S.hunger <= 1, clean: S.poops.length > 0, med: S.sick, lights: (S.asleep && S.lights) || (!S.asleep && !S.lights), play: S.happy <= 1 && !S.sick };
   const live = !S.ended && S.stage !== 'seed' && !S.paused;
   $$('.act').forEach(b => b.classList.toggle('need', live && !!needs[b.dataset.act]));
-  $('[data-act="lights"]').classList.toggle('on', S.lights);
+  $$('[data-act="lights"]').forEach(b => b.classList.toggle('on', S.lights));
 
-  $('#btnPause').setAttribute('aria-pressed', String(!!S.paused));
-  $('#btnPause').setAttribute('aria-label', S.paused ? 'Resume' : 'Pause');
+  for (const b of [$('#btnPause'), $('#btnPower')]) {
+    b.setAttribute('aria-pressed', String(!!S.paused));
+    b.setAttribute('aria-label', S.paused ? 'Resume' : 'Pause');
+  }
   $('#ovPause').hidden = !S.paused;
   if (!S.ended) $('#ovEnd').hidden = true;
 
@@ -368,6 +434,7 @@ function renderUI() {
     foot = `${P.label} · ${S.asleep ? `asleep until ${hhmm(S.cfg.wake)}` : `bedtime ${hhmm(S.cfg.bed)}`} · ${grow}`;
   }
   $('#foot').textContent = foot;
+  $('#toyFoot').textContent = foot;
 }
 
 /* ---------------- Settings ---------------- */
@@ -381,6 +448,7 @@ function renderSettings() {
     l.querySelector('input').checked = S.cfg.pace === id;
     box.appendChild(l);
   }
+  $$('input[name="look"]').forEach(r => { r.checked = r.value === (S.cfg.look || 'toy'); });
   $('#inBed').value = hhmm(S.cfg.bed); $('#inWake').value = hhmm(S.cfg.wake);
   $('#inNotify').checked = S.cfg.notify !== false; $('#inSound').checked = S.cfg.sound !== false;
   const clock = Rules.pace(S).clock;
@@ -417,6 +485,9 @@ function wire() {
   $('#smart').addEventListener('click', () => { const a = $('#smart').dataset.do; if (a) runAction(a); });
   $('#btnPause').addEventListener('click', () => runAction('pause'));
   $('#btnSettings').addEventListener('click', openSettings);
+  $('#btnSettingsToy').addEventListener('click', openSettings);
+  $('#stCall').addEventListener('click', () => { const a = $('#stCall').dataset.need; closeOverlays(); if (a) runAction(a); });
+  $('#looks').addEventListener('change', e => { if (e.target.name === 'look') { S.cfg.look = e.target.value; applyLook(); persist(); } });
   $('#btnBack').addEventListener('click', closeSettings);
   $('#btnAwayOk').addEventListener('click', () => closeOverlays());
   $('#btnReplant').addEventListener('click', replant);
@@ -447,7 +518,7 @@ function wire() {
   });
 
   // Keyboard
-  const KEYS = { f: 'feed', p: 'play', c: 'clean', l: 'lights', m: 'med', d: 'scold' };
+  const KEYS = { f: 'feed', p: 'play', c: 'clean', l: 'lights', m: 'med', d: 'scold', s: 'status', a: 'attn' };
   document.addEventListener('keydown', e => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (!$('#viewSettings').hidden) { if (e.key === 'Escape') { e.preventDefault(); closeSettings(); } return; }
@@ -490,7 +561,7 @@ function wire() {
 }
 
 /* ---------------- Main loop ---------------- */
-let lastFrame = performance.now(), uiT = 0, saveT = 0;
+let lastFrame = performance.now(), uiT = 0, saveT = 0, prevBlink = false;
 function frame(nowP) {
   const rdt = Math.min(.25, Math.max(0, (nowP - lastFrame) / 1000)); lastFrame = nowP;
   Rules.advance(S, Date.now(), document.hidden ? null : { game: !!G, busy: !!A });
@@ -499,6 +570,8 @@ function frame(nowP) {
   handleEvents();
   drawScene(ctx, S, A, G, PET, nowP / 1000);
   if (toastT > 0) { toastT -= rdt; if (toastT <= 0) $toast.hidden = true; }
+  const blinkOn = !!S.call && !S.ended && ((nowP / 1000 * 2.5) | 0) % 2 === 0;
+  if (blinkOn !== prevBlink) { prevBlink = blinkOn; const t = $('.tile[data-act="attn"]'); if (t) t.classList.toggle('alert', blinkOn); }
   uiT += rdt; saveT += rdt;
   if (uiT > .25) { uiT = 0; renderUI(); }
   if (saveT > 1.5) { saveT = 0; persist(); }
@@ -515,14 +588,17 @@ async function boot() {
   const a = art();
   HEART = { full: a.HEART_FULL.toDataURL(), empty: a.HEART_EMPTY.toDataURL() };
   $$('canvas[data-icon]').forEach(c => drawIcon(c, c.dataset.icon));
+  buildShell(document);
+  buildTiles();
+  applyLook();
   wire();
   renderUI();
 
   const away = S.events.filter(e => e.id > seenBefore);
   if (S.ended) showEnd();
-  else if (!lastSeen) toast('A seed! It sprouts in a minute');
-  else if (away.length && now - lastSeen > 2 * 60 * 1000) {
-    showAway(away, now - lastSeen);
+  else if (!lastSeen && S.stage === 'seed') toast('A seed! It sprouts in a minute');
+  else if (away.length && (!lastSeen || now - lastSeen > 2 * 60 * 1000)) {
+    showAway(away, now - (lastSeen || S.born || now));
     const grew = away.filter(e => e.type === 'evolve').pop();
     if (grew) A = { type: 'evolve', t: 0, dur: 1.8, from: grew.from };
   }

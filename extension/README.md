@@ -51,20 +51,25 @@ A welcome tab opens and the seed starts sprouting. Keep the folder where it is: 
 
 Hover over the icon to see a sentence explaining what's going on.
 
-### The popup
+### The popup: the toy pod
 
-Click the icon, or press **Alt + Shift + B** from any tab (Option + Shift + B on a Mac).
+Click the icon, or press **Alt + Shift + B** from any tab (Option + Shift + B on a Mac). You get the same toy as the
+original game:
 
-- **The big button** always shows the most useful thing to do right now, such as *Feed a meal*,
-  *Clean up the poop* or *Give medicine*. Most visits are one click or a press of **Enter**.
-  Green means all is well, amber means soon, red means now.
-- **The six buttons** below it: Feed, Play, Clean, Lights, Medicine, Scold. A red dot marks the ones that would help.
-- **Hearts:** hunger and happiness, 4 hearts each.
-- **While you were away:** when you open Bubby after a while, a card sums up what happened
+- **Round buttons:** **FEED**, **PLAY**, **CLEAN** and **SLEEP** (lights on/off). The small grey button is **power**:
+  it pauses time for Bubby.
+- **Screen tiles:** along the top are Feed, Status (☀), Discipline (pencil) and Medicine; along the bottom are
+  Clean, Lights, Play and Attention (**!**).
+- **The Attention tile flashes** when Bubby is calling. Tap it (or Status) to see Bubby's hearts, weight, discipline
+  and mistakes, plus a button that does exactly what it needs right now: *Feed a meal*, *Clean up the poop*,
+  *Give medicine*, and so on. **Enter** does the same without opening it.
+- **While you were away:** when you open Bubby after a while, a card on the screen sums up what happened
   ("Bubby got hungry and called for you", "Bubby pooped twice", "The seed sprouted!").
+- **⚙ (top right):** settings. Under **Look** you can switch to the **Compact** layout, which has bigger hearts, one
+  big "what to do now" button and a row of action buttons.
 
-Keyboard: `F` feed, `P` play, `C` clean, `L` lights, `M` medicine, `D` scold, `1`/`2` choose in menus,
-`←` `→` in games, `Enter` big button, `Esc` back.
+Keyboard: `F` feed, `P` play, `C` clean, `L` lights, `M` medicine, `D` scold, `S` status, `A` attention,
+`1`/`2` choose in menus, `←` `→` in games, `Enter` do what Bubby needs, `Esc` back.
 
 ### Notifications
 
@@ -106,10 +111,10 @@ cause a toothache), and clean poop quickly or Bubby gets sick.
 ## 3. A 10-minute test drive
 
 1. **Watch it sprout (1 min).** Open the popup. The seed wobbles, cracks, and becomes Bubby the Bulb.
-2. **Use the big button.** Feed a meal, then try **Play → Seed catch**: drag on the garden or hold the arrow keys.
+2. **Care for it.** Press **FEED → Meal**, then **PLAY → Seed catch**: drag on the garden or hold the arrow keys.
    Gold seeds are worth 3 and pebbles cost 2.
 3. **Skip ahead.** ⚙ Settings → **+4 hours**. You'll get a "While you were away" card, and Bubby will probably be
-   hungry or have pooped. Fix it with the big button and watch the toolbar badge clear.
+   hungry or have pooped. Tap the **!** tile, press the button it shows, and watch the toolbar badge clear.
 4. **Check notifications.** ⚙ Settings → **Test notification**. If nothing appears, see Troubleshooting below.
 5. **Try a real background notification.** Close the popup, then:
    1. Go to `chrome://extensions` and click the **service worker** link on the Bubby card (next to "Inspect views"). A console opens.
@@ -156,7 +161,7 @@ extension/
   core/store.js        saving, plus toolbar badge, tooltip and icon
   art/sprites.js       all pixel art, drawn in code (works in the popup and in the background)
   art/icon.js          Bubby's live toolbar face
-  popup/               the popup: layout, styles, game loop, minigames, settings
+  popup/               the popup: toy pod and compact layouts, game loop, minigames, settings
   welcome/             first-run page
   icons/               static icons (rebuild with `node tools/make-icons.mjs`)
   fonts/               bundled fonts (SIL Open Font License, see fonts/OFL-LICENSES.txt)
