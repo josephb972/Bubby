@@ -1595,8 +1595,22 @@ function pixFrame(n, o) {
   st.setProperty('--btnd', pixFrame(6, { ink: '#3b2f4a', hi: '#cfc3dd', lo: '#cfc3dd', fill: '#efe8f5' }));
 })();
 /* Pick the art-pixel size so that (css px per art pixel) × devicePixelRatio is a whole number. */
+const VKEY = 'bubby.view.v1';
+function applyView(v) {
+  document.documentElement.classList.toggle('compact', v === 'compact');
+  const b = $('#btnView'); if (b) { b.setAttribute('aria-pressed', String(v === 'compact')); $('#viewTxt').textContent = v === 'compact' ? 'Toy view' : 'Compact view'; }
+  try { localStorage.setItem(VKEY, v); } catch (e) {}
+  fitDevice();
+}
 function fitDevice() {
   const dpr = window.devicePixelRatio || 1, popup = document.documentElement.classList.contains('popup');
+  if (document.documentElement.classList.contains('compact')) {
+    const vw = popup ? 400 : (document.documentElement.clientWidth || 390);
+    let smax = Math.min(3, (vw - 40) / 100);
+    if (popup) smax = Math.min(smax, (600 - 62 - 110) / 119);   // screen + button row + controls must fit the popup
+    let s = Math.floor(smax * dpr + 1e-6) / dpr; if (s < 1) s = Math.max(.75, smax);
+    document.documentElement.style.setProperty('--s', s.toFixed(4) + 'px'); return;
+  }
   const vw = popup ? 400 : (document.documentElement.clientWidth || 390);
   let wmax = Math.min(430, (vw - 8) / .844);
   if (popup) wmax = Math.min(wmax, (600 - 62) / 1.6667);      // device is 5:3 tall; leave room for the controls row
@@ -1606,7 +1620,9 @@ function fitDevice() {
   if (s < 1) s = Math.max(.75, wmax / 189.474);
   document.documentElement.style.setProperty('--s', s.toFixed(4) + 'px');
 }
-fitDevice(); addEventListener('resize', fitDevice);
+let v0 = 'toy'; try { v0 = localStorage.getItem(VKEY) === 'compact' ? 'compact' : 'toy'; } catch (e) {}
+applyView(v0); addEventListener('resize', fitDevice);
+$('#btnView').addEventListener('click', () => applyView(document.documentElement.classList.contains('compact') ? 'toy' : 'compact'));
 if (window.chrome && chrome.tabs && chrome.runtime && chrome.runtime.getURL) $('#btnFull').addEventListener('click', () => { chrome.tabs.create({ url: chrome.runtime.getURL('bubby.html') }); });
 else { const b = $('#btnFull'); if (b) b.remove(); }
 

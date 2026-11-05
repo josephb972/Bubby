@@ -303,11 +303,27 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
 #chainWrap { transform-origin: 180px 112px; }
 #chainWrap.sway { animation: chainsway 1s cubic-bezier(.2, .8, .3, 1); }
 @keyframes chainsway { 0% { transform: rotate(0); } 18% { transform: rotate(2.2deg); } 42% { transform: rotate(-1.6deg); } 66% { transform: rotate(.8deg); } 100% { transform: rotate(0); } }
+/* compact view: just the screen and the four buttons, no shell, bigger art */
+html.compact .device {
+  width: calc(var(--s) * 100 + 28px); aspect-ratio: auto; height: auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) 34px;
+  align-items: start; justify-items: center; gap: 12px 6px; padding: 16px 14px 34px; container-type: normal;
+  background: radial-gradient(circle at 30% 10%, #dcf4ed, #bfe6db 55%, #9fd2c4); border-radius: 30px;
+  box-shadow: 0 6px 0 #5e978c, 0 0 0 3px #5e978c, 0 14px 22px rgba(30, 70, 62, .28), inset 0 3px 0 rgba(255,255,255,.75), inset 0 -8px 14px rgba(46, 106, 94, .25);
+}
+html.compact .device > svg.shell { display: none; }
+html.compact .screen { position: relative; left: auto; top: auto; grid-column: 1 / -1; border-radius: 6px; box-shadow: 0 0 0 7px #f6eedb, 0 0 0 9px #c7ba98; margin: 9px 0 3px; }
+html.compact .hw { position: relative; left: auto !important; top: auto !important; width: 46px; max-width: 100%; }
+html.compact .hw.power { width: 24px; align-self: center; margin-top: 4px; }
+html.compact .hw .cap { box-shadow: 0 3px 0 var(--d), 0 3px 0 2px #5e978c, 0 0 0 2px #5e978c, 0 7px 6px rgba(30,70,62,.25), inset 0 -3px 5px rgba(0,0,0,.08), inset 0 2px 3px rgba(255,255,255,.55); }
+html.compact .hw:active .cap, html.compact .hw.down .cap { transform: translateY(3px); box-shadow: 0 0 0 var(--d), 0 0 0 2px #5e978c, inset 0 3px 5px rgba(0,0,0,.14); }
+html.compact .hw .lbl { font-size: 11px; top: 124%; letter-spacing: .3px; }
+html.compact .hw.power .cap { box-shadow: 0 2px 0 #8c939c, 0 0 0 2px #7f878f; }
 /* popup build (browser extension): everything must fit Chrome's 600px popup height */
 .popup-only { display: none; }
 html.popup .popup-only { display: inline-flex; }
 html.popup, html.popup body { width: 400px; height: 600px; overflow: hidden; }
 html.popup .page { display: block; padding: 4px 0 0; }
+html.popup.compact .page { padding-top: 8px; }
 html.popup .brand, html.popup .guide, html.popup #speedLbl { display: none; }
 html.popup .play-col { gap: 4px; }
 html.popup .under { gap: 8px; }
@@ -463,6 +479,7 @@ html.popup .under { gap: 8px; }
         <button data-speed="1" aria-pressed="true">1×</button><button data-speed="2" aria-pressed="false">2×</button><button data-speed="4" aria-pressed="false">4×</button>
       </span>
       <button class="chip" id="btnSound" aria-pressed="true" aria-label="Sound"><canvas width="16" height="16" id="sndIcon"></canvas><span id="sndTxt">Sound on</span></button>
+      <button class="chip" id="btnView" aria-pressed="false" aria-label="Switch between the full toy pod and a compact view"><span id="viewTxt">Compact view</span></button>
       <button class="chip popup-only" id="btnFull" aria-label="Open the full page with the care guide"><span aria-hidden="true">↗</span> Full page</button>
     </div>
   </section>
@@ -2108,8 +2125,22 @@ function pixFrame(n, o) {
   st.setProperty('--btnd', pixFrame(6, { ink: '#3b2f4a', hi: '#cfc3dd', lo: '#cfc3dd', fill: '#efe8f5' }));
 })();
 /* Pick the art-pixel size so that (css px per art pixel) × devicePixelRatio is a whole number. */
+const VKEY = 'bubby.view.v1';
+function applyView(v) {
+  document.documentElement.classList.toggle('compact', v === 'compact');
+  const b = $('#btnView'); if (b) { b.setAttribute('aria-pressed', String(v === 'compact')); $('#viewTxt').textContent = v === 'compact' ? 'Toy view' : 'Compact view'; }
+  try { localStorage.setItem(VKEY, v); } catch (e) {}
+  fitDevice();
+}
 function fitDevice() {
   const dpr = window.devicePixelRatio || 1, popup = document.documentElement.classList.contains('popup');
+  if (document.documentElement.classList.contains('compact')) {
+    const vw = popup ? 400 : (document.documentElement.clientWidth || 390);
+    let smax = Math.min(3, (vw - 40) / 100);
+    if (popup) smax = Math.min(smax, (600 - 62 - 110) / 119);   // screen + button row + controls must fit the popup
+    let s = Math.floor(smax * dpr + 1e-6) / dpr; if (s < 1) s = Math.max(.75, smax);
+    document.documentElement.style.setProperty('--s', s.toFixed(4) + 'px'); return;
+  }
   const vw = popup ? 400 : (document.documentElement.clientWidth || 390);
   let wmax = Math.min(430, (vw - 8) / .844);
   if (popup) wmax = Math.min(wmax, (600 - 62) / 1.6667);      // device is 5:3 tall; leave room for the controls row
@@ -2119,7 +2150,9 @@ function fitDevice() {
   if (s < 1) s = Math.max(.75, wmax / 189.474);
   document.documentElement.style.setProperty('--s', s.toFixed(4) + 'px');
 }
-fitDevice(); addEventListener('resize', fitDevice);
+let v0 = 'toy'; try { v0 = localStorage.getItem(VKEY) === 'compact' ? 'compact' : 'toy'; } catch (e) {}
+applyView(v0); addEventListener('resize', fitDevice);
+$('#btnView').addEventListener('click', () => applyView(document.documentElement.classList.contains('compact') ? 'toy' : 'compact'));
 if (window.chrome && chrome.tabs && chrome.runtime && chrome.runtime.getURL) $('#btnFull').addEventListener('click', () => { chrome.tabs.create({ url: chrome.runtime.getURL('bubby.html') }); });
 else { const b = $('#btnFull'); if (b) b.remove(); }
 
