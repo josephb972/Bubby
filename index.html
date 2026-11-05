@@ -422,13 +422,10 @@ const STAGE = {
   adult:  { next: 'senior', dur: 11 * D, hr: 1/48, pr: 1/52, poop: [55, 85], awake: 150, sleep: 35, base: 20, doses: [1, 3] },
   senior: { next: null,     dur: 6 * D, hr: 1/58, pr: 1/58, poop: [65, 95], awake: 110, sleep: 45, base: 20, doses: [2, 3] },
 };
-// The care rules (hunger and happiness rates, poop, sickness, neglect, tantrums, calls) were tuned for a
-// 1140-second life after the seed. They run on a "care clock" that is slowed down by the same factor the life
-// was stretched by, so every rule keeps the same share of Bubby's life whatever the stage lengths are.
-const CARE = (STAGE.baby.dur + STAGE.child.dur + STAGE.adult.dur + STAGE.senior.dur) / 1140;
-// The sleep cycle (awake + sleep, and the lights rules) instead fits one 24-hour day per cycle; pure scaling
-// would keep Bubby awake for two days at a time. Each stage keeps its original awake/sleep split.
-for (const k in STAGE) if (STAGE[k].awake) STAGE[k].cyc = D / (STAGE[k].awake + STAGE[k].sleep);
+// The care and sleep rules below were tuned in "care units". CARE sets how many real seconds one unit lasts at 1x:
+// with 15, a Bulb loses a hunger heart every 22 x 15 s = 5.5 min and an awake + sleep cycle takes about 27 min,
+// so there is always something to do while the 1-month life plays out.
+const CARE = 15;
 const NAMES = { seed: 'Seed', baby: 'Bulb', child: 'Bud', adult: 'Blossom', senior: 'Elder' };
 const FORMS = { radiant: 'Radiant Blossom', daisy: 'Daisy Blossom', thistle: 'Thistle' };
 const CALL_TEXT = {
@@ -525,17 +522,16 @@ function tick(dt) {
   S.age += dt; S.stageT += dt;
   if (S.stage === 'seed') { if (S.stageT >= STAGE.seed.dur) evolve('baby'); return; }
   const st = STAGE[S.stage];
-  const c = dt / CARE;   // care clock: the rule numbers below are in its units
-  const n = dt / st.cyc; // night clock: one awake + sleep cycle per day
+  const c = dt / CARE; // care clock: the rule numbers below are in its units
 
   // Day and night
   if (S.asleep) {
-    S.sleepT += n;
-    if (S.lights) S.happy -= n / 40;
+    S.sleepT += c;
+    if (S.lights) S.happy -= c / 40;
     if (S.sleepT >= st.sleep) wake();
   } else {
-    S.awakeT += n;
-    if (!S.lights) S.happy -= n / 70;
+    S.awakeT += c;
+    if (!S.lights) S.happy -= c / 70;
     if (S.awakeT >= st.awake && !G) fallAsleep();
   }
 
@@ -584,7 +580,7 @@ function tick(dt) {
   else if (S.call && S.call.reason !== 'tantrum') S.call = null;
 
   if (S.call) {
-    S.call.t += S.call.reason === 'sleep' ? n : c;
+    S.call.t += c;
     if (S.call.t >= 30 && !S.call.counted) {
       S.call.counted = true; mistake(S.call.reason);
       if (S.call.reason === 'tantrum') { S.call = null; toast('Bubby sulked and got away with it'); }

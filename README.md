@@ -13,9 +13,9 @@ and scold tantrums. Your care mistakes, discipline and weight while it is a Bulb
 Play has two minigames: **Which way?** (guess where Bubby looks) and **Seed catch** (steer Bubby under falling seeds for 20 seconds; gold seeds are worth 3, pebbles cost 2).
 
 A full life lasts about 1 month of game time at 1× speed: a 2-minute seed, then 5 days as a baby, 8 as a child, 11 as an adult and 6 as a senior (2× and 4× are available).
-The care rules scale with the life length, so each keeps the same share of Bubby's life: at 1× a Bulb loses a hunger heart about every 14 hours,
-an ignored call counts as a care mistake after about 19 hours, and Bubby moves away after about 4 days of starving or untreated sickness.
-Bubby sleeps once per 24-hour day (about 5 hours at night). Time only passes while the page is open,
+Care keeps you busy: at 1× a Bulb loses a hunger heart about every 5–6 minutes (an adult about every 12), poop shows up every
+8–11 minutes, an ignored call counts as a care mistake after about 7 minutes, and Bubby moves away after about 40 minutes of
+starving or untreated sickness. It naps for about 6–9 minutes after every 20–40 minutes awake. Time only passes while the page is open,
 the power button pauses, and progress is saved in the browser's localStorage.
 
 `prompts/visual-polish-prompt.md` is a ready-to-paste prompt for an art-direction and UI polish pass.
