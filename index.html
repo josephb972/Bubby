@@ -2041,7 +2041,7 @@ function updateCard(rdt) {
 
 let last = performance.now(), uiT = 0, saveT = 0, prevCall = false;
 function frame(now) {
-  const rdt = Math.min(.25, (now - last) / 1000); last = now;
+  const rdt = Math.max(0, Math.min(.25, (now - last) / 1000)); last = now;
   const gdt = rdt * (S.speed || 1);
   tick(gdt);
   if (A && !S.paused) { A.t += rdt; if (A.t >= A.dur) { const f = A.after; A = null; if (f) f(); } }
@@ -2135,7 +2135,7 @@ fitDevice(); addEventListener('resize', fitDevice);
 
 /* ---- Boot (keeps state across live updates) ---- */
 const hot = window.claude && window.claude.hot;
-if (hot && hot.snapshot) { try { hot.snapshot(() => ({ S, PET, get A() { return A; }, set A(v) { A = v; }, get G() { return G; }, set G(v) { G = v; } })); } catch (e) {} }
+if (hot && hot.snapshot) { try { hot.snapshot(() => ({ S, PET, PM, FX, get A() { return A; }, set A(v) { A = v; }, get G() { return G; }, set G(v) { G = v; } })); } catch (e) {} }
 if (hot && hot.ready) hot.ready(start); else start(hot && hot.data ? hot.data : {});
 })();
 </script>
