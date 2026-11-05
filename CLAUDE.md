@@ -16,7 +16,12 @@ session about the extension, work through open items, and tick them off (`[x]`) 
 - Game rules live in `extension/core/rules.js` (pure, no DOM; shared by popup and background worker).
 - After changing rules or pacing, run `node tools/sim-check.mjs`.
 - Regenerate PNG icons with `node tools/make-icons.mjs` (needs Playwright).
-- Test by loading `extension/` with "Load unpacked"; Playwright Chromium can load it with
-  `--load-extension` for automated checks.
+- Test by loading `extension/` with "Load unpacked". After changes, run `node tools/e2e-check.mjs` (Playwright loads
+  the extension into Chromium; use `viewport: null` when checking real window sizes, and `deviceScaleFactor`, not
+  `--force-device-scale-factor`, for 2× captures).
 - Keep existing saves working: saved state is versioned; update `migrate()` in `core/rules.js` when the format changes.
-- `bubby-extension.zip` is a local build artifact (gitignored).
+- Store package: `node tools/build-store.mjs` → `dist/bubby-<version>.zip` (gitignored). `--unpacked` makes
+  `bubby-extension.zip` (gitignored) for testers.
+- Store images: `node tools/store-assets.mjs` → `store/` (committed). Re-run after visible UI changes. Listing text and
+  privacy answers: `docs/STORE-LISTING.md`; keep them true to what the code does.
+- Time-skip buttons are hidden developer tools (`S.cfg.dev`): tap the Settings title 5 times, or `bubby.dev(true)`.
