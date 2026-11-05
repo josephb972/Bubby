@@ -24,7 +24,10 @@ let port = null;
 function connect() {
   try {
     port = chrome.runtime.connect({ name: 'popup' });
-    port.onMessage.addListener(m => { if (m && m.type === 'act') runAction(m.action); });
+    port.onMessage.addListener(m => {
+      if (m && m.type === 'act') runAction(m.action);
+      if (m && m.type === 'cfg' && m.cfg) { Object.assign(S.cfg, m.cfg); persist(); if (!$('#viewSettings').hidden) renderSettings(); }
+    });
     port.onDisconnect.addListener(() => { port = null; setTimeout(connect, 400); });
   } catch (e) { port = null; }
 }
@@ -340,6 +343,21 @@ function applyLook() {
   document.body.classList.toggle('toy', toy);
   const slot = $(toy ? '#toySlot' : '#compactSlot');
   if ($('#sceneWrap').parentElement !== slot) slot.appendChild($('#sceneWrap'));
+  fitWindow();
+}
+// In the fallback window (opened from a notification), size the window to fit the current look exactly.
+function fitWindow() {
+  if (!IS_WIN || !chrome.windows) return;
+  requestAnimationFrame(() => {
+    const app = $('#app');
+    const w = Math.ceil(app.offsetWidth), h = Math.ceil(app.offsetHeight);
+    const frameW = Math.max(0, outerWidth - innerWidth), frameH = Math.max(0, outerHeight - innerHeight);
+    if (Math.abs(innerWidth - w) <= 2 && Math.abs(innerHeight - h) <= 2) return;
+    chrome.windows.getCurrent(win => {
+      if (chrome.runtime.lastError || !win) return;
+      chrome.windows.update(win.id, { width: w + frameW, height: h + frameH }, () => void chrome.runtime.lastError);
+    });
+  });
 }
 function renderStatus() {
   if (OV !== 'status') return;
@@ -454,7 +472,18 @@ function renderSettings() {
   const clock = Rules.pace(S).clock;
   $('#grpBed').disabled = !clock;
   $('#inNotify').disabled = !clock;
+  $('#devTools').hidden = !S.cfg.dev;
   $$('[data-skip]').forEach(b => { b.disabled = !clock || !!S.ended || S.paused; });
+  const fb = feedbackUrl();
+  $('#feedbackBox').hidden = !fb;
+  if (fb) $('#feedbackLink').href = fb;
+}
+// The store listing's support page. Store installs carry an update_url; unpacked copies have none (no link then).
+function feedbackUrl() {
+  const u = chrome.runtime.getManifest().update_url || '';
+  if (u.includes('edge.microsoft.com')) return `https://microsoftedge.microsoft.com/addons/detail/${chrome.runtime.id}`;
+  if (u.includes('google.com')) return `https://chromewebstore.google.com/detail/${chrome.runtime.id}/support`;
+  return '';
 }
 function openSettings() { closeOverlays(); G = null; renderSettings(); $('#viewMain').hidden = true; $('#viewSettings').hidden = false; $('#btnBack').focus(); }
 function closeSettings() { $('#viewSettings').hidden = true; $('#viewMain').hidden = false; resetBox(); renderUI(); }
@@ -498,11 +527,21 @@ function wire() {
     Rules.setPace(S, e.target.value); S.lastT = Date.now();
     persist(); renderSettings(); toast(`${Rules.PACES[S.cfg.pace].label} pace`);
   });
-  $('#inBed').addEventListener('change', e => { if (e.target.value) { S.cfg.bed = toMin(e.target.value); persist(); } });
-  $('#inWake').addEventListener('change', e => { if (e.target.value) { S.cfg.wake = toMin(e.target.value); persist(); } });
+  $('#inBed').addEventListener('change', e => { if (e.target.value) { S.cfg.bed = toMin(e.target.value); S.cfg.bedAsked = true; persist(); } });
+  $('#inWake').addEventListener('change', e => { if (e.target.value) { S.cfg.wake = toMin(e.target.value); S.cfg.bedAsked = true; persist(); } });
   $('#inNotify').addEventListener('change', e => { S.cfg.notify = e.target.checked; persist(); });
   $('#inSound').addEventListener('change', e => { S.cfg.sound = e.target.checked; if (S.cfg.sound) { unlockAudio(); beep(880, .05); } persist(); });
-  $$('[data-skip]').forEach(b => b.addEventListener('click', () => skipAhead(+b.dataset.skip)));
+  $$('[data-skip]').forEach(b => b.addEventListener('click', () => { if (S.cfg.dev) skipAhead(+b.dataset.skip); }));
+  // Hidden developer switch: tap the Settings title 5 times within 3 seconds to show or hide the time-skip buttons.
+  let devTaps = [];
+  $('#settingsTitle').addEventListener('click', () => {
+    const now = Date.now();
+    devTaps = devTaps.filter(t => now - t < 3000).concat(now);
+    if (devTaps.length < 5) return;
+    devTaps = [];
+    S.cfg.dev = !S.cfg.dev;
+    persist(); renderSettings();
+  });
   $('#resetBox').addEventListener('click', e => {
     const id = e.target.id;
     if (id === 'btnTestNote') {

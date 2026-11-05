@@ -26,6 +26,17 @@ li b { display: block; font: 600 18px/1.3 "Fredoka", sans-serif; }
 li p { margin: 2px 0 0; color: var(--muted); }
 kbd { font: 400 13px/1 "Pixelify Sans", monospace; border: 1.5px solid var(--ink); border-bottom-width: 3px; border-radius: 5px; padding: 2px 6px; background: #fff; }
 .tip { margin-top: 24px; font-size: 14px; color: var(--muted); }
+.bed { margin-top: 20px; background: var(--cream); border: 2px solid var(--line); border-radius: 16px; padding: 16px 18px; }
+.bed h2 { margin: 0; font: 600 22px/1.2 "Fredoka", sans-serif; }
+.bed > p { margin: 4px 0 0; color: var(--muted); }
+.bed-row { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: flex-end; margin-top: 12px; }
+.bed label { display: flex; flex-direction: column; gap: 4px; font-weight: 700; font-size: 14px; }
+.bed input { font: 600 17px "Nunito", sans-serif; color: var(--ink); padding: 6px 8px; border: 2px solid var(--line); border-radius: 10px; background: #fff; }
+.bed button { font: 600 16px "Fredoka", sans-serif; color: #fff; background: var(--line); border: 2px solid #3f6f66; border-bottom-width: 4px; border-radius: 12px; padding: 8px 16px; cursor: pointer; }
+.bed button:active { border-bottom-width: 2px; transform: translateY(2px); }
+.bed :focus-visible { outline: 3px solid var(--red); outline-offset: 2px; }
+.bed-msg { margin: 8px 0 0; min-height: 1.55em; font-weight: 700; color: #2f6b45; }
+.bed-msg.err { color: var(--red); }
 @media (max-width: 520px) { .hero { flex-direction: column; text-align: center; } h1 { font-size: 36px; } }
 </style>
 </head>
@@ -42,8 +53,18 @@ kbd { font: 400 13px/1 "Pixelify Sans", monospace; border: 1.5px solid var(--ink
     <li><b>Pin Bubby to your toolbar</b><p>Click the puzzle-piece icon at the top right of the browser, then the pin next to Bubby. Now you can see Bubby's face all the time.</p></li>
     <li><b>Glance at the icon</b><p>Bubby's face shows its mood. A red <b style="display:inline;color:var(--red)">!</b> badge means it is calling you, <b style="display:inline">z</b> means it's asleep.</p></li>
     <li><b>Click to take care of it</b><p>The toy opens right in your toolbar. When the <b style="display:inline;color:var(--red)">!</b> tile flashes, tap it to see what Bubby needs, with a button that does it. Or press <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd> from any tab.</p></li>
-    <li><b>Set Bubby's bedtime</b><p>Open the ⚙ gear in the popup. Bubby sleeps when you do, and won't send notifications at night.</p></li>
   </ol>
+  <form class="bed" id="bedForm">
+    <h2>When do you go to bed?</h2>
+    <p>Bubby sleeps when you do and stays quiet at night. The only night-time notification is one reminder at bedtime
+      to turn off its lights.</p>
+    <div class="bed-row">
+      <label>I go to bed <input type="time" id="inBed" step="900" value="22:00" required></label>
+      <label>I wake up <input type="time" id="inWake" step="900" value="08:00" required></label>
+      <button type="submit" id="btnBed">Save bedtime</button>
+    </div>
+    <p class="bed-msg" id="bedMsg" role="status" aria-live="polite"></p>
+  </form>
   <p class="tip">Bubby lives in real time, even while the browser is closed (Chill pace: about 10 days per life). Want to see everything quickly? Switch to the Quick pace in settings for the original 20-minute life.</p>
 </main>
 <script type="module" src="welcome.js"></script>
