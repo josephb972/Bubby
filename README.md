@@ -16,3 +16,12 @@ A full life lasts about 20 minutes at 1× speed (2× and 4× are available). Tim
 the power button pauses, and progress is saved in the browser's localStorage.
 
 `prompts/visual-polish-prompt.md` is a ready-to-paste prompt for an art-direction and UI polish pass.
+
+## Art and feel notes
+
+- The garden canvas is 100×75 art pixels, always shown at a whole number of device pixels per art pixel (`fitDevice()` picks the CSS size from `devicePixelRatio`).
+- Sprites are drawn in code, shaded with a warm-highlight / cool-shadow ramp pass, outlined with tinted (never pure black) selective outlines, and cached.
+- Day and night follow the in-game age (60 game-seconds per day). Rare surprises: butterfly, ladybug, shooting star.
+- `prefers-reduced-motion` turns off screen shake, parallax drift and particles; hearts and score numbers still appear, just without movement.
+- The guide's collectible cards are remembered in the optional `bubby.collection.v1` localStorage key. The game save (`bubby.save.v1`) is unchanged.
+- `prompts/visual-audit.md` is the audit behind this pass; `prompts/shots/` holds before/after contact sheets.

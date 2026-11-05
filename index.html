@@ -17,7 +17,7 @@
   --sky: #a6d9ea;
   --sky-2: #c4e8f3;
   --ink: #1f4047;
-  --muted: #46696f;
+  --muted: #35585f;
   --panel: #e8f6fa;
   --line: #86c3d2;
   --accent: #d9504a;
@@ -27,13 +27,14 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --sky: #10232b; --sky-2: #163241; --ink: #def1f4; --muted: #9fc2c8;
+    --sky: #10232b; --sky-2: #163241; --ink: #def1f4; --muted: #a9cbd1;
     --panel: #183641; --line: #2e5a66; --accent: #ff7d70; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --sky: #10232b; --sky-2: #163241; --ink: #def1f4; --muted: #9fc2c8;
   --panel: #183641; --line: #2e5a66; --accent: #ff7d70; color-scheme: dark;
+  --muted: #a9cbd1;
 }
 html, body { min-height: 100%; }
 body {
@@ -242,7 +243,7 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   font: 600 3.5cqw/1 var(--font-display); color: #2f5559; letter-spacing: .2cqw; text-shadow: 0 1px 0 rgba(255,255,255,.55);
 }
 .hw.power { width: 6.6%; }
-.hw.power::before { content: ""; position: absolute; inset: -9px; border-radius: 50%; } /* 44px target */
+.hw.power::before { content: ""; position: absolute; inset: -11px; border-radius: 50%; } /* 44px target */
 .hw.power .cap { background: radial-gradient(circle at 36% 30%, #f4f5f7 0 20%, #c9cdd3 60%, #9fa5ae 100%); box-shadow: 0 .8cqw 0 #8c939c, 0 0 0 .45cqw #7f878f; }
 .hw.power[aria-pressed="true"] .cap { background: radial-gradient(circle at 36% 30%, #fff3c4 0 20%, #ffd34a 60%, #d9a520 100%); }
 .hw.power .cap svg { width: 58%; height: 58%; }
@@ -274,26 +275,40 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .legend canvas { width: 22px; height: 22px; image-rendering: pixelated; }
 .legend b { display: block; font: 600 14px/1.2 var(--font-display); }
 .legend span { display: block; font-size: 12.5px; line-height: 1.35; color: var(--muted); }
-.life { display: flex; align-items: flex-end; justify-content: space-between; gap: 4px; padding: 14px 12px 10px; background: var(--panel); border-radius: 14px; overflow-x: auto; }
-.life figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 52px; }
-.life canvas { width: 56px; height: 56px; image-rendering: pixelated; }
-.life figcaption { font: 600 12px/1.15 var(--font-display); text-align: center; }
-.life figcaption small { display: block; font: 400 11px/1.2 var(--font-body); color: var(--muted); }
+.guide h2::before { content: ""; display: inline-block; width: 14px; height: 14px; margin-right: 8px; vertical-align: -1px; background: var(--leaf) center / contain no-repeat; image-rendering: pixelated; }
+.life { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.card, .forms figure {
+  margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; position: relative; min-width: 0;
+  padding: 8px 4px 8px; color: #3b2f4a; background: var(--cream);
+  border: 6px solid transparent; border-image: var(--frame) 3 fill / 6px stretch; image-rendering: pixelated;
+  transition: transform .18s cubic-bezier(.3, 1.6, .5, 1);
+}
+.card:hover, .forms figure:hover { transform: translateY(-3px) rotate(-1deg); }
+.card canvas, .forms canvas { width: 56px; height: 56px; image-rendering: pixelated; }
+.card.locked canvas, .forms figure.locked canvas { opacity: .9; }
+.card .no { position: absolute; top: -2px; left: 0; font: 600 10px/1 var(--font-pixel); color: #5c4f6b; }
+.card figcaption, .forms figcaption { font: 600 12.5px/1.15 var(--font-display); color: #3b2f4a; }
+.card figcaption small, .forms figcaption small { display: block; font: 400 11px/1.25 var(--font-body); color: #5c4f6b; margin-top: 2px; }
+.card.locked figcaption, .forms figure.locked figcaption { color: #5c4f6b; }
+.card.new::after, .forms figure.new::after { content: "NEW"; position: absolute; top: -8px; right: -6px; font: 600 10px/1 var(--font-pixel); background: #ff7d9c; color: #fff; padding: 3px 4px; box-shadow: 0 2px 0 #b8435f; animation: newpulse 1.4s ease-in-out infinite; }
+@keyframes newpulse { 50% { transform: translateY(-2px); } }
 .rules { margin: 0; padding-left: 18px; display: grid; gap: 6px; color: var(--muted); font-size: 14px; }
 .rules b { color: var(--ink); font-weight: 700; }
-.forms { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.forms figure { margin: 0; background: var(--panel); border-radius: 12px; padding: 10px 6px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
-.forms canvas { width: 56px; height: 56px; image-rendering: pixelated; }
-.forms figcaption { font: 600 12.5px/1.15 var(--font-display); }
-.forms figcaption small { display: block; font: 400 11px/1.3 var(--font-body); color: var(--muted); margin-top: 2px; }
+.forms { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .keys { font-size: 13px; color: var(--muted); }
 kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); border-bottom-width: 3px; border-radius: 5px; padding: 2px 5px; color: var(--ink); background: var(--panel); }
 .confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; }
 .chip.danger { border-color: var(--accent); color: var(--accent); }
 
+#chainWrap { transform-origin: 180px 112px; }
+#chainWrap.sway { animation: chainsway 1s cubic-bezier(.2, .8, .3, 1); }
+@keyframes chainsway { 0% { transform: rotate(0); } 18% { transform: rotate(2.2deg); } 42% { transform: rotate(-1.6deg); } 66% { transform: rotate(.8deg); } 100% { transform: rotate(0); } }
 @media (prefers-reduced-motion: reduce) {
-  .toast.show { animation: none; }
-  .hw .cap { transition: none; }
+  .toast, .namecard, .ov-pause i, .tile.bounce canvas, .st-hearts canvas.pop, #gRound.bump { animation: none !important; }
+  .tile.alert { animation: none; background-color: #ff9aa0; }
+  .tile.alert canvas { animation: none; }
+  .hw .cap, .pbtn, .opt { transition: none; }
+  #chainWrap.sway { animation: none; }
 }
 </style>
 
@@ -316,8 +331,23 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
           <radialGradient id="cream" gradientUnits="userSpaceOnUse" cx="150" cy="200" r="280">
             <stop offset="0" stop-color="#fffcf3"/><stop offset=".6" stop-color="#f6eedb"/><stop offset="1" stop-color="#e7dcbf"/>
           </radialGradient>
+          <filter id="matte" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+            <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="4" result="n"/>
+            <feColorMatrix in="n" type="matrix" values="0 0 0 0 .18  0 0 0 0 .38  0 0 0 0 .34  0 0 0 1.5 -.62" result="g"/>
+            <feComposite in="g" in2="SourceAlpha" operator="in"/>
+          </filter>
+          <filter id="rim" x="-3%" y="-3%" width="106%" height="106%" color-interpolation-filters="sRGB">
+            <feOffset in="SourceAlpha" dx="2.2" dy="2.8" result="o"/><feComposite in="SourceAlpha" in2="o" operator="out" result="e"/>
+            <feGaussianBlur in="e" stdDeviation=".65" result="eb"/><feFlood flood-color="#ffffff" flood-opacity=".95"/><feComposite in2="eb" operator="in"/>
+          </filter>
+          <filter id="inShade" x="-3%" y="-3%" width="106%" height="106%" color-interpolation-filters="sRGB">
+            <feOffset in="SourceAlpha" dx="-3" dy="-4" result="o"/><feComposite in="SourceAlpha" in2="o" operator="out" result="e"/>
+            <feGaussianBlur in="e" stdDeviation="2.2" result="eb"/><feFlood flood-color="#2e6a5e" flood-opacity=".5"/><feComposite in2="eb" operator="in"/>
+          </filter>
+          <filter id="blur3" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="3.2"/></filter>
+          <filter id="chainSh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="2.2" stdDeviation="1.4" flood-color="#2f5559" flood-opacity=".4"/></filter>
         </defs>
-        <g id="chain" fill="none" stroke="url(#silver)" stroke-width="3.4"></g>
+        <g id="chainWrap"><g id="chain" fill="none" stroke="url(#silver)" stroke-width="3.4" filter="url(#chainSh)"></g></g>
         <path d="M180 120 C 181 100, 196 90, 226 100" fill="none" stroke="#7f8894" stroke-width="11" stroke-linecap="round"/>
         <path d="M180 120 C 181 100, 196 90, 226 100" fill="none" stroke="url(#silver)" stroke-width="7" stroke-linecap="round"/>
         <path d="M181 108 C 162 74, 122 66, 100 86 C 124 108, 156 116, 181 108 Z" fill="url(#silver)" stroke="#7f8894" stroke-width="3"/>
@@ -327,9 +357,15 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
         <g id="bodySh" fill="#7fb8ab" transform="translate(0 9)"></g>
         <g id="bodyLn" fill="#5e978c" stroke="#5e978c" stroke-width="6"></g>
         <g id="bodyFl" fill="url(#mint)"></g>
+        <g id="bodyShade" filter="url(#inShade)"></g>
+        <g id="bodyMatte" filter="url(#matte)" opacity=".3"></g>
+        <g id="bodyRim" filter="url(#rim)" opacity=".9"></g>
+        <g id="bezAO" fill="#2f6b5f" opacity=".42" filter="url(#blur3)" transform="translate(0 6)"></g>
         <g id="bezSh" fill="#9ccabd" transform="translate(0 7)"></g>
         <g id="bezLn" fill="#c7ba98" stroke="#c7ba98" stroke-width="4"></g>
         <g id="bezFl" fill="url(#cream)"></g>
+        <g id="bezMatte" filter="url(#matte)" opacity=".16"></g>
+        <g id="bezRim" filter="url(#rim)" opacity=".95"></g>
         <rect x="78" y="172" width="204" height="236" rx="18" fill="#454b58" stroke="#2f3440" stroke-width="3"/>
         <rect x="81.5" y="175.5" width="197" height="229" rx="15" fill="none" stroke="#6b7282" stroke-width="1.5"/>
       </svg>
@@ -430,7 +466,7 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
 
     <section>
       <h2>Life cycle</h2>
-      <div class="life" id="lifeStrip"></div>
+      <div class="life" id="lifeStrip" role="list"></div>
     </section>
 
     <section>
@@ -558,6 +594,7 @@ function evolve(to) {
     S.variant = ['radiant', 'daisy', 'thistle'][tier];
   }
   S.stage = to; S.stageT = 0;
+  unlock('stages', to); if (to === 'adult') unlock('forms', S.variant);
   S.nextPoop = rand(...STAGE[to].poop);
   if (to === 'baby') { S.awakeT = 0; S.nextTantrum = 55; }
   if (from === 'seed') { PET.x = PET.tx = 50; }
@@ -1628,18 +1665,44 @@ function buildGuide() {
     const c = mk(16, 16); c.getContext('2d').drawImage(ICONS[k], 0, 0); li.querySelector('.ic').appendChild(c);
     lg.appendChild(li);
   });
-  const strip = $('#lifeStrip');
-  [['seed', 'Seed', 'egg'], ['baby', 'Bulb', 'baby'], ['child', 'Bud', 'child'], ['adult', 'Blossom', 'adult'], ['senior', 'Elder', 'senior']].forEach(([st, n, sub]) => {
-    const f = document.createElement('figure');
-    f.appendChild(petSprite(st, { variant: 'radiant' }));
-    f.insertAdjacentHTML('beforeend', `<figcaption>${n}<small>${sub}</small></figcaption>`);
+  renderCollection();
+}
+/* Collection: optional, separate from the game save. Stages and adult forms the player has raised. */
+const CKEY = 'bubby.collection.v1';
+const STAGES_ORDER = ['seed', 'baby', 'child', 'adult', 'senior'];
+let COL = { stages: { seed: 1 }, forms: {}, fresh: {} };
+function loadCol() { try { const o = JSON.parse(localStorage.getItem(CKEY) || 'null'); if (o && typeof o === 'object') COL = Object.assign({ stages: { seed: 1 }, forms: {}, fresh: {} }, o); } catch (e) {} COL.fresh = {}; }
+function saveCol() { try { localStorage.setItem(CKEY, JSON.stringify({ stages: COL.stages, forms: COL.forms })); } catch (e) {} }
+function unlock(kind, id) { if (!COL[kind][id]) { COL[kind][id] = 1; COL.fresh[kind + id] = 1; saveCol(); renderCollection(); } }
+function syncCollection() {
+  const i = STAGES_ORDER.indexOf(S.stage);
+  for (let k = 0; k <= i; k++) { if (!COL.stages[STAGES_ORDER[k]]) { COL.stages[STAGES_ORDER[k]] = 1; } }
+  if (S.variant && (S.stage === 'adult' || S.stage === 'senior')) COL.forms[S.variant] = 1;
+  saveCol(); renderCollection();
+}
+function cardCanvas(stage, variant, locked) {
+  const c = mk(48, 48), x = c.getContext('2d'), img = petSprite(stage, { variant, mood: 'normal' });
+  x.drawImage(locked ? silhouette(img, '#7d6d99') : img, 0, 0);
+  if (locked) { x.globalAlpha = .35; x.globalCompositeOperation = 'source-atop'; x.fillStyle = '#ffffff'; for (let i = 0; i < 48; i += 2) x.fillRect(0, i, 48, 1); }
+  return c;
+}
+function renderCollection() {
+  const strip = $('#lifeStrip'); if (!strip) return; strip.textContent = '';
+  [['seed', 'Seed', 'egg'], ['baby', 'Bulb', 'baby'], ['child', 'Bud', 'child'], ['adult', 'Blossom', 'adult'], ['senior', 'Elder', 'senior']].forEach(([st, n, sub], i) => {
+    const got = !!COL.stages[st], f = document.createElement('figure');
+    f.className = 'card' + (got ? '' : ' locked') + (COL.fresh['stages' + st] ? ' new' : ''); f.setAttribute('role', 'listitem');
+    f.setAttribute('aria-label', got ? `${n}, ${sub}` : `${n}, not yet raised`);
+    f.appendChild(cardCanvas(st, 'radiant', !got));
+    f.insertAdjacentHTML('beforeend', `<span class="no">${i + 1}</span><figcaption>${got ? n : '???'}<small>${got ? sub : 'not yet raised'}</small></figcaption>`);
     strip.appendChild(f);
   });
-  const forms = $('#forms');
+  const forms = $('#forms'); forms.textContent = '';
   [['radiant', 'Radiant Blossom', '0–2 mistakes, well disciplined'], ['daisy', 'Daisy Blossom', 'A few slips along the way'], ['thistle', 'Thistle', 'Lots of mistakes or overweight']].forEach(([v, n, sub]) => {
-    const f = document.createElement('figure');
-    f.appendChild(petSprite('adult', { variant: v }));
-    f.insertAdjacentHTML('beforeend', `<figcaption>${n}<small>${sub}</small></figcaption>`);
+    const got = !!COL.forms[v], f = document.createElement('figure');
+    f.className = got ? '' : 'locked'; if (COL.fresh['forms' + v]) f.classList.add('new');
+    f.setAttribute('aria-label', got ? n : 'Adult form not yet raised');
+    f.appendChild(cardCanvas('adult', v, !got));
+    f.insertAdjacentHTML('beforeend', `<figcaption>${got ? n : '???'}<small>${got ? sub : 'Raise a Bubby to find out'}</small></figcaption>`);
     forms.appendChild(f);
   });
 }
@@ -2008,7 +2071,7 @@ function start(data) {
   if (S.soundOn === undefined) S.soundOn = true;
   if (![1, 2, 4].includes(S.speed)) S.speed = 1;
   if (data && data.PET) Object.assign(PET, data.PET);
-  buildTiles(); buildGuide(); wire(); syncControls();
+  loadCol(); buildTiles(); buildGuide(); wire(); syncControls(); syncCollection();
   if (!restored) toast('A seed! Watch it sprout');
   requestAnimationFrame(t => { last = t; frame(t); });
 }
@@ -2030,6 +2093,9 @@ function pixFrame(n, o) {
   const st = document.documentElement.style;
   st.setProperty('--frame', pixFrame(8, { ink: '#3b2f4a', hi: '#ffffff', lo: '#e3d4b4', fill: '#fff8e6' }));
   st.setProperty('--btn', pixFrame(6, { ink: '#3b2f4a', hi: '#ffffff', lo: '#cfc3dd', fill: '#ffffff' }));
+  const lc = mk(7, 7), lx = lc.getContext('2d');
+  ['.....##', '...####', '..#####', '.#####.', '####...', '#.#....', '#......'].forEach((r, y) => [...r].forEach((ch, X) => { if (ch === '#') { lx.fillStyle = (X + y) % 4 === 0 ? '#8be095' : '#4fae55'; lx.fillRect(X, y, 1, 1); } }));
+  st.setProperty('--leaf', `url(${lc.toDataURL()})`);
   st.setProperty('--btnd', pixFrame(6, { ink: '#3b2f4a', hi: '#cfc3dd', lo: '#cfc3dd', fill: '#efe8f5' }));
 })();
 /* Pick the art-pixel size so that (css px per art pixel) × devicePixelRatio is a whole number. */
@@ -2051,12 +2117,12 @@ fitDevice(); addEventListener('resize', fitDevice);
     return s;
   };
   const body = ring(180, 349, 112, 180, 61, 16, 152, 220);
-  ['#bodySh', '#bodyLn', '#bodyFl'].forEach(id => { $(id).innerHTML = body; });
+  ['#bodySh', '#bodyLn', '#bodyFl', '#bodyShade', '#bodyMatte', '#bodyRim'].forEach(id => { $(id).innerHTML = body; });
   const bc = [180, 290];
   let bez = `<rect x="${bc[0] - 120}" y="${bc[1] - 134}" width="240" height="268" rx="40"/>`;
   const lobes = [[94, 110, 36], [-94, 110, 36], [94, -110, 36], [-94, -110, 36], [34, 124, 32], [-34, 124, 32], [34, -124, 32], [-34, -124, 32], [106, 40, 30], [-106, 40, 30], [106, -40, 30], [-106, -40, 30]];
   lobes.forEach(([dx, dy, r]) => { bez += `<circle cx="${bc[0] + dx}" cy="${bc[1] + dy}" r="${r}"/>`; });
-  ['#bezSh', '#bezLn', '#bezFl'].forEach(id => { $(id).innerHTML = bez; });
+  ['#bezSh', '#bezLn', '#bezFl', '#bezAO', '#bezMatte', '#bezRim'].forEach(id => { $(id).innerHTML = bez; });
   let ch = '';
   const N = 22, a0 = 170 * Math.PI / 180, a1 = 370 * Math.PI / 180, cx = 168, cy = 92, r = 64;
   for (let i = 0; i <= N; i++) {
@@ -2064,7 +2130,7 @@ fitDevice(); addEventListener('resize', fitDevice);
     ch += i % 2 ? `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="6.5" ry="1.6" transform="rotate(${rot} ${x.toFixed(1)} ${y.toFixed(1)})" stroke-width="2.6"/>`
                 : `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="6.5" ry="4" transform="rotate(${rot} ${x.toFixed(1)} ${y.toFixed(1)})"/>`;
   }
-  $('#chain').innerHTML = `<g stroke="#7f8894" stroke-width="5.4">${ch}</g>${ch}`;
+  $('#chain').innerHTML = `<g stroke="#7f8894" stroke-width="5.4">${ch}</g>${ch}<g stroke="#ffffff" stroke-width="1.1" opacity=".6" transform="translate(-.7 -.9)">${ch}</g>`;
 })();
 
 /* ---- Boot (keeps state across live updates) ---- */
