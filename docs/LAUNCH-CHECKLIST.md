@@ -1,7 +1,7 @@
 # Bubby extension: launch plan and checklist
 
-Status at time of writing: extension **v0.3.1** works end to end in Chromium (toy pod and compact looks, real-time
-paces, background ticks, notifications with action buttons). Goal: publish **v1.0.0** on the Chrome Web Store, then
+Status: extension **v1.0.0**. The coding fixes are done without changing Bubby's UI design; the store package, images,
+listing text and privacy policy are ready. What's left needs the owner. Goal: publish on the Chrome Web Store, then
 Edge Add-ons.
 
 Tick items as they are done (`[x]`). Owner: **Claude** = can be done in a coding session, **You** = needs the owner.
@@ -10,19 +10,19 @@ Tick items as they are done (`[x]`). Owner: **Claude** = can be done in a coding
 
 ## 1. Fixes before launch (Claude)
 
-- [ ] **Fallback window too narrow.** When a notification can't open the popup, `background.js` (`openBubby`) opens
-      a window at 380×660. The toy pod is 468px wide, so it gets cut off. Resize it to fit the toy pod (about 490×640)
-      and check the compact look still centers.
-- [ ] **Hide the time-skip buttons.** The "+1 / +4 / +12 hours" buttons in Settings → Try it out are test tools and
-      let players cheat. Put them behind a hidden developer switch; keep "Test notification".
-- [ ] **Ask for bedtime on first launch.** Add a one-time bedtime question (defaults 22:00–08:00) to the welcome page
-      or the first popup open, so nobody gets surprise lights reminders at night.
-- [ ] **Store build.** Add a script that makes a store zip with `manifest.json` at the zip root (the "Load unpacked"
-      zip keeps a `bubby-extension/` folder). Leave out `README.md` and anything not needed at runtime.
-- [ ] **Version 1.0.0** in `extension/manifest.json`.
-- [ ] **High-resolution screens:** check the toy pod artwork (`extension/art/photo/toy.webp`, 646×828) still looks
-      sharp at 2× (Retina-type) scaling; re-export from the original at higher resolution if it looks soft.
-- [ ] Run `node tools/sim-check.mjs` and the end-to-end checks again after the fixes.
+- [x] **Fallback window too narrow.** `openBubby` now opens 490×650 for the toy pod and 382×640 for the compact look,
+      and the window shows the whole pod (it used to be squeezed into the compact width).
+- [x] **Hide the time-skip buttons.** "+1 / +4 / +12 hours" are hidden. To show them for testing, run
+      `bubby.dev(true)` in the service worker console (`bubby.dev(false)` hides them). "Test notification" stays.
+- [x] **Ask for bedtime on first launch.** Step 4 of the welcome page now has "Goes to bed / Wakes up" fields
+      (22:00–08:00 filled in) that save as soon as they change, through the background worker.
+- [x] **Store build.** `node tools/package.mjs` → `dist/bubby-<version>.zip` with `manifest.json` at the root and no
+      README or hidden files.
+- [x] **Version 1.0.0** in `extension/manifest.json`.
+- [ ] **High-resolution screens (You).** Checked: at 2× the toy pod artwork looks soft. `toy.webp` is 646×828 but
+      shown at 468×600, so 2× screens need at least **936×1200** (1404×1800 also covers 3×). There's no larger copy
+      in the repo. Send the original, or a re-export at that size, to swap in.
+- [x] `node tools/sim-check.mjs` and the end-to-end checks (`node tools/check-extension.mjs`) pass after the fixes.
 
 ## 2. Testing (You)
 
@@ -38,24 +38,27 @@ Tick items as they are done (`[x]`). Owner: **Claude** = can be done in a coding
 - [ ] **Toy pod artwork:** confirm you own it or are allowed to use it commercially (if it came from an AI image tool,
       check that tool's terms).
 - [x] Fonts: SIL Open Font License, license files bundled in `extension/fonts/OFL-LICENSES.txt`.
-- [ ] **Name check:** search the Chrome Web Store for existing "Bubby" extensions.
-- [ ] Listing wording: describe it as "a virtual pet"; don't mention or imitate other brands (e.g. Tamagotchi).
+- [x] **Name check** (5 Nov 2026): web searches found no store extension called "Bubby"; similar names (Bubble Bunny,
+      Cubby, My Pet Buddy) aren't conflicts. Search the store itself once more just before submitting.
+- [x] Listing wording: `docs/STORE-LISTING.md` calls it "a virtual pet" and names no other brands.
 
 ## 4. Chrome Web Store listing
 
 - [ ] **Register as a Chrome Web Store developer** (one-time US$5 fee). (You)
-- [ ] **Store assets** (Claude can make them from the game):
+- [x] **Store assets** (`node tools/store-images.mjs`, screenshots of the real popup):
   - [x] 128×128 icon (`extension/icons/icon-128.png`)
-  - [ ] At least one 1280×800 screenshot (toy pod, status card, Seed catch, a notification)
-  - [ ] Small promo tile, 440×280
-  - [ ] Short description (one line) and long description
-  - [ ] Category
-- [ ] **Privacy section:**
-  - [ ] Declare that no user data is collected (true: everything stays in `chrome.storage.local`, no network requests).
-  - [ ] One-line reason per permission: `storage` (save the pet), `alarms` (update Bubby once a minute while the popup
-        is closed), `notifications` (tell you when Bubby needs care).
-  - [ ] Privacy policy page (for example a GitHub page): "Bubby stores your pet only in your browser and sends nothing
-        anywhere."
+  - [x] Four 1280×800 screenshots: toy pod, status card, Seed catch, compact look (`store/screenshot-1..4.png`).
+        No notification shot: a real system notification can't be captured automatically, and a drawn one wouldn't be
+        the real UI. Add your own screenshot of one if you'd like (1280×800).
+  - [x] Small promo tile, 440×280 (`store/promo-small.png`), plus optional marquee 1400×560
+  - [x] Short description (one line) and long description: `docs/STORE-LISTING.md`
+  - [x] Category: Lifestyle → Games
+- [x] **Privacy section** (answers in `docs/STORE-LISTING.md`):
+  - [x] Declare that no user data is collected (true: everything stays in `chrome.storage.local`, no network requests).
+  - [x] One-line reason per permission: `storage`, `alarms`, `notifications`.
+  - [x] Privacy policy text: `docs/PRIVACY.md`.
+  - [ ] **Put the privacy policy at a public URL (You):** make the repository public and link to `docs/PRIVACY.md`, or
+        turn on GitHub Pages for the `/docs` folder.
 - [ ] **Submit for review.** Usually a few days; only three permissions helps it go through.
 - [ ] **Edge Add-ons** (free): submit the same package.
 - [ ] Firefox: needs a small port (background script format, `browser_specific_settings`). After launch.
@@ -74,5 +77,7 @@ Tick items as they are done (`[x]`). Owner: **Claude** = can be done in a coding
 
 - Extension guide (install, test drive, troubleshooting): `extension/README.md`
 - Game rules and paces: `extension/core/rules.js`; balance check: `node tools/sim-check.mjs`
+- Store package: `node tools/package.mjs`; store images: `node tools/store-images.mjs`; end-to-end checks:
+  `node tools/check-extension.mjs`; listing text: `docs/STORE-LISTING.md`
 - Background worker console helpers (chrome://extensions → Bubby → service worker): `bubby.skip(6)`,
-  `bubby.tick()`, `bubby.act('meal')`, `bubby.state()`
+  `bubby.tick()`, `bubby.act('meal')`, `bubby.dev(true)`, `bubby.state()`
