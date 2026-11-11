@@ -1,8 +1,9 @@
 // A 9:16 short (1080×1920, 30 fps, ~30 s): Bubby's whole life sped up, with captions and chiptune sound.
-// Usage: node tools/tiktok-video.mjs   (needs Playwright with Chromium, and ffmpeg) → dist/bubby-tiktok.mp4
-// The story and captions live in tools/video/tiktok.js; it draws with the extension's own sprites and scene.
+// Usage: node tools/tiktok-video.mjs [story]   (needs Playwright with Chromium, and ffmpeg) → dist/bubby-<story>.mp4
+// Stories (captions, timing, what happens): tools/video/stories/*.js, default "life". Engine: tools/video/tiktok.js,
+// which draws with the extension's own sprites and scene.
 import { createRequire } from 'node:module';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 import { join, dirname, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,7 +12,8 @@ const { chromium } = createRequire(import.meta.url)('playwright');
 const repo = join(dirname(fileURLToPath(import.meta.url)), '..');
 const ext = join(repo, 'extension'), out = join(repo, 'dist');
 await mkdir(out, { recursive: true });
-const video = join(out, 'bubby-tiktok-silent.mp4'), audio = join(out, 'bubby-tiktok.wav'), final = join(out, 'bubby-tiktok.mp4');
+const story = process.argv[2] || 'life';
+const video = join(out, `bubby-${story}-silent.mp4`), audio = join(out, `bubby-${story}.wav`), final = join(out, `bubby-${story}.mp4`);
 
 const run = (cmd, args, input) => new Promise((ok, fail) => {
   const p = spawn(cmd, args, { stdio: [input ? 'pipe' : 'ignore', 'ignore', 'inherit'] });
@@ -27,8 +29,9 @@ await page.route('http://bubby.video/**', async r => {
   const path = new URL(r.request().url()).pathname;
   if (path === '/') return r.fulfill({ contentType: 'text/html', body: `<!doctype html><meta charset="utf-8"><style>
     @font-face{font-family:Fredoka;font-weight:600;src:url(/fonts/fredoka-latin-600-normal.woff2)}
+    @font-face{font-family:Nunito;font-weight:400;src:url(/fonts/nunito-latin-400-normal.woff2)}
     @font-face{font-family:"Pixelify Sans";font-weight:600;src:url(/fonts/pixelify-sans-latin-600-normal.woff2)}
-    body{margin:0}</style><canvas id="v" width="1080" height="1920"></canvas><script type="module" src="/video/tiktok.js"></script>` });
+    body{margin:0}</style><canvas id="v" width="1080" height="1920"></canvas><script type="module" src="/video/tiktok.js?story=${story}"></script>` });
   const file = path.startsWith('/video/') ? join(repo, 'tools', path) : join(ext, path);
   try { r.fulfill({ contentType: TYPES[extname(file)] || 'application/octet-stream', body: await readFile(file) }); }
   catch { r.fulfill({ status: 404, body: '' }); }
@@ -50,7 +53,7 @@ await run('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate
   stdin.end();
   console.log(`\rframes ${frames}/${frames}`);
 });
-const cues = await page.evaluate(() => window.CUES());
+const cues = await page.evaluate(() => window.CUES()), music = await page.evaluate(() => window.MUSIC());
 await browser.close();
 
 /* ---------- Sound: the popup's square-wave beeps, plus a little chiptune loop ---------- */
@@ -82,13 +85,15 @@ const SFX = {
   gold: t => { tone(t, 1318, .06); tone(t + .07, 1568, .1); },
   bonk: t => { tone(t, 120, .3, .24, { slide: -60 }); tone(t, 0, .12, .12, { wave: 'noise' }); },
   end: t => [784, 659, 523, 392, 523].forEach((f, i) => tone(t + i * .2, f, .22, .14)),
+  step: t => tone(t, 90, .06, .12, { slide: -30 }),
+  sad: t => { [392, 370, 349].forEach((f, i) => tone(t + i * .45, f, .4, .16)); tone(t + 1.35, 330, 1.2, .16, { slide: -20, vib: .03 }); },
 };
 for (const c of cues) SFX[c.name](c.t);
 
-// 150 bpm loop in C pentatonic; quieter while Bubby sleeps, fades out at the very end.
+// 150 bpm loop in C pentatonic; the story sets its volume over time, and it fades out at the very end.
 const E8 = .2, LEAD = [72, 76, 79, 76, 81, 79, 76, 74, 72, 74, 76, 79, 76, 74, 72, 0], BASS = [48, 48, 55, 55, 57, 57, 55, 52];
 const hz = m => 440 * Math.pow(2, (m - 69) / 12);
-const musicVol = t => (t > 16.1 && t < 18.2 ? .35 : 1) * Math.min(1, Math.max(0, (DURATION - t) / 1.5));
+const musicVol = t => music[Math.min(music.length - 1, Math.round(t * 10))] * Math.min(1, Math.max(0, (DURATION - t) / 1.5));
 for (let i = 0, t = 0; t < DURATION; i++, t = i * E8) {
   const m = LEAD[i % 16]; if (m) tone(t, hz(m), .16, .045 * musicVol(t));
   if (i % 2 === 0) tone(t, hz(BASS[(i / 2) % 8]), .36, .11 * musicVol(t), { wave: 'tri' });
@@ -101,4 +106,5 @@ for (let i = 0; i < N; i++) pcm.writeInt16LE(Math.round(Math.tanh(mixBuf[i] * 1.
 await writeFile(audio, pcm);
 
 await run('ffmpeg', ['-y', '-loglevel', 'error', '-i', video, '-i', audio, '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-shortest', '-movflags', '+faststart', final]);
-console.log('dist/bubby-tiktok.mp4');
+await Promise.all([rm(video), rm(audio)]);
+console.log(`dist/bubby-${story}.mp4`);

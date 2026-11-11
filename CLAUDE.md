@@ -22,7 +22,7 @@ session about the extension, work through open items, and tick them off (`[x]`) 
 - Don't change Bubby's UI design (layouts, colours, fonts, artwork) unless the owner asks.
 - Store package: `node tools/package.mjs` → `dist/` (gitignored). Store images: `node tools/store-images.mjs` →
   `store/` (committed; re-run after visible changes). Listing and privacy text: `docs/STORE-LISTING.md`, `docs/PRIVACY.md`.
-- TikTok/short video (9:16, ~30 s): `node tools/tiktok-video.mjs` → `dist/bubby-tiktok.mp4` (needs ffmpeg). Story and
-  captions: `tools/video/tiktok.js`.
+- TikTok/short videos (9:16, ~30 s): `node tools/tiktok-video.mjs [story]` → `dist/bubby-<story>.mp4` (needs ffmpeg).
+  Stories (captions, timing, events): `tools/video/stories/` (`life`, `moving-out`); engine: `tools/video/tiktok.js`.
 - Time-skip buttons are hidden test tools: `bubby.dev(true)` in the service worker console shows them.
 - `bubby-extension.zip` is a local build artifact (gitignored).
