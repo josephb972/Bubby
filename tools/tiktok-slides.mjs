@@ -157,7 +157,7 @@ const SLIDES = [
   ['it keeps a diary\nof what you missed', 'close it for 9 hours and come back to this. the guilt is free.', zoom(shots.away)],
   ['how you raise it =\nwhat it becomes', 'good parent: Radiant. okay parent: Daisy. you: probably Thistle.', forms],
   ['ignore it and\nit MOVES OUT', 'no dying. it packs up, leaves you a seed, and goes. somehow worse.', zoom(shots.end)],
-  ['it’s called', 'free. no ads. no account. not in the store yet \u{1F440}\ncomment \u{1F331} and I’ll send you the link when it drops', cta],
+  ['adopt yours now', 'free on the Chrome Web Store \u{1F331}\nsearch “Bubby”. no ads. no account.\ncomment which form yours becomes \u{1F447}', cta],
 ];
 
 const browser = await chromium.launch();
@@ -173,7 +173,7 @@ for (const [i, [h, sub, pic]] of SLIDES.entries()) {
 await browser.close();
 
 // The post's caption and hashtags, ready to paste.
-await writeFile(join(out, 'captions.txt'), `did you have one of these as a kid?? \u{1F97A} I made one that lives in your browser. it’s called Bubby and it already hates my sleep schedule. comment \u{1F331} if you want it when it’s out
+await writeFile(join(out, 'captions.txt'), `did you have one of these as a kid?? \u{1F97A} I made one that lives in your browser. it’s called Bubby and it already hates my sleep schedule. it’s free on the Chrome Web Store, search “Bubby” \u{1F331}
 
 #virtualpet #nostalgia #y2k #90skids #2000skids #pixelart #indiedev #chromeextension #cozygames #gamedev
 `);
