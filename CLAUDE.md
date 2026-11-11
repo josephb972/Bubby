@@ -24,5 +24,6 @@ session about the extension, work through open items, and tick them off (`[x]`) 
   `store/` (committed; re-run after visible changes). Listing and privacy text: `docs/STORE-LISTING.md`, `docs/PRIVACY.md`.
 - TikTok/short videos (9:16, ~30 s): `node tools/tiktok-video.mjs [story]` → `dist/bubby-<story>.mp4` (needs ffmpeg).
   Stories (captions, timing, events): `tools/video/stories/` (`life`, `moving-out`); engine: `tools/video/tiktok.js`.
+  TikTok photo slideshow of the interface: `node tools/tiktok-slides.mjs` → `dist/tiktok-slides/` (13 slides + caption).
 - Time-skip buttons are hidden test tools: `bubby.dev(true)` in the service worker console shows them.
 - `bubby-extension.zip` is a local build artifact (gitignored).
