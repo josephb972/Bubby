@@ -1,6 +1,8 @@
 // Engine for Bubby short videos (9:16, 1080×1920). Runs in a page served by tools/tiktok-video.mjs and draws
 // with the extension's own sprites and scene code. The story comes from tools/video/stories/<name>.js (?story=name).
 // window.frame(i) draws frame i; window.CUES() lists the sound cues and window.MUSIC() the music volume (10 per s).
+// Two looks: the default draws the screen in a plain cream bezel with hearts below; frame: 'pod' draws the real toy pod
+// (a screenshot of the popup, served as /video/pod.png + pod.json) with a camera that zooms between pod and screen.
 import { art, SW, SH, GROUND } from '/art/sprites.js';
 import { drawScene, catchY } from '/popup/scene.js';
 import * as Rules from '/core/rules.js';
@@ -9,6 +11,9 @@ const FPS = 30, W = 1080, H = 1920;
 const cv = document.getElementById('v'), cx = cv.getContext('2d');
 const screen = document.createElement('canvas'); screen.width = SW; screen.height = SH;
 const sx = screen.getContext('2d');
+const bare = document.createElement('canvas'); bare.width = SW; bare.height = SH;
+const bx = bare.getContext('2d'), layer = document.createElement('canvas'); layer.width = SW; layer.height = SH;
+const lx = layer.getContext('2d');
 
 // Deterministic randomness, so every render is the same video.
 let seed = 7;
@@ -16,7 +21,8 @@ const rnd = () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (se
 
 const S = Rules.fresh(1, { pace: 'quick' }, 0);
 let A = null, G = null, T = 0, card = null;
-const PET = { x: 50, tx: 50, dir: 1, wait: .6, moving: false, walk: null };
+const PET = { x: 50, tx: 50, dir: 1, wait: .6, moving: false, walk: null, speed: null };
+const presses = [], pops = [];
 const cues = [];
 
 // What a story can do.
@@ -31,14 +37,22 @@ const api = {
   walk: (x, speed = 12) => { PET.walk = { x, speed }; },
   // An end-of-life card over the screen, like the popup's.
   card: (title, text) => { card = title ? { title, text, at: T } : null; },
-  // Seed catch, scripted: plan = [[time after start, x, 'seed' | 'gold' | 'pebble'], ...]
-  catchGame: plan => { G = { type: 'catch', phase: 'play', t: 0, score: 0, px: PET.x, dir: 1, moving: false, stun: 0, joy: 0, items: [], plan: plan.slice() }; },
+  // Seed catch, scripted: plan = [[time after start, x, 'seed' | 'gold' | 'pebble'], ...]; speed and reach of Bubby.
+  catchGame: (plan, { speed = 58, reach = 9 } = {}) => { G = { type: 'catch', phase: 'play', t: 0, score: 0, px: PET.x, dir: 1, moving: false, stun: 0, joy: 0, items: [], plan: plan.slice(), speed, reach }; },
+  // Pod look: press a screen tile and/or printed button ('feed', 'play', 'clean', 'lights', 'med', ...) for a moment.
+  press: name => presses.push({ name, at: T }),
+  // A little "+2g" that floats up from the meter.
+  pop: text => pops.push({ text, at: T }),
 };
 const name = new URL(import.meta.url).searchParams.get('story') || 'life';
 const story = (await import(`/video/stories/${name}.js`)).default(api);
 const { beats: BEATS, clock: CLOCK, duration: DURATION } = story;
 const badge = story.badge || (() => '▶▶ x10000');
 const musicVol = story.music || (() => 1);
+const POD = story.frame === 'pod';
+const pod = POD ? { img: await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = '/video/pod.png'; }), ...(await (await fetch('/video/pod.json')).json()) } : null;
+// How much wider than normal Bubby is drawn (story.fat), on a spring so every gain wobbles a little.
+const fat = { f: 1, v: 0 };
 let nextBeat = 0, caption = '', captionAt = 0;
 
 function clock(t) {
@@ -55,7 +69,7 @@ function updateCatch(dt) {
   for (const it of g.items) {
     if (it.fx) { it.fx += dt; continue; }
     it.y += 44 * dt;
-    if (it.y >= cy && it.y < cy + 6 && Math.abs(it.x - g.px) < 9) {
+    if (it.y >= cy && it.y < cy + 6 && Math.abs(it.x - g.px) < g.reach) {
       it.hit = true; it.fx = 1e-3;
       if (it.kind === 'pebble') { g.stun = 1.4; g.score = Math.max(0, g.score - 2); api.cue('bonk'); }
       else { g.joy = .5; g.score += it.kind === 'gold' ? 3 : 1; api.cue(it.kind === 'gold' ? 'gold' : 'catch'); }
@@ -67,7 +81,7 @@ function updateCatch(dt) {
   g.moving = false;
   if (want && !g.stun) {
     const d = want.x - g.px;
-    if (Math.abs(d) > .5) { g.dir = Math.sign(d); g.px += g.dir * Math.min(Math.abs(d), 58 * dt); g.moving = true; }
+    if (Math.abs(d) > .5) { g.dir = Math.sign(d); g.px += g.dir * Math.min(Math.abs(d), g.speed * dt); g.moving = true; }
   }
 }
 
@@ -84,7 +98,7 @@ function updatePet(dt) {
   }
   if (S.stage === 'seed' || S.ended || A || G || S.asleep || S.call) return;
   if (PET.wait > 0) { PET.wait -= dt; return; }
-  const sp = S.stage === 'senior' ? 6 : 14, d = PET.tx - PET.x;
+  const sp = PET.speed || (S.stage === 'senior' ? 6 : 14), d = PET.tx - PET.x;
   if (Math.abs(d) < .5) { PET.wait = .3 + rnd() * .8; PET.tx = 22 + rnd() * 40; }
   else { PET.dir = Math.sign(d); PET.x += PET.dir * Math.min(Math.abs(d), sp * dt); PET.moving = true; }
 }
@@ -100,6 +114,28 @@ function step(dt) {
   if (A) { A.t += dt; if (A.t >= A.dur) A = null; }
   if (G) updateCatch(dt);
   updatePet(dt);
+  if (story.fat) { fat.v += ((story.fat(S) - fat.f) * 260 - fat.v * 11) * dt; fat.f += fat.v * dt; }
+}
+
+// The game screen. With story.fat, Bubby (and whatever is on it) is cut out and drawn wider.
+function drawGame(t) {
+  drawScene(sx, S, A, G, PET, t);
+  if (!story.fat || Math.abs(fat.f - 1) < .01 || S.stage === 'seed' || S.ended) return;
+  // Same frame without Bubby (moved far off screen); the pixels that differ are Bubby.
+  const px = PET.x, gx = G && G.px; PET.x = -500; if (G) G.px = -500;
+  drawScene(bx, S, A, G, PET, t);
+  PET.x = px; if (G) G.px = gx;
+  const a = sx.getImageData(0, 0, SW, SH), b = bx.getImageData(0, 0, SW, SH), l = lx.createImageData(SW, SH);
+  for (let i = 0; i < a.data.length; i += 4) {
+    if (a.data[i] !== b.data[i] || a.data[i + 1] !== b.data[i + 1] || a.data[i + 2] !== b.data[i + 2]) {
+      l.data[i] = a.data[i]; l.data[i + 1] = a.data[i + 1]; l.data[i + 2] = a.data[i + 2]; l.data[i + 3] = 255;
+    }
+  }
+  lx.putImageData(l, 0, 0);
+  const c = G ? G.px : px, fx = fat.f, fy = 1 + (fat.f - 1) * .12;
+  sx.putImageData(b, 0, 0);
+  sx.imageSmoothingEnabled = false;
+  sx.drawImage(layer, 0, 0, SW, SH, c - c * fx, GROUND + 2 - (GROUND + 2) * fy, SW * fx, SH * fy);
 }
 
 /* ---------- Drawing ---------- */
@@ -150,7 +186,55 @@ function drawCard(t, x, y, w, h) {
   cx.restore();
 }
 
+function drawPod(t) {
+  // Camera: 0 shows the whole toy pod, 1 is a close-up of its screen.
+  const z0 = story.camera ? story.camera(t) : 1, z = z0 * z0 * (3 - 2 * z0);
+  const scr = pod.screen, s0 = 900 / 468, s1 = 940 / scr.w;
+  const s = Math.exp(Math.log(s0) + (Math.log(s1) - Math.log(s0)) * z);
+  const fx = 234 + (scr.x + scr.w / 2 - 234) * z, fy = 300 + (scr.y + scr.h / 2 - 300) * z; // pod point at the centre
+  const cyOut = 620 + 577 + (1150 - 1197) * z;
+  cx.save();
+  cx.setTransform(s, 0, 0, s, W / 2 - fx * s, cyOut - fy * s);
+  cx.shadowColor = 'rgba(40,60,70,.3)'; cx.shadowBlur = 40; cx.shadowOffsetY = 20;
+  cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high';
+  cx.save(); rr(0, 0, 468, 600, 24); cx.clip(); cx.shadowColor = 'transparent'; cx.drawImage(pod.img, 0, 0, 468, 600); cx.restore();
+  drawGame(t);
+  cx.imageSmoothingEnabled = false;
+  const g = pod.scene;
+  cx.drawImage(screen, g.x, g.y, g.w, g.h);
+  for (const p of presses) {
+    const k = (t - p.at) / .2; if (k < 0 || k > 1) continue;
+    cx.fillStyle = `rgba(30,30,40,${.28 * (1 - k)})`;
+    const tile = pod.tiles[p.name]; if (tile) cx.fillRect(tile.x, tile.y, tile.w, tile.h);
+    const btn = pod.buttons[p.name]; if (btn) { cx.beginPath(); cx.arc(btn.x, btn.y, btn.r, 0, Math.PI * 2); cx.fill(); }
+  }
+  cx.restore();
+}
+
+function drawMeter(t) {
+  const m = story.meter(S, t); if (!m) return;
+  cx.font = '600 56px "Pixelify Sans", monospace'; cx.textBaseline = 'middle'; cx.textAlign = 'left';
+  const w = cx.measureText(m.text).width + 50, x = W / 2 - w / 2, y = 590;
+  cx.fillStyle = m.hot ? 'rgba(217,80,74,.92)' : 'rgba(59,47,74,.8)'; rr(x, y - 40, w, 80, 40); cx.fill();
+  cx.fillStyle = '#fff6c8'; cx.fillText(m.text, x + 25, y + 2);
+  for (const p of pops) {
+    const k = (t - p.at) / .9; if (k < 0 || k > 1) continue;
+    cx.globalAlpha = 1 - k * k; cx.font = '600 60px Fredoka, sans-serif'; cx.lineWidth = 12; cx.lineJoin = 'round';
+    cx.strokeStyle = INK; cx.strokeText(p.text, x + w + 14, y - 10 - k * 70); cx.fillStyle = '#ff9ccb'; cx.fillText(p.text, x + w + 14, y - 10 - k * 70);
+    cx.globalAlpha = 1;
+  }
+}
+
 function draw(t) {
+  if (POD) {
+    const bg0 = cx.createRadialGradient(W * .3, 0, 0, W * .3, 0, H * .8);
+    bg0.addColorStop(0, '#dcf4ed'); bg0.addColorStop(1, '#bfe6db');
+    cx.fillStyle = bg0; cx.fillRect(0, 0, W, H);
+    drawPod(t);
+    if (story.meter) drawMeter(t);
+    drawCaption(t);
+    return;
+  }
   const bg = cx.createRadialGradient(W * .3, 0, 0, W * .3, 0, H * .8);
   bg.addColorStop(0, '#dcf4ed'); bg.addColorStop(1, '#bfe6db');
   cx.fillStyle = bg; cx.fillRect(0, 0, W, H);
@@ -161,7 +245,7 @@ function draw(t) {
   cx.fillStyle = '#fffcf3'; rr(SX - 34, SY - 34, SW * SC + 68, SH * SC + 300, 56); cx.fill();
   cx.strokeStyle = '#c7ba98'; cx.lineWidth = 4; cx.stroke();
   cx.fillStyle = '#454b58'; rr(SX - 12, SY - 12, SW * SC + 24, SH * SC + 24, 26); cx.fill();
-  drawScene(sx, S, A, G, PET, t);
+  drawGame(t);
   cx.imageSmoothingEnabled = false;
   cx.save(); rr(SX, SY, SW * SC, SH * SC, 16); cx.clip(); cx.drawImage(screen, SX, SY, SW * SC, SH * SC);
   if (card) drawCard(t, SX, SY, SW * SC, SH * SC);

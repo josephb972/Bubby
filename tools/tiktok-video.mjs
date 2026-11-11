@@ -1,7 +1,8 @@
-// A 9:16 short (1080×1920, 30 fps, ~30 s): Bubby's whole life sped up, with captions and chiptune sound.
+// 9:16 shorts (1080×1920, 30 fps, ~30 s) of Bubby, with captions and chiptune sound.
 // Usage: node tools/tiktok-video.mjs [story]   (needs Playwright with Chromium, and ffmpeg) → dist/bubby-<story>.mp4
 // Stories (captions, timing, what happens): tools/video/stories/*.js, default "life". Engine: tools/video/tiktok.js,
-// which draws with the extension's own sprites and scene.
+// which draws with the extension's own sprites and scene. Stories with frame: 'pod' show the real toy pod: it is
+// captured from the extension's popup first (Playwright loads the extension), then served to the page.
 import { createRequire } from 'node:module';
 import { mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
@@ -21,6 +22,45 @@ const run = (cmd, args, input) => new Promise((ok, fail) => {
   if (input) input(p.stdin);
 });
 
+/* ---------- The toy pod, from the real popup ---------- */
+let pod = null;
+if (/frame:\s*'pod'/.test(await readFile(join(repo, 'tools', 'video', 'stories', story + '.js'), 'utf8'))) {
+  let off = (14 - new Date().getUTCHours() + 24) % 24; if (off > 14) off -= 24; // early afternoon: Bubby awake
+  const ctx = await chromium.launchPersistentContext('', {
+    channel: 'chromium', headless: true, viewport: { width: 468, height: 600 }, deviceScaleFactor: 6,
+    env: { ...process.env, TZ: off >= 0 ? `Etc/GMT-${off}` : `Etc/GMT+${-off}` },
+    args: [`--disable-extensions-except=${ext}`, `--load-extension=${ext}`],
+  });
+  let [sw] = ctx.serviceWorkers();
+  if (!sw) sw = await ctx.waitForEvent('serviceworker');
+  await sw.evaluate(async () => {
+    let S; for (let i = 0; i < 50 && !(S = (await chrome.storage.local.get('bubby')).bubby); i++) await new Promise(r => setTimeout(r, 100));
+    const now = Date.now();
+    Object.assign(S, { stage: 'adult', variant: 'daisy', weight: 24, age: 5 * 86400, stageT: 3600, hunger: 4, happy: 4, poops: [], sick: false,
+      call: null, asleep: false, lights: true, paused: false, ended: null, awakeT: 3600, lastT: now, lastSeenAt: now, seenSeq: S.evSeq });
+    Object.assign(S.cfg, { look: 'toy', bed: 22 * 60, wake: 8 * 60 });
+    await chrome.storage.local.set({ bubby: S });
+  });
+  const p = await ctx.newPage();
+  await p.goto(`chrome-extension://${new URL(sw.url()).host}/popup/popup.html`);
+  await p.waitForSelector('#app');
+  await p.evaluate(() => document.fonts.ready);
+  await p.waitForTimeout(700);
+  const layout = await p.evaluate(() => {
+    const o = document.querySelector('.pdev').getBoundingClientRect();
+    const box = el => { const r = el.getBoundingClientRect(); return { x: r.x - o.x, y: r.y - o.y, w: r.width, h: r.height }; };
+    document.querySelector('#scene').style.visibility = 'hidden';
+    document.querySelector('#toast').hidden = true;
+    const tiles = {}, buttons = {};
+    for (const t of document.querySelectorAll('.tscreen .tile')) tiles[t.dataset.act] = box(t);
+    for (const b of document.querySelectorAll('.hot')) { const r = box(b); buttons[b.dataset.act] = { x: r.x + r.w / 2, y: r.y + r.h / 2, r: r.w / 2 }; }
+    return { scene: box(document.querySelector('#scene')), screen: box(document.querySelector('.tscreen')), tiles, buttons };
+  });
+  await p.evaluate(() => document.activeElement && document.activeElement.blur());
+  pod = { png: await p.locator('.pdev').screenshot(), json: JSON.stringify(layout) };
+  await ctx.close();
+}
+
 /* ---------- Frames ---------- */
 const TYPES = { '.js': 'text/javascript', '.woff2': 'font/woff2', '.html': 'text/html', '.png': 'image/png', '.webp': 'image/webp' };
 const browser = await chromium.launch();
@@ -32,6 +72,8 @@ await page.route('http://bubby.video/**', async r => {
     @font-face{font-family:Nunito;font-weight:400;src:url(/fonts/nunito-latin-400-normal.woff2)}
     @font-face{font-family:"Pixelify Sans";font-weight:600;src:url(/fonts/pixelify-sans-latin-600-normal.woff2)}
     body{margin:0}</style><canvas id="v" width="1080" height="1920"></canvas><script type="module" src="/video/tiktok.js?story=${story}"></script>` });
+  if (pod && path === '/video/pod.png') return r.fulfill({ contentType: 'image/png', body: pod.png });
+  if (pod && path === '/video/pod.json') return r.fulfill({ contentType: 'application/json', body: pod.json });
   const file = path.startsWith('/video/') ? join(repo, 'tools', path) : join(ext, path);
   try { r.fulfill({ contentType: TYPES[extname(file)] || 'application/octet-stream', body: await readFile(file) }); }
   catch { r.fulfill({ status: 404, body: '' }); }
@@ -85,6 +127,7 @@ const SFX = {
   gold: t => { tone(t, 1318, .06); tone(t + .07, 1568, .1); },
   bonk: t => { tone(t, 120, .3, .24, { slide: -60 }); tone(t, 0, .12, .12, { wave: 'noise' }); },
   end: t => [784, 659, 523, 392, 523].forEach((f, i) => tone(t + i * .2, f, .22, .14)),
+  nom: t => { tone(t, 700, .04, .14); tone(t + .07, 900, .04, .14); },
   step: t => tone(t, 90, .06, .12, { slide: -30 }),
   sad: t => { [392, 370, 349].forEach((f, i) => tone(t + i * .45, f, .4, .16)); tone(t + 1.35, 330, 1.2, .16, { slide: -20, vib: .03 }); },
 };
