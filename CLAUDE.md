@@ -1,18 +1,46 @@
-# Bubby project memory
+# Bubby
 
-Bubby is a single-file virtual-pet game (`index.html`). No build step, no package.json, progress saved in localStorage.
+A small virtual-pet game. Two parts that do NOT share code or saves:
+
+- `index.html`: the single-file **web game** (its own rules and save in localStorage, draws its own pod in code, PostHog analytics).
+- `extension/`: the **launched** Chrome / Edge / Brave extension (Manifest V3, store package v1.0.0 submitted). Real-time pet in the
+  toolbar; the popup shows the toy pod artwork (`extension/art/photo/toy.webp`) with the live game on its screen, or a compact
+  layout. See `extension/README.md`.
+
+The extension is the product that was launched. Features planned in `memory/` (races, diseases, points, shop and so on) are
+being ported into the extension. The web game already has v1.1 (races, rare Starling, Bubbydex) and a v1.3 draft (diseases,
+medicine, points, shop), which serve as the reference design.
 
 ## Key files
-- `index.html`: the whole game, with PostHog analytics configured (EU host, project key set).
-- `README.md`: player-facing description.
-- `memory/bubby-monetization-and-marketing.md`: monetization options (Bubby Plus ranked 1, cosmetic packs ranked 2), marketing plan, and TikTok strategy with Claude-only and Claude plus Higgsfield routes.
-- `memory/bubby-update-roadmap.md`: planned updates v1.1 to v1.6 (races and Bubbydex, visiting, diseases, cross-breeding, minigames, mutant Lab), with order, rules, risks, and PostHog events.
+- `docs/LAUNCH-CHECKLIST.md`: extension launch plan. Read it at the start of a session about the extension and tick items off.
+- `memory/bubby-monetization-and-marketing.md`: monetization options (Bubby Plus ranked 1, cosmetic packs ranked 2), marketing plan, TikTok strategy.
+- `memory/bubby-update-roadmap.md`: planned updates v1.1 to v1.6, with order, rules, risks, and PostHog events.
+- `memory/bubby-points-and-shop.md`: points economy, caps, prices, and illness and medicine rules (when present).
 - `prompts/visual-polish-prompt.md`: art-direction prompt.
+- `README.md`: player-facing description of the web game.
 
-## Conventions
-- Keep the game a single HTML file unless the user asks otherwise.
+## Working on the extension
+
+- Game rules live in `extension/core/rules.js` (pure, no DOM; shared by popup and background worker).
+- After changing rules or pacing, run `node tools/sim-check.mjs`.
+- Regenerate PNG icons with `node tools/make-icons.mjs` (needs Playwright).
+- Test by loading `extension/` with "Load unpacked". After changes, run `node tools/check-extension.mjs` (Playwright
+  loads the extension into Chromium).
+- Keep existing saves working: saved state is versioned; update `migrate()` in `core/rules.js` when the format changes.
+- Don't change Bubby's existing UI design (layouts, colours, fonts, artwork) unless the owner asks. New screens (shop and so on)
+  must match it.
+- Store package: `node tools/package.mjs` → `dist/` (gitignored). The version submitted to the stores is committed in `release/` (copy the new zip there for each release). Store images: `node tools/store-images.mjs` →
+  `store/` (committed; re-run after visible changes). Listing and privacy text: `docs/STORE-LISTING.md`, `docs/PRIVACY.md`.
+- Time-skip buttons are hidden test tools: `bubby.dev(true)` in the service worker console shows them.
+- `bubby-extension.zip` is a local build artifact (gitignored).
+
+## Working on the web game (`index.html`)
+- Keep it a single HTML file unless the user asks otherwise.
 - Analytics events go through `track()`. Never send personal data. The Stats button must keep working.
-- Game balance and decay rules are in `STAGE` and `ABSENCE`. Don't make absence punish the player.
-- Paid features must never change difficulty or revive a dead Bubby. Cosmetics only.
-- Races are random (`rollRace`, `RARE_CHANCE`). Care quality only decides the adult tier. The Bubbydex (`S.dex`) must survive resets.
+- Game balance and decay rules are in `STAGE` and `ABSENCE`.
+
+## Rules for every version
+- Don't make absence punish the player. Illness and other bad things only happen during active play.
+- Paid features must never change difficulty or revive a dead Bubby. Cosmetics only. Points are earned, never bought with money.
+- Races are random (`rollRace`, `RARE_CHANCE`). Care quality only decides the adult tier. The Bubbydex must survive resets.
 - Work on `claude/practical-faraday-wxk9us`.
