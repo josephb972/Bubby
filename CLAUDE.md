@@ -14,4 +14,5 @@ Bubby is a single-file virtual-pet game (`index.html`). No build step, no packag
 - Analytics events go through `track()`. Never send personal data. The Stats button must keep working.
 - Game balance and decay rules are in `STAGE` and `ABSENCE`. Don't make absence punish the player.
 - Paid features must never change difficulty or revive a dead Bubby. Cosmetics only.
+- Races are random (`rollRace`, `RARE_CHANCE`). Care quality only decides the adult tier. The Bubbydex (`S.dex`) must survive resets.
 - Work on `claude/practical-faraday-wxk9us`.

@@ -40,32 +40,30 @@ Target months (adjust to real progress): v1.1 Dec 2026, v1.2 Jan to Feb 2027, v1
 
 ### v1.1 Many Faces: races, Bubbydex, jump rope
 
+**Status: races, the rare-race animation, and the Bubbydex are built (in `index.html`). Solo jump rope is not built yet.**
+
+**Design decision (changed from the first draft):** races are **random**, not earned by care style. Care quality still decides the adult tier (Radiant, Daisy, Thistle). This keeps every new life a surprise and gives the rare race a real "pull".
+
 **What ships**
-- A new **race** is chosen when the Bulb grows into a Bud, based on how the player cared for it as a Bulb. Today only the adult form varies (Radiant, Daisy, Thistle by care quality). Races sit on top of that, so the quality tiers stay.
-- Six races (placeholder names):
-
-| Race | How it is earned (Bulb stage) | Look |
-|---|---|---|
-| Leafling | Balanced care, or default | Current green Bubby |
-| Mossback | Very clean, meals only, no snacks | Mossy brown-green |
-| Puddle | 3 or more games played | Blue, bouncy |
-| Shroomling | 3 or more snacks | Red cap, spots |
-| Duskling | Lights off early more than once | Purple, night glow |
-| Emberling | Scolded tantrums 2 or more times | Warm orange |
-
+- When the Bulb grows into a Bud, Bubby is **randomly assigned a race**:
+  - Five common races share the odds equally: Leafling, Mossback, Puddle, Shroomling, Emberling.
+  - One **rare race, Starling, rolls at 5%** (about 1 in 20 lives). Tunable with `RARE_CHANCE`.
+- **Rare reveal animation (Starling):** the garden dims, a glow and spinning rays build behind the Bulb, stars fall, the sprite flickers between forms, a golden shockwave ring marks the reveal, and a rising fanfare plays. About 4.4 seconds. Starlings keep a gold twinkle for life. Common races get a short color-ring reveal.
 - 6 races x 3 care tiers = **18 forms** to collect.
-- **Bubbydex:** a collection page. Found forms in colour, unfound as silhouettes with a one-line hint. Progress shows "7 / 18".
-- **Jump rope (solo):** a tap-rhythm minigame, 20 seconds, like Seed catch. Best score saved.
+- **Bubbydex:** a collection section in the guide. Race rows reveal at the Bud stage, each adult form reveals when it blossoms, unfound forms show as silhouettes. Progress shows "7 / 18". The dex survives replanting and "Start over".
+- Old saves keep working: a Bubby from before races becomes a Leafling, which keeps its classic look.
+- **Jump rope (solo):** a tap-rhythm minigame, 20 seconds, like Seed catch. Best score saved. **Not built yet.**
 
 **Build notes**
-- Sprites are drawn in code from a palette table (`PAL`, `palette()`, `drawChild`, `drawAdult`). A race is a palette plus one small shape change. Low art cost.
-- New fields: `S.race`, `S.sig` (care counters during Bulb), `S.dex` (found forms). Race is set in `evolve()` when going to `child`.
-- Keep the old `S.variant` as the care tier.
+- Races are a color table (`RACES`) plus small pixel accents (`raceMark`). Leafling uses the original colors, so the old look is unchanged.
+- State: `S.race`, `S.dex` (race ids and `race:variant` forms). `S.dex` is carried through resets by `keepSettings()`.
+- Race is rolled in `evolve()` when going to `child` (`rollRace()`).
+- Open option: a "bad luck" guarantee after N lives without the rare race. Not added.
 
-**Shareable moment:** the race reveal at the Bulb to Bud evolution ("My Bubby became a Duskling").
-**Retention hook:** Bubbydex completion; every new life is a chance at a new form.
-**PostHog events:** `race_revealed {race}`, `dex_progress {found}`, `game_start {game:'rope'}`.
-**Risks:** race rules must feel discoverable, not random. Show the hint in the Bubbydex after a form is found.
+**Shareable moment:** the Starling reveal ("I got the 1 in 20 Bubby").
+**Retention hook:** Bubbydex completion; every new life is a chance at a new race.
+**PostHog events (built):** `race_revealed {race, rare}`, `dex_progress {found, form}`, and `evolved` now carries `race`. Still to add: `game_start {game:'rope'}`.
+**Risks:** a 5% rare means some players may take hours to see it. Watch the share of players who see Starling per life in PostHog before changing the odds.
 
 ---
 

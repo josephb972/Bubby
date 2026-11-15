@@ -220,6 +220,16 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .forms canvas { width: 56px; height: 56px; image-rendering: pixelated; }
 .forms figcaption { font: 600 12.5px/1.15 var(--font-display); }
 .forms figcaption small { display: block; font: 400 11px/1.3 var(--font-body); color: var(--muted); margin-top: 2px; }
+.dex-count { font: 600 14px/1 var(--font-body); color: var(--muted); margin-left: 6px; }
+.dex { display: grid; gap: 8px; margin-top: 10px; }
+.dex-row { display: grid; grid-template-columns: 86px repeat(3, 1fr); gap: 6px; align-items: center; background: var(--panel); border-radius: 12px; padding: 8px 10px; }
+.dex-row > b { font: 600 13px/1.2 var(--font-display); }
+.dex-row > b small { display: block; font: 400 11px/1.3 var(--font-body); color: var(--muted); margin-top: 2px; }
+.dex-row.rare > b { color: #7a56d6; }
+.dex-row figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+.dex-row canvas { width: 48px; height: 48px; image-rendering: pixelated; }
+.dex-row figcaption { font: 600 11px/1.1 var(--font-display); }
+.dex-row figure.locked canvas { filter: brightness(0); opacity: .2; }
 .keys { font-size: 13px; color: var(--muted); }
 kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); border-bottom-width: 3px; border-radius: 5px; padding: 2px 5px; color: var(--ink); background: var(--panel); }
 .confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; }
@@ -278,6 +288,7 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
             <p class="ov-title"><span id="stName">Bubby</span><button class="pbtn" data-close>Back</button></p>
             <dl class="stat-grid">
               <dt>Age</dt><dd><span id="stAge">0 days</span>&nbsp;· <span id="stGen">Gen 1</span></dd>
+              <dt>Race</dt><dd id="stRace">–</dd>
               <dt>Weight</dt><dd id="stWeight">5g</dd>
               <dt>Hunger</dt><dd id="stHunger"></dd>
               <dt>Happy</dt><dd id="stHappy"></dd>
@@ -394,6 +405,12 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
       <div class="forms" id="forms"></div>
     </section>
 
+    <section>
+      <h2>Bubbydex <span class="dex-count" id="dexCount"></span></h2>
+      <p>When a Bulb grows into a Bud it becomes a random race. One race is very rare. Raise every race to each adult form to fill the dex.</p>
+      <div class="dex" id="dex"></div>
+    </section>
+
     <section class="keys">
       <p>Keyboard: <kbd>F</kbd> feed · <kbd>P</kbd> play · <kbd>C</kbd> clean · <kbd>L</kbd> lights · <kbd>M</kbd> medicine · <kbd>D</kbd> discipline · <kbd>S</kbd> status · <kbd>←</kbd><kbd>→</kbd> in games · <kbd>Space</kbd> pause · <kbd>Esc</kbd> back. Time only passes while this page is open, and progress is saved in this browser.</p>
     </section>
@@ -426,6 +443,24 @@ const STAGE = {
 };
 const NAMES = { seed: 'Seed', baby: 'Bulb', child: 'Bud', adult: 'Blossom', senior: 'Elder' };
 const FORMS = { radiant: 'Radiant Blossom', daisy: 'Daisy Blossom', thistle: 'Thistle' };
+
+/* ---- Races: rolled at random when the Bulb grows into a Bud ----
+   Five common races share the odds equally. One rare race (RARE_CHANCE) gets a special animation.
+   Colors: body = [ring, fill, light], bud = [ring, fill, line, highlight], leaf/collar = [ring, fill]. */
+const RARE_RACE = 'starling', RARE_CHANCE = 0.05;
+const RACES = {
+  leafling:   { name: 'Leafling',   body: ['#2f7d3a', '#5cbf5a', '#8ad98a'], foot: '#3f9a45', leaf: ['#2a6e35', '#47a852'], collar: ['#2a6e35', '#4fae55'], bud: ['#b9544a', '#f08f7a', '#d8705f', '#ffb7a3'], suit: false, tint: '#8ad98a' },
+  mossback:   { name: 'Mossback',   body: ['#4b5a2c', '#86a04e', '#b8cf86'], foot: '#6b8040', leaf: ['#3d4a22', '#6f8a40'], collar: ['#3d4a22', '#7a9446'], bud: ['#6e5a2a', '#b59a52', '#8f7a3a', '#dcc888'], suit: true, tint: '#b8cf86' },
+  puddle:     { name: 'Puddle',     body: ['#2a6aa0', '#4ba8e2', '#a0dcf8'], foot: '#3a8ac4', leaf: ['#22609a', '#3d9ad4'], collar: ['#22609a', '#46a2dc'], bud: ['#2a8aa8', '#6fd3e6', '#4fb8d0', '#bdf0f8'], suit: true, tint: '#6fd3e6' },
+  shroomling: { name: 'Shroomling', body: ['#8a5a3a', '#c9966a', '#ecca9e'], foot: '#b07c52', leaf: ['#6e4528', '#a87a52'], collar: ['#6e4528', '#b88a5e'], bud: ['#a63636', '#e65a5a', '#c84444', '#ff9a9a'], suit: true, tint: '#e65a5a' },
+  emberling:  { name: 'Emberling',  body: ['#b0431c', '#f0803a', '#ffbb80'], foot: '#d9622a', leaf: ['#9a3818', '#e0702e'], collar: ['#9a3818', '#e8782e'], bud: ['#d42a1a', '#ff9d2e', '#f06a1a', '#ffd27a'], suit: true, tint: '#ff9d2e' },
+  starling:   { name: 'Starling',   body: ['#4a2f96', '#8d6de0', '#d4c4ff'], foot: '#6e50c4', leaf: ['#3e2784', '#7a58d0'], collar: ['#3e2784', '#8264d8'], bud: ['#c98f0a', '#ffe066', '#f0b820', '#fff3b0'], suit: true, tint: '#ffe066', rare: true },
+};
+const COMMON_RACES = Object.keys(RACES).filter(k => !RACES[k].rare);
+function rollRace() {
+  if (Math.random() < RARE_CHANCE) return RARE_RACE;
+  return COMMON_RACES[Math.floor(Math.random() * COMMON_RACES.length)];
+}
 const CALL_TEXT = {
   hungry: 'Bubby is calling: its tummy is empty. Feed it a meal.',
   sad: 'Bubby is calling: it feels lonely. Play a game or give a snack.',
@@ -445,6 +480,10 @@ function stageName(s = S) {
   if (s.stage === 'senior') return 'Elder ' + (FORMS[s.variant] || 'Blossom').replace(' Blossom', '');
   return NAMES[s.stage];
 }
+function fullName(s = S) {
+  const r = RACES[s.race];
+  return r && s.stage !== 'seed' && s.stage !== 'baby' ? `${r.name} ${stageName(s)}` : stageName(s);
+}
 function healthyMax(stage) { return STAGE[stage].base ? Math.round(STAGE[stage].base * 1.6) : 99; }
 
 function fresh(gen = 1, speed = 1) {
@@ -456,6 +495,7 @@ function fresh(gen = 1, speed = 1) {
     call: null, mistakes: 0, snacks: [], variant: null, chubby: false,
     ended: null, paused: false, nextPoop: 30, nextTantrum: 55,
     savedAt: 0, installedAt: 0, lastCheckIn: '', streak: 0, analytics: true,
+    race: null, dex: [],
     stats: { meals: 0, snacks: 0, games: 0, wins: 0, cleans: 0, meds: 0, scolds: 0, sick: 0 },
   };
 }
@@ -495,27 +535,35 @@ function evolve(to) {
   const from = S.stage;
   if (to === 'baby') S.weight = STAGE.baby.base;
   else S.weight += STAGE[to].base - STAGE[from].base;
+  let newForm = false, rare = false;
   if (to === 'adult') {
     let tier = S.mistakes <= 2 && S.discipline >= 75 ? 0 : (S.mistakes <= 6 && S.discipline >= 25 ? 1 : 2);
     if (S.weight - (STAGE.adult.base - STAGE.child.base) > healthyMax('child')) { S.chubby = true; tier = Math.min(2, tier + 1); }
     S.variant = ['radiant', 'daisy', 'thistle'][tier];
+    newForm = dexAdd(`${S.race}:${S.variant}`);
   }
+  if (to === 'child') { S.race = rollRace(); rare = !!RACES[S.race].rare; dexAdd(S.race); }
   S.stage = to; S.stageT = 0;
   S.nextPoop = rand(...STAGE[to].poop);
   if (to === 'baby') { S.awakeT = 0; S.nextTantrum = 55; }
-  A = { type: 'evolve', t: 0, dur: 1.8, from, to };
+  A = { type: 'evolve', t: 0, dur: rare ? 4.4 : 1.8, from, to, rare };
+  const rn = (RACES[S.race] || RACES.leafling).name, art = /^[AEIOU]/i.test(rn) ? 'an' : 'a';
   const msg = to === 'baby' ? 'The seed sprouted! Meet Bubby the Bulb'
-    : to === 'child' ? 'Bubby grew into a Bud!'
-    : to === 'adult' ? `Bubby blossomed into a ${FORMS[S.variant]}!`
+    : to === 'child' ? (rare ? `A rare ${rn}! Only 1 in ${Math.round(1 / RARE_CHANCE)} Bubbies` : `Bubby grew into ${art} ${rn} Bud!`)
+    : to === 'adult' ? `Bubby blossomed into ${art} ${rn} ${FORMS[S.variant]}!${newForm ? ' New in the Bubbydex!' : ''}`
     : 'Bubby is an Elder now. Take it easy';
   toast(msg);
   beep(523, .1); setTimeout(() => beep(659, .1), 120); setTimeout(() => beep(784, .16), 240);
-  track('evolved', { to, variant: S.variant });
+  if (rare) [988, 1175, 1319, 1568, 1760, 2093].forEach((f, i) => setTimeout(() => beep(f, .18, .06), 700 + i * 150));
+  if (to === 'child') track('race_revealed', { race: S.race, rare });
+  if (newForm) track('dex_progress', { found: dexFound(), form: `${S.race}:${S.variant}` });
+  track('evolved', { to, variant: S.variant, race: S.race });
+  renderDex();
   save();
 }
 
 function end(kind) {
-  S.ended = { kind, age: S.age, stage: S.stage, name: stageName(), mistakes: S.mistakes, gen: S.gen };
+  S.ended = { kind, age: S.age, stage: S.stage, name: fullName(), mistakes: S.mistakes, gen: S.gen };
   S.call = null; A = null; G = null;
   closeOverlays();
   showEnd();
@@ -864,8 +912,10 @@ const PAL = {
   daisy:   { ring: '#b3a9c4', petal: '#ffffff', face: '#ffd54f', faceRing: '#d9a520', suit: ['#3f8f4f', '#66bb6a'], blush: '#f59a7a', wings: null },
   thistle: { ring: '#5a3b80', petal: '#9a6cc7', face: '#c39be0', faceRing: '#6e4b98', suit: ['#5d6b4f', '#7f8f6a'], blush: '#a678c9', wings: null },
 };
-function palette(variant, senior) {
-  const p = PAL[variant] || PAL.radiant;
+function palette(variant, senior, race) {
+  let p = PAL[variant] || PAL.radiant;
+  const r = RACES[race];
+  if (r && r.suit) p = { ...p, suit: [r.body[0], r.body[1]], petal: mix(p.petal, r.bud[1], .25), ring: mix(p.ring, r.bud[0], .25) };
   if (!senior) return p;
   const m = c => mix(c, '#cdb8a6', .45);
   return { ring: m(p.ring), petal: m(p.petal), face: m(p.face), faceRing: m(p.faceRing), suit: [m(p.suit[0]), m(p.suit[1])], blush: m(p.blush),
@@ -890,21 +940,45 @@ function drawBaby(x, o) {
   P(x, [18, 21, 20, 21, 28, 20, 30, 20], '#8be095');
   face(x, 24, 36, { ...o, blush: '#f59aa6' });
 }
+/* Small per-race decorations, drawn over the body. o.t (seconds) makes flames and stars flicker. */
+function raceMark(x, o, st) {
+  const k = o.race, fl = ((o.t || 0) * 3 | 0) % 2, ad = st !== 'child';
+  if (k === 'mossback') {
+    P(x, ad ? [17, 9, 18, 9, 18, 10, 30, 9, 31, 9, 30, 10, 14, 37, 15, 37, 33, 37, 34, 37] : [20, 40, 21, 40, 21, 41, 27, 39, 28, 39, 28, 40, 17, 35, 18, 35], '#4f6a2a');
+    P(x, ad ? [17, 8, 31, 8] : [20, 39, 28, 38], '#b8cf86');
+  } else if (k === 'puddle') {
+    P(x, ad ? [12, 14, 36, 14, 11, 27, 37, 28] : [12, 30, 36, 31, 13, 41, 35, 40], '#bff0ff');
+    P(x, ad ? [12, 15, 36, 15] : [12, 31, 36, 32], '#6fd3e6');
+    P(x, ad ? [21, 36, 22, 36, 21, 37] : [19, 33, 20, 32], '#ffffff');
+  } else if (k === 'shroomling') {
+    P(x, ad ? [24, 9, 25, 9, 31, 13, 32, 13, 16, 13, 17, 13, 35, 21, 13, 21] : [22, 15, 23, 15, 27, 18, 28, 18, 21, 21, 25, 23, 26, 23], '#ffffff');
+  } else if (k === 'emberling') {
+    const y0 = ad ? 1 : 4;
+    P(x, [24, y0 + 2, 23, y0 + 3, 24, y0 + 3, 25, y0 + 3, 23, y0 + 4, 24, y0 + 4, 25, y0 + 4], '#ff7a1a');
+    P(x, fl ? [24, y0 + 1, 24, y0 + 3] : [23, y0 + 2, 25, y0 + 2], '#ffd27a');
+  } else if (k === 'starling') {
+    const y0 = ad ? 1 : 5;
+    P(x, [24, y0, 23, y0 + 1, 24, y0 + 1, 25, y0 + 1, 24, y0 + 2], '#ffe066');
+    P(x, fl ? [14, ad ? 24 : 27, 34, ad ? 20 : 30] : [34, ad ? 24 : 27, 14, ad ? 20 : 30], '#fff3b0');
+  }
+}
 function drawChild(x, o) {
-  ER(x, 20, 45, 2.6, 2, '#2f7d3a', '#3f9a45'); ER(x, 28, 45, 2.6, 2, '#2f7d3a', '#3f9a45');
-  ER(x, 14.5, 37, 2.6, 3.6, '#2f7d3a', '#5cbf5a', .3); ER(x, 33.5, 37, 2.6, 3.6, '#2f7d3a', '#5cbf5a', -.3);
-  ER(x, 24, 36, 9.5, 9, '#2f7d3a', '#5cbf5a');
-  E(x, 20, 31, 2.5, 1.6, '#8ad98a');
-  ER(x, 16, 25.5, 6.5, 2.6, '#2a6e35', '#47a852', -.4); ER(x, 32, 25.5, 6.5, 2.6, '#2a6e35', '#47a852', .4);
-  ER(x, 24, 19, 6, 7.5, '#b9544a', '#f08f7a');
-  R(x, 21, 15, 1, 9, '#d8705f'); R(x, 26, 15, 1, 9, '#d8705f');
-  E(x, 22.5, 15.5, 1.2, 2, '#ffb7a3');
-  P(x, [23, 10, 24, 10, 23, 11, 24, 11], '#f08f7a');
-  ER(x, 24, 26, 5, 2, '#2a6e35', '#4fae55');
+  const r = RACES[o.race] || RACES.leafling, b = r.body, u = r.bud;
+  ER(x, 20, 45, 2.6, 2, b[0], r.foot); ER(x, 28, 45, 2.6, 2, b[0], r.foot);
+  ER(x, 14.5, 37, 2.6, 3.6, b[0], b[1], .3); ER(x, 33.5, 37, 2.6, 3.6, b[0], b[1], -.3);
+  ER(x, 24, 36, 9.5, 9, b[0], b[1]);
+  E(x, 20, 31, 2.5, 1.6, b[2]);
+  ER(x, 16, 25.5, 6.5, 2.6, r.leaf[0], r.leaf[1], -.4); ER(x, 32, 25.5, 6.5, 2.6, r.leaf[0], r.leaf[1], .4);
+  ER(x, 24, 19, 6, 7.5, u[0], u[1]);
+  R(x, 21, 15, 1, 9, u[2]); R(x, 26, 15, 1, 9, u[2]);
+  E(x, 22.5, 15.5, 1.2, 2, u[3]);
+  P(x, [23, 10, 24, 10, 23, 11, 24, 11], u[1]);
+  ER(x, 24, 26, 5, 2, r.collar[0], r.collar[1]);
+  raceMark(x, o, 'child');
   face(x, 24, 37, { ...o, blush: '#f59aa6' });
 }
 function drawAdult(x, o, senior) {
-  const pal = palette(o.variant, senior), ch = o.chubby ? 2 : 0, cx = 24, hy = 21, th = o.variant === 'thistle';
+  const pal = palette(o.variant, senior, o.race), ch = o.chubby ? 2 : 0, cx = 24, hy = 21, th = o.variant === 'thistle';
   if (pal.wings) { ER(x, 12 - ch, 35, 6.5, 3.4, pal.wings[0], pal.wings[1], -.55); ER(x, 36 + ch, 35, 6.5, 3.4, pal.wings[0], pal.wings[1], .55); }
   ER(x, 20.5, 45, 2.5, 1.8, pal.suit[0], pal.suit[0]); ER(x, 27.5, 45, 2.5, 1.8, pal.suit[0], pal.suit[0]);
   ER(x, 16 - ch, 38.5, 2.6, 3.6, pal.suit[0], pal.suit[1], .35); ER(x, 32 + ch, 38.5, 2.6, 3.6, pal.suit[0], pal.suit[1], -.35);
@@ -923,6 +997,7 @@ function drawAdult(x, o, senior) {
     ER(x, px, py, pr, pr, pal.ring, pal.petal);
   }
   if (senior) P(x, [15, 14, 32, 13, 12, 22, 36, 24, 18, 31, 30, 31], mix(pal.petal, '#8a5a40', .35));
+  raceMark(x, o, senior ? 'senior' : 'adult');
   ER(x, cx, hy, 8.5, 8.5, pal.faceRing, pal.face);
   E(x, 20, 16.5, 2, 1.3, mix(pal.face, '#ffffff', .45));
   face(x, cx, hy + 1, { ...o, blush: pal.blush, glasses: senior, skin: pal.face, mood: (th && (o.mood || 'normal') === 'normal') ? 'normal' : o.mood, mouth: o.mouth || (th && (!o.mood || o.mood === 'normal') ? 'flat' : undefined) });
@@ -1049,6 +1124,51 @@ function sparkles(cx, cy, t, r = 16) {
     sx.fillStyle = col; sx.fillRect(px, py, 1, 1); sx.fillRect(px - 1, py, 3, 1); sx.fillRect(px, py - 1, 1, 3);
   }
 }
+/* ---- Rare race moment: dim garden, spinning rays, glow (behind Bubby), then a shockwave and falling stars (in front) ---- */
+function evolveBack(px, time) {
+  const cy = GROUND - 24, t = A.t, fade = Math.min(1, t / .5) * Math.min(1, (A.dur - t) / .9);
+  R(sx, 0, 0, SW, SH, `rgba(30,12,80,${(fade * .55).toFixed(2)})`);
+  sx.globalAlpha = fade;
+  for (let i = 0; i < 12; i++) {
+    const ang = time * .9 + i * Math.PI / 6;
+    for (let r = 12; r < 56; r += 4) {
+      if (((r >> 2) + i) % 2) continue;
+      P(sx, [Math.round(px + Math.cos(ang) * r), Math.round(cy + Math.sin(ang) * r * .75)], i % 2 ? '#fff3b0' : '#d7c6ff');
+    }
+  }
+  sx.globalAlpha = .1 * fade;
+  for (let r = 26; r >= 10; r -= 4) E(sx, px, cy, r, r * .85, '#ffe9a8');
+  sx.globalAlpha = 1;
+}
+function evolveFront(px, time) {
+  const cy = GROUND - 24, t = A.t;
+  if (A.rare) {
+    if (t > 1.3 && t < 2.6) {
+      const rr = (t - 1.3) * 38;
+      for (let a = 0; a < Math.PI * 2; a += .1) P(sx, [Math.round(px + Math.cos(a) * rr), Math.round(cy + Math.sin(a) * rr * .75)], '#ffe066');
+    }
+    for (let i = 0; i < 16; i++) {
+      const bx = (i * 37 + 11) % SW, by = Math.round(((time * 14 + i * 23) % (SH + 10)) - 5);
+      P(sx, [bx, by, bx - 1, by, bx + 1, by, bx, by - 1, bx, by + 1], i % 3 ? '#fff3b0' : '#ffffff');
+    }
+    sparkles(px, cy, time, 20 + Math.sin(time * 6) * 2);
+    if (t < .25) R(sx, 0, 0, SW, SH, 'rgba(255,255,255,.85)');
+    return;
+  }
+  sparkles(px, cy, time, 18 + Math.sin(time * 6) * 2);
+  if (t < .2) R(sx, 0, 0, SW, SH, 'rgba(255,255,255,.8)');
+  if (A.to === 'child' && t > .4 && t < 1.6 && RACES[S.race]) {
+    const rr = (t - .4) * 30;
+    for (let a = 0; a < Math.PI * 2; a += .14) P(sx, [Math.round(px + Math.cos(a) * rr), Math.round(cy + Math.sin(a) * rr * .75)], RACES[S.race].tint);
+  }
+}
+function twinkle(px, cy, time) {
+  for (let i = 0; i < 5; i++) {
+    if (((time * 1.6 + i * .7) | 0) % 3 !== 0) continue;
+    const a = i * 2.4 + 1, bx = Math.round(px + Math.cos(a) * 17), by = Math.round(cy + Math.sin(a) * 15);
+    P(sx, [bx, by, bx - 1, by, bx + 1, by, bx, by - 1, bx, by + 1], '#ffe066');
+  }
+}
 function moodNow() {
   let mood = 'normal', mouth;
   if (S.asleep) mood = 'sleep';
@@ -1097,9 +1217,12 @@ function draw(time) {
     else bob = -(((time * 1.6) | 0) % 2);
     if (A && A.type === 'no') shake = (((A.t * 12) | 0) % 2) ? 1 : -1;
   }
+  if (stage !== 'seed') { o.race = S.race; o.t = time; }
+  if (A && A.type === 'evolve' && A.rare) evolveBack(px, time);
   const spr = petSprite(stage, o);
   if (stage !== 'seed') { sx.fillStyle = 'rgba(64,120,52,.45)'; E(sx, px, GROUND + 1.5, 9, 1.6, 'rgba(64,120,52,.45)'); }
   blit(spr, px - 24 + shake, GROUND - 46 + bob);
+  if (S.race === RARE_RACE && stage !== 'seed' && !(A && A.type === 'evolve' && A.rare)) twinkle(px, GROUND - 24, time);
   const top = GROUND - 46 + HEADTOP[stage] + bob;
 
   // Action effects
@@ -1115,7 +1238,7 @@ function draw(time) {
     }
     if (A.type === 'med') { blit(ICONS.med, px + 9, top - 6 - Math.round(Math.sin(k * Math.PI) * 4)); }
     if (A.type === 'scold') { if (((A.t * 6) | 0) % 2 === 0) blit(BANG, px + 10, top - 4); }
-    if (A.type === 'evolve') { sparkles(px, GROUND - 22, time, 18 + Math.sin(time * 6) * 2); if (A.t < .2) { R(sx, 0, 0, SW, SH, 'rgba(255,255,255,.8)'); } }
+    if (A.type === 'evolve') evolveFront(px, time);
     if (A.type === 'sparkle' || A.type === 'happy') sparkles(px, GROUND - 20, time, 15);
   }
 
@@ -1170,6 +1293,33 @@ function buildTiles() {
   });
   $$('canvas[data-icon]').forEach(c => c.getContext('2d').drawImage(ICONS[c.dataset.icon], 0, 0));
 }
+/* ---- Bubbydex: every race x care tier. Race rows reveal at the Bud stage, each form when it blossoms. ---- */
+const TIERS = [['radiant', 'Radiant'], ['daisy', 'Daisy'], ['thistle', 'Thistle']];
+function dexAdd(key) {
+  if (!S.dex) S.dex = [];
+  if (S.dex.includes(key)) return false;
+  S.dex.push(key);
+  return true;
+}
+function dexFound() { return (S.dex || []).filter(k => k.includes(':')).length; }
+function renderDex() {
+  const box = $('#dex'); if (!box) return;
+  box.textContent = '';
+  $('#dexCount').textContent = `${dexFound()} / ${Object.keys(RACES).length * TIERS.length}`;
+  for (const [id, r] of Object.entries(RACES)) {
+    const seen = (S.dex || []).includes(id), row = document.createElement('div');
+    row.className = 'dex-row' + (r.rare ? ' rare' : '');
+    row.innerHTML = `<b>${seen ? r.name + (r.rare ? ' ★' : '') : '???'}<small>${r.rare ? 'Very rare' : seen ? 'Race found' : 'Not found yet'}</small></b>`;
+    for (const [v, vn] of TIERS) {
+      const got = (S.dex || []).includes(`${id}:${v}`), f = document.createElement('figure');
+      f.className = got ? '' : 'locked';
+      f.appendChild(petSprite('adult', { variant: v, race: id, t: 0 }));
+      f.insertAdjacentHTML('beforeend', `<figcaption>${got ? vn : '?'}</figcaption>`);
+      row.appendChild(f);
+    }
+    box.appendChild(row);
+  }
+}
 function buildGuide() {
   const lg = $('#legend');
   TILES.forEach(([k, label, col, text]) => {
@@ -1212,7 +1362,8 @@ function hearts(v) {
 }
 function renderStatus() {
   if (OV !== 'status') return;
-  $('#stName').textContent = stageName();
+  $('#stName').textContent = fullName();
+  $('#stRace').textContent = S.race && RACES[S.race] ? RACES[S.race].name + (RACES[S.race].rare ? ' ★' : '') : '–';
   $('#stGen').textContent = `Gen ${S.gen}`;
   $('#stAge').textContent = `${Math.floor(S.age / DAY)} day${Math.floor(S.age / DAY) === 1 ? '' : 's'}`;
   const hm = healthyMax(S.stage);
@@ -1330,7 +1481,7 @@ function welcomeBack(now) {
   if (away || gift) save();
 }
 function keepSettings() {
-  return { speed: S.speed, soundOn: S.soundOn, analytics: S.analytics, installedAt: S.installedAt, lastCheckIn: S.lastCheckIn, streak: S.streak };
+  return { speed: S.speed, soundOn: S.soundOn, analytics: S.analytics, installedAt: S.installedAt, lastCheckIn: S.lastCheckIn, streak: S.streak, dex: S.dex };
 }
 
 /* ---- Analytics: PostHog, anonymous random ID, opt-out with the Stats button ---- */
@@ -1487,11 +1638,17 @@ function start(data) {
   if (S.soundOn === undefined) S.soundOn = true;
   if (![1, 2, 4].includes(S.speed)) S.speed = 1;
   if (data && data.PET) Object.assign(PET, data.PET);
+  // Bubbies from before races existed keep their classic look as Leaflings
+  if (!S.race && ['child', 'adult', 'senior'].includes(S.stage)) S.race = 'leafling';
+  if (S.race) {
+    dexAdd(S.race);
+    if ((S.stage === 'adult' || S.stage === 'senior') && S.variant) dexAdd(`${S.race}:${S.variant}`);
+  }
   const now = Date.now();
   if (restored) welcomeBack(now);
   else { S.installedAt = now; S.lastCheckIn = dayKey(now); S.streak = 1; track('install'); }
   track('session_start', { days: Math.floor(S.age / DAY) });
-  buildTiles(); buildGuide(); wire(); syncControls();
+  buildTiles(); buildGuide(); renderDex(); wire(); syncControls();
   if (!restored) toast('A seed! Watch it sprout');
   requestAnimationFrame(t => { last = t; frame(t); });
 }

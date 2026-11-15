@@ -20,6 +20,7 @@ the power button pauses, and progress is saved in the browser's localStorage.
 - **Clock:** the subtitle shows a countdown to the next bedtime or growth stage. The status panel shows both.
 - **Daily gift:** the first visit each calendar day gives Bubby +1 heart of hunger and happiness, and a day streak grows.
 - **Gentle time away:** while the page is closed, hunger and happiness ease down by at most 2 hearts over 8 hours, and never below 1 heart. Bubby does not get sick, make poop, or move away while you are gone.
+- **Races:** when a Bulb grows into a Bud it becomes a random race (Leafling, Mossback, Puddle, Shroomling, Emberling), with a rare **Starling** (about 1 in 20) that gets a special animation. The **Bubbydex** in the guide tracks every race and adult form, and carries over when you replant.
 - **Analytics (PostHog):** anonymous usage events, sent with a random ID stored in this browser. Turn them off with the **Stats** button. To enable, set `PH_KEY` in `index.html` to your PostHog project key. The default placeholder sends nothing.
 
 `prompts/visual-polish-prompt.md` is a ready-to-paste prompt for an art-direction and UI polish pass.
