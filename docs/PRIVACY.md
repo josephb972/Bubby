@@ -1,13 +1,14 @@
 # Bubby privacy policy
 
-_Effective 5 November 2026_
+_Effective 15 November 2026_
 
 **Bubby stores your pet only in your browser and sends nothing anywhere.**
 
 Bubby is a virtual pet game that runs as a browser extension.
 
-- **Stored on your device:** your pet (its stage, hearts, weight, discipline and recent events) and your Bubby settings
-  (pace, bedtime, look, sound and notifications), in your browser's extension storage.
+- **Stored on your device:** your pet (its stage, race, hearts, weight, discipline, illness and recent events), your points,
+  shop items, daily quests, goals and Bubbydex collection, and your Bubby settings (pace, bedtime, look, sound and
+  notifications), in your browser's extension storage. Points are earned by playing and are not money.
 - **Collected:** nothing. There are no accounts, analytics, ads or trackers, and Bubby makes no network requests.
   Nobody, including the developer, can see your data.
 - **Shared or sold:** nothing.

@@ -1,6 +1,8 @@
 // Bubby's pixel art, drawn in code (ported from the original index.html).
 // Works with a DOM canvas in the popup and with OffscreenCanvas in the background service worker.
 
+import { RACES, ITEMS, DISEASES } from '../core/content.js';
+
 export const INK = '#3b2f4a';
 export const SW = 100, SH = 75, GROUND = 67;
 
@@ -72,8 +74,10 @@ const PAL = {
   daisy:   { ring: '#b3a9c4', petal: '#ffffff', face: '#ffd54f', faceRing: '#d9a520', suit: ['#3f8f4f', '#66bb6a'], blush: '#f59a7a', wings: null },
   thistle: { ring: '#5a3b80', petal: '#9a6cc7', face: '#c39be0', faceRing: '#6e4b98', suit: ['#5d6b4f', '#7f8f6a'], blush: '#a678c9', wings: null },
 };
-function palette(variant, senior) {
-  const p = PAL[variant] || PAL.radiant;
+function palette(variant, senior, race) {
+  let p = PAL[variant] || PAL.radiant;
+  const r = RACES[race];
+  if (r && r.suit) p = { ...p, suit: [r.body[0], r.body[1]], petal: mix(p.petal, r.bud[1], .25), ring: mix(p.ring, r.bud[0], .25) };
   if (!senior) return p;
   const m = c => mix(c, '#cdb8a6', .45);
   return { ring: m(p.ring), petal: m(p.petal), face: m(p.face), faceRing: m(p.faceRing), suit: [m(p.suit[0]), m(p.suit[1])], blush: m(p.blush),
@@ -98,21 +102,45 @@ function drawBaby(x, o) {
   P(x, [18, 21, 20, 21, 28, 20, 30, 20], '#8be095');
   face(x, 24, 36, { ...o, blush: '#f59aa6' });
 }
+/* Small per-race decorations, drawn over the body. o.fl (0 or 1) makes flames and stars flicker. */
+function raceMark(x, o, st) {
+  const k = o.race, fl = o.fl ? 1 : 0, ad = st !== 'child';
+  if (k === 'mossback') {
+    P(x, ad ? [17, 9, 18, 9, 18, 10, 30, 9, 31, 9, 30, 10, 14, 37, 15, 37, 33, 37, 34, 37] : [20, 40, 21, 40, 21, 41, 27, 39, 28, 39, 28, 40, 17, 35, 18, 35], '#4f6a2a');
+    P(x, ad ? [17, 8, 31, 8] : [20, 39, 28, 38], '#b8cf86');
+  } else if (k === 'puddle') {
+    P(x, ad ? [12, 14, 36, 14, 11, 27, 37, 28] : [12, 30, 36, 31, 13, 41, 35, 40], '#bff0ff');
+    P(x, ad ? [12, 15, 36, 15] : [12, 31, 36, 32], '#6fd3e6');
+    P(x, ad ? [21, 36, 22, 36, 21, 37] : [19, 33, 20, 32], '#ffffff');
+  } else if (k === 'shroomling') {
+    P(x, ad ? [24, 9, 25, 9, 31, 13, 32, 13, 16, 13, 17, 13, 35, 21, 13, 21] : [22, 15, 23, 15, 27, 18, 28, 18, 21, 21, 25, 23, 26, 23], '#ffffff');
+  } else if (k === 'emberling') {
+    const y0 = ad ? 1 : 4;
+    P(x, [24, y0 + 2, 23, y0 + 3, 24, y0 + 3, 25, y0 + 3, 23, y0 + 4, 24, y0 + 4, 25, y0 + 4], '#ff7a1a');
+    P(x, fl ? [24, y0 + 1, 24, y0 + 3] : [23, y0 + 2, 25, y0 + 2], '#ffd27a');
+  } else if (k === 'starling') {
+    const y0 = ad ? 1 : 5;
+    P(x, [24, y0, 23, y0 + 1, 24, y0 + 1, 25, y0 + 1, 24, y0 + 2], '#ffe066');
+    P(x, fl ? [14, ad ? 24 : 27, 34, ad ? 20 : 30] : [34, ad ? 24 : 27, 14, ad ? 20 : 30], '#fff3b0');
+  }
+}
 function drawChild(x, o) {
-  ER(x, 20, 45, 2.6, 2, '#2f7d3a', '#3f9a45'); ER(x, 28, 45, 2.6, 2, '#2f7d3a', '#3f9a45');
-  ER(x, 14.5, 37, 2.6, 3.6, '#2f7d3a', '#5cbf5a', .3); ER(x, 33.5, 37, 2.6, 3.6, '#2f7d3a', '#5cbf5a', -.3);
-  ER(x, 24, 36, 9.5, 9, '#2f7d3a', '#5cbf5a');
-  E(x, 20, 31, 2.5, 1.6, '#8ad98a');
-  ER(x, 16, 25.5, 6.5, 2.6, '#2a6e35', '#47a852', -.4); ER(x, 32, 25.5, 6.5, 2.6, '#2a6e35', '#47a852', .4);
-  ER(x, 24, 19, 6, 7.5, '#b9544a', '#f08f7a');
-  R(x, 21, 15, 1, 9, '#d8705f'); R(x, 26, 15, 1, 9, '#d8705f');
-  E(x, 22.5, 15.5, 1.2, 2, '#ffb7a3');
-  P(x, [23, 10, 24, 10, 23, 11, 24, 11], '#f08f7a');
-  ER(x, 24, 26, 5, 2, '#2a6e35', '#4fae55');
+  const r = RACES[o.race] || RACES.leafling, b = r.body, u = r.bud;
+  ER(x, 20, 45, 2.6, 2, b[0], r.foot); ER(x, 28, 45, 2.6, 2, b[0], r.foot);
+  ER(x, 14.5, 37, 2.6, 3.6, b[0], b[1], .3); ER(x, 33.5, 37, 2.6, 3.6, b[0], b[1], -.3);
+  ER(x, 24, 36, 9.5, 9, b[0], b[1]);
+  E(x, 20, 31, 2.5, 1.6, b[2]);
+  ER(x, 16, 25.5, 6.5, 2.6, r.leaf[0], r.leaf[1], -.4); ER(x, 32, 25.5, 6.5, 2.6, r.leaf[0], r.leaf[1], .4);
+  ER(x, 24, 19, 6, 7.5, u[0], u[1]);
+  R(x, 21, 15, 1, 9, u[2]); R(x, 26, 15, 1, 9, u[2]);
+  E(x, 22.5, 15.5, 1.2, 2, u[3]);
+  P(x, [23, 10, 24, 10, 23, 11, 24, 11], u[1]);
+  ER(x, 24, 26, 5, 2, r.collar[0], r.collar[1]);
+  raceMark(x, o, 'child');
   face(x, 24, 37, { ...o, blush: '#f59aa6' });
 }
 function drawAdult(x, o, senior) {
-  const pal = palette(o.variant, senior), ch = o.chubby ? 2 : 0, cx = 24, hy = 21, th = o.variant === 'thistle';
+  const pal = palette(o.variant, senior, o.race), ch = o.chubby ? 2 : 0, cx = 24, hy = 21, th = o.variant === 'thistle';
   if (pal.wings) { ER(x, 12 - ch, 35, 6.5, 3.4, pal.wings[0], pal.wings[1], -.55); ER(x, 36 + ch, 35, 6.5, 3.4, pal.wings[0], pal.wings[1], .55); }
   ER(x, 20.5, 45, 2.5, 1.8, pal.suit[0], pal.suit[0]); ER(x, 27.5, 45, 2.5, 1.8, pal.suit[0], pal.suit[0]);
   ER(x, 16 - ch, 38.5, 2.6, 3.6, pal.suit[0], pal.suit[1], .35); ER(x, 32 + ch, 38.5, 2.6, 3.6, pal.suit[0], pal.suit[1], -.35);
@@ -131,6 +159,7 @@ function drawAdult(x, o, senior) {
     ER(x, px, py, pr, pr, pal.ring, pal.petal);
   }
   if (senior) P(x, [15, 14, 32, 13, 12, 22, 36, 24, 18, 31, 30, 31], mix(pal.petal, '#8a5a40', .35));
+  raceMark(x, o, senior ? 'senior' : 'adult');
   ER(x, cx, hy, 8.5, 8.5, pal.faceRing, pal.face);
   E(x, 20, 16.5, 2, 1.3, mix(pal.face, '#ffffff', .45));
   face(x, cx, hy + 1, { ...o, blush: pal.blush, glasses: senior, skin: pal.face, mood: (th && (o.mood || 'normal') === 'normal') ? 'normal' : o.mood, mouth: o.mouth || (th && (!o.mood || o.mood === 'normal') ? 'flat' : undefined) });
@@ -139,7 +168,7 @@ function drawAdult(x, o, senior) {
 // Sprites are cached: the scene asks for the same pose every frame.
 const cache = new Map();
 export function petSprite(stage, o = {}) {
-  const key = stage + '|' + [o.mood, o.mouth, o.variant, o.chubby, o.sick, o.blink, o.look, o.wobble, o.crack].join(',');
+  const key = stage + '|' + [o.mood, o.mouth, o.variant, o.chubby, o.sick, o.blink, o.look, o.wobble, o.crack, o.race, o.fl].join(',');
   let c = cache.get(key);
   if (c) return c;
   c = mk(48, 48); const x = c.getContext('2d');
@@ -148,7 +177,7 @@ export function petSprite(stage, o = {}) {
   else if (stage === 'child') drawChild(x, o);
   else drawAdult(x, o, stage === 'senior');
   outline(c);
-  if (o.sick) { x.globalCompositeOperation = 'source-atop'; x.fillStyle = 'rgba(140,190,60,.28)'; x.fillRect(0, 0, 48, 48); x.globalCompositeOperation = 'source-over'; }
+  if (o.sick) { x.globalCompositeOperation = 'source-atop'; x.fillStyle = (DISEASES[o.sick] || {}).tint || 'rgba(140,190,60,.28)'; x.fillRect(0, 0, 48, 48); x.globalCompositeOperation = 'source-over'; }
   if (cache.size > 300) cache.clear();
   cache.set(key, c);
   return c;
@@ -257,6 +286,21 @@ export function art() {
     STARS: [[8, 6], [22, 12], [37, 4], [55, 9], [70, 5], [86, 13], [15, 20], [62, 18], [93, 3], [46, 15]],
     SLOTS: [[80, 64], [90, 64], [70, 65], [88, 56]],
   };
+  // Shop items: plates for food, bottles for medicine and tonics, a cup for Garden Tea
+  const foodIcon = col => sprite(16, 16, x => {
+    E(x, 8, 11.5, 7, 3.4, '#ffffff'); E(x, 8, 12.3, 6, 2.4, '#dfe6ec');
+    E(x, 8, 8.4, 5, 3.6, col); E(x, 6.4, 6.8, 2, 1.2, mix(col, '#ffffff', .45)); P(x, [10, 9, 11, 8, 8, 10], mix(col, '#000000', .25));
+  });
+  const bottleIcon = col => sprite(16, 16, x => {
+    R(x, 6, 1, 4, 2, '#b78a5a'); R(x, 6, 3, 4, 1, '#dfe7ee');
+    R(x, 4, 4, 8, 10, '#f4f8fb'); R(x, 10, 4, 2, 10, '#cfdbe6');
+    R(x, 5, 8, 6, 5, col); R(x, 5, 8, 6, 1, mix(col, '#ffffff', .45)); P(x, [5, 5, 6, 5], '#ffffff');
+  });
+  for (const [id, it] of Object.entries(ITEMS)) _art.ICONS[id] = it.kind === 'food' ? foodIcon(it.icon) : bottleIcon(it.icon);
+  _art.ICONS.tea = sprite(16, 16, x => {
+    E(x, 8, 10, 6, 4, '#ffffff'); R(x, 2, 6, 12, 2, '#ffffff'); E(x, 8, 7, 5, 1.4, '#c9a66b');
+    R(x, 13, 8, 2, 3, '#ffffff'); P(x, [6, 3, 8, 2, 10, 3], '#dfe9ee');
+  });
   return _art;
 }
 

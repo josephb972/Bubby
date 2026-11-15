@@ -7,25 +7,26 @@ A small virtual-pet game. Two parts that do NOT share code or saves:
   toolbar; the popup shows the toy pod artwork (`extension/art/photo/toy.webp`) with the live game on its screen, or a compact
   layout. See `extension/README.md`.
 
-The extension is the product that was launched. Features planned in `memory/` (races, diseases, points, shop and so on) are
-being ported into the extension. The web game already has v1.1 (races, rare Starling, Bubbydex) and a v1.3 draft (diseases,
-medicine, points, shop), which serve as the reference design.
+The extension is the product that was launched. Version 1.1.0 adds races, the rare Starling reveal, the Bubbydex, named illnesses
+with matching medicine, points and the shop (design in `memory/`). The web game has the same features as a draft (its v1.3 still
+needs small-screen polish) and is not the priority. Anything else in `memory/` is still a plan.
 
 ## Key files
 - `docs/LAUNCH-CHECKLIST.md`: extension launch plan. Read it at the start of a session about the extension and tick items off.
 - `memory/bubby-monetization-and-marketing.md`: monetization options (Bubby Plus ranked 1, cosmetic packs ranked 2), marketing plan, TikTok strategy.
 - `memory/bubby-update-roadmap.md`: planned updates v1.1 to v1.6, with order, rules, risks, and PostHog events.
-- `memory/bubby-points-and-shop.md`: points economy, caps, prices, and illness and medicine rules (when present).
+- `memory/bubby-points-and-shop.md`: points economy, caps, prices, and illness and medicine rules (built in extension 1.1.0).
 - `prompts/visual-polish-prompt.md`: art-direction prompt.
 - `README.md`: player-facing description of the web game.
 
 ## Working on the extension
 
 - Game rules live in `extension/core/rules.js` (pure, no DOM; shared by popup and background worker).
-- After changing rules or pacing, run `node tools/sim-check.mjs`.
+- After changing rules or pacing, run `node tools/rules-check.mjs` and `node tools/sim-check.mjs` (a sensible player must still reach a full life).
+- Game content and numbers (races, illnesses, items, points) are in `extension/core/content.js`.
 - Regenerate PNG icons with `node tools/make-icons.mjs` (needs Playwright).
 - Test by loading `extension/` with "Load unpacked". After changes, run `node tools/check-extension.mjs` (Playwright
-  loads the extension into Chromium).
+  loads the extension into Chromium) and `node tools/check-v11.mjs [screenshot-folder]` (the 1.1 features, both looks).
 - Keep existing saves working: saved state is versioned; update `migrate()` in `core/rules.js` when the format changes.
 - Don't change Bubby's existing UI design (layouts, colours, fonts, artwork) unless the owner asks. New screens (shop and so on)
   must match it.

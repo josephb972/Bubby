@@ -1,6 +1,10 @@
 # Bubby: Update Roadmap (v1.1 to v1.6)
 
-Status: planning. Nothing here is built yet.
+Status (updated 15 Nov 2026): **v1.1 (races, rare Starling reveal, Bubbydex) and v1.3 (illnesses, medicine, points, shop) are built in the
+launched Chrome extension, version 1.1.0.** Everything else is still planned. The web game `index.html` has a draft of the same
+features (v1.3 there still needs small-screen polish). The roadmap below was written for the web game; for the extension,
+real-time lives last days, so rarity has a pity counter and illness timers scale with the pace. Details: `bubby-points-and-shop.md`.
+Not built yet: solo jump rope, visiting (v1.2), cross-breeding, more minigames, the Lab.
 Goal of every update: more fun, more shareable, more reasons to come back tomorrow.
 Companion docs: `memory/bubby-monetization-and-marketing.md` (pricing, TikTok plan).
 

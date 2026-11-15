@@ -1,5 +1,8 @@
 # Bubby
 
+> The launched version is the Chrome / Edge / Brave **extension** in `extension/` (see `extension/README.md`). The single HTML file described
+> below is the original web game.
+
 A small virtual-pet game in a single HTML file. Open `index.html` in a browser to play.
 
 Bubby grows from a **Seed** into a **Bulb** (baby), a **Bud** (child), a **Blossom** (adult) and finally an **Elder**.

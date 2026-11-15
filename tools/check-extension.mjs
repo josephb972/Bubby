@@ -24,7 +24,7 @@ let [sw] = ctx.serviceWorkers();
 if (!sw) sw = await ctx.waitForEvent('serviceworker');
 const base = `chrome-extension://${new URL(sw.url()).host}/`;
 try {
-  check((await sw.evaluate(() => chrome.runtime.getManifest().version)) === '1.0.0', 'manifest version 1.0.0');
+  check((await sw.evaluate(() => chrome.runtime.getManifest().version)) === '1.1.0', 'manifest version 1.1.0');
 
   // 1. Welcome page asks for bedtime and saves it as soon as a time changes
   const welcome = ctx.pages().find(p => p.url().includes('welcome'))

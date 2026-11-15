@@ -2,7 +2,8 @@
 
 Works for the Chrome Web Store and Edge Add-ons. Everything here is true of the code; update it if the code changes.
 
-- **Upload:** `release/bubby-1.0.0.zip` (the exact file to upload; `node tools/package.mjs` rebuilds it into `dist/`).
+- **Upload:** version 1.0.0 is `release/bubby-1.0.0.zip`. Version 1.1.0 is built with `node tools/package.mjs` into `dist/bubby-1.1.0.zip`
+  (copy it into `release/` once it is submitted).
 - **Images:** `store/`, made by `node tools/store-images.mjs` from the real popup.
 
 ## Listing
@@ -14,7 +15,7 @@ Works for the Chrome Web Store and Edge Add-ons. Everything here is true of the 
 | Category | Lifestyle → Games (Lifestyle → Just for Fun also fits) |
 | Language | English |
 | Icon | `extension/icons/icon-128.png` |
-| Screenshots, in order | `store/screenshot-1.png` toy pod · `-2` status card · `-3` Seed catch · `-4` compact look (all 1280×800) |
+| Screenshots (refresh them for 1.1: `node tools/store-images.mjs`), in order | `store/screenshot-1.png` toy pod · `-2` status card · `-3` Seed catch · `-4` compact look (all 1280×800) |
 | Small promo tile | `store/promo-small.png` (440×280) |
 | Marquee (optional) | `store/promo-marquee.png` (1400×560) |
 
@@ -29,6 +30,18 @@ Take care of it
 • Feed it meals and snacks, play games, clean up after it, give medicine when it's sick, and turn off the lights at bedtime.
 • Scold its tantrums so it grows up well behaved.
 • How you raise it decides who it becomes: a Radiant Blossom, a Daisy Blossom or a Thistle.
+
+Collect them all
+• When the Bulb grows into a Bud it becomes one of six races, picked at random. One race, the Starling, is very rare and arrives with a special reveal.
+• Fill the Bubbydex: every race in every adult form, 18 in all.
+
+When Bubby gets sick
+• Four illnesses, each with its own medicine: Spore Cough, Itchy Moss, Moonflu and The Blight.
+• Garden Tea is always free and cures a Spore Cough. Other medicine comes from the Shop.
+
+Earn points, spend them in the Shop
+• Open Bubby each day, look after it, win games, finish daily quests and reach goals to earn points.
+• Spend them on better food, medicine and an Immunity Tonic. Points are earned by playing, never bought.
 
 It lives while you're away
 • Bubby keeps going even when the browser is closed. When you come back, a short card tells you what happened.

@@ -1,7 +1,7 @@
 // Bubby's background worker.
 // Wakes once a minute, brings Bubby up to date, updates the toolbar icon and badge, and sends a
 // notification when Bubby really needs you. While the popup is open, the popup runs the game instead.
-import { advance, doAction, pace, needKey, stageName } from './core/rules.js';
+import { advance, doAction, pace, needKey, fullName, DISEASES, ITEMS, dosesLeft } from './core/rules.js';
 import { loadState, saveState, updateAction } from './core/store.js';
 import * as store from './core/store.js';
 
@@ -45,7 +45,7 @@ const NEED_COPY = {
   hungry: { title: 'Bubby is hungry', message: 'Its tummy is empty. Feed it a meal before it gets upset.', buttons: [['meal', 'Feed a meal'], ['open', 'Open Bubby']] },
   sad:    { title: 'Bubby feels lonely', message: 'Play a game together, or cheer it up with a snack.', buttons: [['open', 'Play a game'], ['snack', 'Give a snack']] },
   sleep:  { title: 'Bubby fell asleep', message: 'The lights are still on. Turn them off so it can rest.', buttons: [['lights', 'Turn lights off'], ['open', 'Open Bubby']] },
-  sick:   { title: 'Bubby feels sick', message: 'It needs medicine. Some sicknesses take a few doses.', buttons: [['med', 'Give medicine'], ['open', 'Open Bubby']] },
+  sick:   { title: 'Bubby feels sick', message: 'It needs medicine. Some sicknesses take a few doses.', buttons: [['med', 'Give medicine'], ['open', 'Open Bubby']] },   // the text is made specific below
   dirty:  { title: 'Time to clean up', message: 'Bubby’s garden is getting dirty. Clean it before Bubby gets sick.', buttons: [['clean', 'Clean up'], ['open', 'Open Bubby']] },
 };
 
@@ -71,7 +71,7 @@ async function maybeNotify(S) {
   const end = newEvents.find(e => e.type === 'end');
   if (end) { await show('bubby-life', { title: end.text, message: `A new seed is waiting for you. Generation ${S.gen + 1} starts when you plant it.`, buttons: [['open', 'Open Bubby']] }, S); return; }
   const grew = newEvents.filter(e => e.type === 'evolve').pop();
-  if (grew) await show('bubby-life', { title: grew.text, message: `Come and see Bubby the ${stageName(S)}.`, buttons: [['open', 'Open Bubby']] }, S);
+  if (grew) await show('bubby-life', { title: grew.text, message: `Come and see Bubby the ${fullName(S)}.`, buttons: [['open', 'Open Bubby']] }, S);
 
   // Needs: one notification per new need, with a daily limit, a minimum gap, and quiet hours while Bubby sleeps.
   const key = needKey(S);
@@ -83,7 +83,11 @@ async function maybeNotify(S) {
   if (quiet || S.notif.count >= DAILY_LIMIT || now - (S.notif.lastAt || 0) < MIN_GAP) return;
   S.notif.lastKey = key; S.notif.lastAt = now; S.notif.count++;
   const copy = { ...NEED_COPY[key] };
-  if (key === 'sick' && S.doses > 1) copy.message = `It needs ${S.doses} doses of medicine.`;
+  if (key === 'sick') {
+    const d = DISEASES[S.disease] || DISEASES.sporecough, n = dosesLeft(S);
+    copy.title = `Bubby has ${d.name}`;
+    copy.message = `${ITEMS[d.med].name} cures it${n > 1 ? ` (${n} doses)` : ''}. Open Bubby to buy or give it.`;
+  }
   await show(NOTE, copy, S);
 }
 

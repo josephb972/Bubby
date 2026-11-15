@@ -73,11 +73,29 @@ Tick items as they are done (`[x]`). Owner: **Claude** = can be done in a coding
 
 ---
 
+## 6. Version 1.1.0: races, illnesses, points and the shop
+
+- [x] **Built (Claude):** races with a rare Starling reveal and the Bubbydex; four illnesses with matching medicine, Garden
+      Tea and the Cure-All; points, daily quests, goals and the shop. Rules in `core/rules.js` and `core/content.js`.
+- [x] **Checked (Claude):** `node tools/rules-check.mjs` (102 checks), `node tools/sim-check.mjs` (everyone who checks in still
+      reaches a full life, as in 1.0.0), `node tools/check-extension.mjs` and `node tools/check-v11.mjs` (the real extension in
+      Chromium, both looks).
+- [x] Privacy policy wording updated (more is stored on the device; still nothing collected).
+- [ ] **Playtest (You):** 3–5 friends on Chill for a few days. Is the shop too stingy or too generous? (`PTS` and `CAPS` in
+      `core/content.js`.) Is the rare Starling too rare? (`RARE_BASE`, `RARE_PITY`.)
+- [ ] **Refresh the store images (You or Claude):** `node tools/store-images.mjs`, and update the listing text from
+      `docs/STORE-LISTING.md`.
+- [ ] **Upload `dist/bubby-1.1.0.zip` as an update (You)**, then copy it into `release/`.
+- [ ] Decide what comes next: visiting (v1.2) needs a server or shareable Bubby Cards; see `memory/bubby-update-roadmap.md`.
+
+---
+
 ## Reference
 
 - Extension guide (install, test drive, troubleshooting): `extension/README.md`
 - Game rules and paces: `extension/core/rules.js`; balance check: `node tools/sim-check.mjs`
 - Store package: `node tools/package.mjs`; store images: `node tools/store-images.mjs`; end-to-end checks:
-  `node tools/check-extension.mjs`; listing text: `docs/STORE-LISTING.md`
+  `node tools/check-extension.mjs` and `node tools/check-v11.mjs`; rules checks: `node tools/rules-check.mjs`;
+  listing text: `docs/STORE-LISTING.md`
 - Background worker console helpers (chrome://extensions → Bubby → service worker): `bubby.skip(6)`,
   `bubby.tick()`, `bubby.act('meal')`, `bubby.dev(true)`, `bubby.state()`
