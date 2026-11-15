@@ -6,6 +6,7 @@ Bubby is a single-file virtual-pet game (`index.html`). No build step, no packag
 - `index.html`: the whole game, with PostHog analytics configured (EU host, project key set).
 - `README.md`: player-facing description.
 - `memory/bubby-monetization-and-marketing.md`: monetization options (Bubby Plus ranked 1, cosmetic packs ranked 2), marketing plan, and TikTok strategy with Claude-only and Claude plus Higgsfield routes.
+- `memory/bubby-update-roadmap.md`: planned updates v1.1 to v1.6 (races and Bubbydex, visiting, diseases, cross-breeding, minigames, mutant Lab), with order, rules, risks, and PostHog events.
 - `prompts/visual-polish-prompt.md`: art-direction prompt.
 
 ## Conventions
