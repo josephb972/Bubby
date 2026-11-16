@@ -514,7 +514,7 @@ function renderPick() {
 }
 // One short line for the small screen (the shop has the full text)
 function shortDesc(id, it) {
-  if (id === 'tea') return 'Free. Spore Cough, 2 cups';
+  if (id === 'tea') return `Free. ${Rules.DISEASES[Rules.TEA.cures[0]].name}, 2 cups`;
   if (it.kind === 'food') return [it.hunger && `+${it.hunger} hunger`, it.happy && `+${it.happy} happy`].filter(Boolean).join(' ');
   if (id === 'elixir') return 'Cures any illness';
   if (id === 'shield') return 'Protects from illness';
@@ -556,7 +556,8 @@ function shopRow(id) {
   row.className = 'shop-row';
   row.appendChild(iconCanvas(id));
   const info = document.createElement('div');
-  info.innerHTML = `<b>${it.name}</b><small>${it.desc}${n ? ` · you have ${n}` : ''}</small>`;
+  const lore = Rules.loreOf(id);
+  info.innerHTML = `<b>${it.name}</b><small>${it.desc}${n ? ` · you have ${n}` : ''}</small>${lore ? `<small class="lore">${lore}</small>` : ''}`;
   row.appendChild(info);
   const b = document.createElement('button');
   b.className = 'buy'; b.dataset.buy = id;
@@ -579,7 +580,7 @@ function renderShop() {
       body.appendChild(sec);
     }
     const tip = document.createElement('p'); tip.className = 'note';
-    tip.textContent = 'Every illness needs its own medicine. Garden Tea is free and always in the cabinet, but it only cures Spore Cough, slowly. Points are earned by caring for Bubby and are never sold.';
+    tip.textContent = `Every illness needs its own medicine. Garden Tea is free and always in the cabinet, but it only cures ${Rules.DISEASES.sporecough.name}, slowly. Points are earned by caring for Bubby and are never sold. ${Rules.DISCLAIMER}`;
     body.appendChild(tip);
   } else if (SHOP_TAB === 'today') {
     const Q = Rules.ensureQuests(S, Date.now()), d = Rules.ptsDay(S, Date.now());
@@ -820,11 +821,22 @@ async function boot() {
   if (S.ended) showEnd();
   else if (!lastSeen && S.stage === 'seed') toast(`A seed! It sprouts in a minute. ${ciText}`.trim());
   else if (away.length && (!lastSeen || now - lastSeen > 2 * 60 * 1000)) {
-    showAway(away, now - (lastSeen || S.born || now));
-    const grown = away.filter(e => e.type === 'evolve'), grew = grown.filter(e => e.rare).pop() || grown.pop();
-    if (grew) A = evolveAnim(grew);
-    if (ciText) toast(ciText);
+    const goAway = () => showAway(away, now - (lastSeen || S.born || now));
+    const rareAway = away.filter(e => e.type === 'evolve' && e.rare).pop();
+    if (rareAway) {
+      // The reveal first (the away card would cover it), then the summary
+      A = { ...evolveAnim(rareAway), after: goAway };
+      toast(rareAway.text + (ciText ? ' · ' + ciText : ''));
+    } else {
+      goAway();
+      const grew = away.filter(e => e.type === 'evolve').pop();
+      if (grew) A = evolveAnim(grew);
+      if (ciText) toast(ciText);
+    }
   } else if (ciText && lastSeen) toast(ciText);
+  // A rare reveal always plays, even when Bubby grew up only a minute after you closed it (no away card then)
+  const rareNews = away.filter(e => e.type === 'evolve' && e.rare).pop();
+  if (rareNews && !A && !S.ended) { A = evolveAnim(rareNews); toast(rareNews.text); }
   persist();
   connect();
   requestAnimationFrame(t => { lastFrame = t; frame(t); });

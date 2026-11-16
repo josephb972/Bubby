@@ -95,15 +95,15 @@ Target months (adjust to real progress): v1.1 Dec 2026, v1.2 Jan to Feb 2027, v1
 ### v1.3 Sniffles: diseases and quarantine
 
 **Content decision (please review):** use **fictional, garden-themed diseases**, not real ones.
-- "Plague" can stay in spirit as **The Blight** or **Spore Plague**.
+- "Plague" can stay in spirit as **The Plague** or **Spore Plague**.
 - **Do not use real sexually transmitted infection names** (chlamydia and similar). They risk a higher age rating, moderation limits and reduced reach on TikTok, store review problems, and brand damage with a pet game that kids may play. Fictional names give the same comedy and sharing value.
 
 | Disease | Severity | Doses | Contagious |
 |---|---|---|---|
-| Spore Cough | mild | 1 | yes |
-| Itchy Moss | medium | 2 | yes |
-| Moonflu | medium | 2 | yes |
-| The Blight | severe | 3 | yes, highest |
+| Ague | mild | 1 | yes |
+| Scurvy | medium | 2 | yes |
+| Dancing Plague | medium | 2 | yes |
+| The Plague | severe | 3 | yes, highest |
 
 **Rules**
 - A sick Bubby shows a coloured badge on its Bubby Card ("contagious").

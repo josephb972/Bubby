@@ -6,7 +6,7 @@ import * as R from '../extension/core/rules.js';
 
 const MIN = 60 * 1000;
 // Treat an illness the way a sensible player would: tea for a cough, otherwise buy the matching medicine
-// (or the Cure-All when that is cheaper), and soothe with tea while saving up.
+// (or the Theriac when that is cheaper), and soothe with tea while saving up.
 function treat(S, t, tally) {
   for (let i = 0; i < 8 && S.sick; i++) {
     const d = R.DISEASES[S.disease];

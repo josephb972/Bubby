@@ -148,6 +148,8 @@ export function rareChance(S) {
   return Math.min(RARE_MAX, (RARE_BASE[S.cfg && S.cfg.pace] ?? RARE_BASE.chill) + RARE_PITY * (S.rareMiss || 0));
 }
 export function rollRace(S, rng = Math.random) {
+  // Test helper (service worker console: bubby.nextRace('starling')): the next Bud is this race
+  if (S.nextRace && RACES[S.nextRace]) { const r = S.nextRace; S.nextRace = null; if (r === RARE_RACE) S.rareMiss = 0; return r; }
   if (rng() < rareChance(S)) { S.rareMiss = 0; return RARE_RACE; }
   S.rareMiss = (S.rareMiss || 0) + 1;
   return COMMON_RACES[Math.floor(rng() * COMMON_RACES.length)];
@@ -235,8 +237,8 @@ function startCall(S, reason, now) {
   S.call = { reason, t: 0, counted: false };
   say(S, 'call', CALL_TEXT[reason], now, { reason });
 }
-// What makes Bubby ill: a dirty garden gives Spore Cough (sometimes Itchy Moss), sweets and extra weight give
-// Itchy Moss, sleeping with the lights on while you watch gives Moonflu, and neglect gives The Blight.
+// What makes Bubby ill: a dirty garden gives Ague (sometimes Scurvy), sweets and extra weight give Scurvy,
+// sleeping with the lights on while you watch gives the Dancing Plague, and neglect gives The Plague.
 export function pickDisease(cause, rng = Math.random) {
   if (cause === 'poop') return rng() < .7 ? 'sporecough' : 'itchymoss';
   if (cause === 'sweets' || cause === 'weight') return 'itchymoss';
@@ -248,7 +250,7 @@ export function getSick(S, cause, now, forced) {
   if (S.sick) return;
   if (S.immuneT > 0) {
     S.sickMeter = 0; S.neglectT = 0; S.litSleep = 0;
-    if (!S.immuneNote) { S.immuneNote = true; say(S, 'info', 'Immunity Tonic kept Bubby well!', now); }
+    if (!S.immuneNote) { S.immuneNote = true; say(S, 'info', `${ITEMS.shield.name} kept Bubby well!`, now); }
     return;
   }
   const id = DISEASES[forced] ? forced : pickDisease(cause), d = DISEASES[id];
@@ -331,7 +333,7 @@ export function step(S, dt, now, live) {
     if (S.lights) {
       S.happy -= dt / (40 * kG);
       S.litTotal += dt;
-      // Moonflu from sleeping with the lights on only happens while you are watching (or on Quick), never overnight.
+      // The Dancing Plague from sleeping with the lights on only happens while you are watching (or on Quick), never overnight.
       if (!P.clock || live) {
         S.litSleep += dt;
         if (S.litSleep >= 18 && !S.sick) { S.litSleep = 10; getSick(S, 'light', now); }
@@ -448,7 +450,7 @@ export function canCare(S) {
 }
 
 // The medicine the Medicine button (and the notification button) gives: the one that fits the illness if you have it,
-// then a Cure-All Elixir, then Garden Tea.
+// then Theriac (the cure-all), then Garden Tea.
 export function bestMed(S) {
   const d = S.sick && DISEASES[S.disease];
   if (!d) return 'tea';
@@ -457,7 +459,7 @@ export function bestMed(S) {
   return 'tea';
 }
 
-// Use something from the pantry or the cabinet: shop food, medicine, Garden Tea or an Immunity Tonic.
+// Use something from the pantry or the cabinet: shop food, medicine, Garden Tea or the Plague Doctor’s Posy.
 export function useItem(S, id, now = Date.now()) {
   const r = useItemRaw(S, id, now);
   if (r.ok) checkGoals(S, now);

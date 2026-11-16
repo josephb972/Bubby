@@ -12,6 +12,7 @@ with matching medicine, points and the shop (design in `memory/`). The web game 
 needs small-screen polish) and is not the priority. Anything else in `memory/` is still a plan.
 
 ## Key files
+- `docs/TEST-AND-PUBLISH.md`: how to test a build (including the upgrade test and the console test helpers) and publish an update.
 - `docs/LAUNCH-CHECKLIST.md`: extension launch plan. Read it at the start of a session about the extension and tick items off.
 - `memory/bubby-monetization-and-marketing.md`: monetization options (Bubby Plus ranked 1, cosmetic packs ranked 2), marketing plan, TikTok strategy.
 - `memory/bubby-update-roadmap.md`: planned updates v1.1 to v1.6, with order, rules, risks, and PostHog events.
@@ -43,5 +44,6 @@ needs small-screen polish) and is not the priority. Anything else in `memory/` i
 ## Rules for every version
 - Don't make absence punish the player. Illness and other bad things only happen during active play.
 - Paid features must never change difficulty or revive a dead Bubby. Cosmetics only. Points are earned, never bought with money.
+- Illness names: old historical diseases in a cartoon, clearly fictional way, with the "not medical advice" note. Never an illness that still stigmatises people today (leprosy) and never a sexually transmitted infection.
 - Races are random (`rollRace`, `RARE_CHANCE`). Care quality only decides the adult tier. The Bubbydex must survive resets.
 - Work on `claude/practical-faraday-wxk9us`.

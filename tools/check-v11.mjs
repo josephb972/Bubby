@@ -76,13 +76,13 @@ try {
   pop = await openPopup('medicine');
   await pop.keyboard.press('m'); await pop.waitForTimeout(300);
   check(await pop.isVisible('#ovPick'), 'Medicine opens the cabinet');
-  check(/Itchy Moss/.test(await pop.textContent('#pickNote')), 'it says which illness: ' + (await pop.textContent('#pickNote')).trim());
-  check(/Moss Salve/.test(await pop.textContent('#pickCard')) && await pop.$eval('#pickCard', e => e.classList.contains('rec')), 'it starts on Moss Salve, marked as a good fit');
+  check(/Scurvy/.test(await pop.textContent('#pickNote')), 'it says which illness: ' + (await pop.textContent('#pickNote')).trim());
+  check(/Lime Juice/.test(await pop.textContent('#pickCard')) && await pop.$eval('#pickCard', e => e.classList.contains('rec')), 'it starts on Lime Juice, marked as a good fit');
   await shot(pop, '2-cabinet');
   await pop.click('[data-pick="-1"]'); await pop.waitForTimeout(150);
-  check(/Spore Syrup/.test(await pop.textContent('#pickCard')), 'the arrows browse to Spore Syrup');
+  check(/Cinchona Bark/.test(await pop.textContent('#pickCard')), 'the arrows browse to Cinchona Bark');
   await pop.click('#pickUse'); await pop.waitForTimeout(300);
-  check(/won.t help Itchy Moss/.test(await pop.textContent('#toast')), 'the wrong medicine is refused: ' + (await pop.textContent('#toast')));
+  check(/won.t help Scurvy/.test(await pop.textContent('#toast')), 'the wrong medicine is refused: ' + (await pop.textContent('#toast')));
   s = await saved(); check(s.inv.syrup === 1 && s.sick, 'and it is not used up');
   await pop.waitForTimeout(1100);
   await pop.keyboard.press('m'); await pop.waitForTimeout(250); await pop.click('#pickUse'); await pop.waitForTimeout(300);
@@ -112,7 +112,7 @@ try {
   await pop.keyboard.press('b'); await pop.waitForTimeout(300);
   check(await pop.isVisible('#viewShop') && await pop.isHidden('#viewMain'), 'B opens the shop');
   check((await pop.textContent('#shopPts')).includes('60'), 'the shop shows 60 points');
-  check(await pop.$eval('[data-buy="feast"]', b => !b.disabled) && await pop.$eval('[data-buy="elixir"]', b => !b.disabled), 'a Golden Feast (30) and a Cure-All (45) are affordable');
+  check(await pop.$eval('[data-buy="feast"]', b => !b.disabled) && await pop.$eval('[data-buy="elixir"]', b => !b.disabled), 'a Golden Feast (30) and a Theriac (45) are affordable');
   await shot(pop, '4a-shop');
   await pop.click('[data-buy="salad"]'); await pop.waitForTimeout(300);
   s = await saved(); check(s.inv.salad === 1 && s.points === 60 - 6 + 5, `bought a Garden Salad (60 - 6, then the Shopper goal +5 = ${s.points})`);
@@ -145,6 +145,30 @@ try {
   await shot(pop, '5d-starling');
   await pop.close();
 
+  /* 5b. The rare reveal when Bubby grew up while you were away (the usual case on the real-time paces) */
+  {
+    const m = new Date().getHours() * 60 + new Date().getMinutes(), bed = (m + 600) % 1440, wake = (bed + 60) % 1440;   // bedtime is hours away: never asleep during the test
+    await setState({ stage: 'baby', race: null, dex: [], points: 0, stageT: 11.5 * 3600, hunger: 4, happy: 4, awakeT: 3600, quests: null, lastSeenAt: Date.now() - 3 * 3600e3, cfg: { pace: 'chill', bed, wake } });
+    await sw.evaluate(() => self.bubby.nextRace('starling'));
+    await sw.evaluate(() => self.bubby.skip(1));
+    s = await saved();
+    check(s.stage === 'child' && s.race === 'starling', `grew up in the background with the popup closed: ${s.stage}, ${s.race}`);
+    check(s.events.some(e => e.type === 'evolve' && e.rare && e.race === 'starling'), 'the background kept the rare flag for the next time you open Bubby');
+    pop = await openPopup('rare-away');
+    await shot(pop, '5e-rare-away-reveal');
+    await pop.waitForSelector('#ovAway:not([hidden])', { timeout: 8000 }).catch(() => {});   // the reveal plays first, then the away card
+    check(await pop.isVisible('#ovAway') && /rare Starling/.test(await pop.textContent('#awayList')), 'the reveal plays first, then the away card shows the rare news: ' + (await pop.textContent('#awayList')).replace(/\s+/g, ' ').trim().slice(0, 90));
+    await pop.waitForTimeout(300); await shot(pop, '5e-rare-away');
+    await pop.close();
+    // Closed only a minute ago: no away card, but the reveal still plays
+    await setState({ stage: 'baby', race: null, dex: [], points: 0, stageT: 11.5 * 3600, hunger: 4, happy: 4, awakeT: 3600, quests: null, cfg: { pace: 'chill', bed, wake } });
+    await sw.evaluate(() => self.bubby.nextRace('starling'));
+    await sw.evaluate(() => self.bubby.skip(1));
+    pop = await openPopup('rare-away-short');
+    check(await pop.isHidden('#ovAway') && /rare Starling/.test(await pop.textContent('#toast')), 'closed only a minute: no away card, but the rare reveal still announces itself: ' + (await pop.textContent('#toast')));
+    await pop.close();
+  }
+
   /* 6. Every race looks different (screens for review) */
   for (const r of ['leafling', 'mossback', 'puddle', 'shroomling', 'emberling', 'starling']) {
     await setState({ race: r, dex: [r], stage: 'adult', variant: 'radiant', cfg: { pace: 'quick' } });
@@ -158,12 +182,29 @@ try {
   await setState({ sick: true, disease: 'blight', doses: 3, inv: { tonic: 1 } });
   await helper.evaluate(async () => { const { loadState, updateAction } = await import(chrome.runtime.getURL('core/store.js')); await updateAction(await loadState()); });
   const title = await sw.evaluate(() => chrome.action.getTitle({}));
-  check(/The Blight/.test(title) && /Blight Tonic/.test(title), 'the toolbar tooltip names the illness and its medicine: ' + title);
+  check(/The Plague/.test(title) && /Four Thieves Vinegar/.test(title), 'the toolbar tooltip names the illness and its medicine: ' + title);
   await sw.evaluate(() => self.bubby.act('med'));
   s = await saved(); check(s.inv.tonic === 0 && s.doses === 2 && s.sick, 'the notification button gives the matching medicine (1 of 3 doses)');
   await setState({ sick: true, disease: 'itchymoss', doses: 2, sickT: 90, inv: {} });
   await sw.evaluate(() => self.bubby.act('med'));
   s = await saved(); check(s.sick && s.sickT < 90, 'with no medicine, the notification button soothes with Garden Tea instead');
+
+  /* 7b. Every race has its own body shape, not just its own colours (silhouette overlap between races) */
+  const overlap = await helper.evaluate(async () => {
+    const { petSprite } = await import(chrome.runtime.getURL('art/sprites.js'));
+    const races = ['leafling', 'mossback', 'puddle', 'shroomling', 'emberling', 'starling'], out = {};
+    const mask = (stage, race) => { const d = petSprite(stage, { race, variant: 'daisy', mood: 'normal' }).getContext('2d').getImageData(0, 0, 48, 48).data; return Array.from({ length: 2304 }, (_, i) => d[i * 4 + 3] > 0); };
+    for (const stage of ['child', 'adult']) {
+      const m = races.map(r => mask(stage, r)); let worst = 0, pair = '';
+      for (let i = 0; i < 6; i++) for (let j = i + 1; j < 6; j++) {
+        let inter = 0, uni = 0; for (let k = 0; k < 2304; k++) { if (m[i][k] && m[j][k]) inter++; if (m[i][k] || m[j][k]) uni++; }
+        if (inter / uni > worst) { worst = inter / uni; pair = races[i] + ' / ' + races[j]; }
+      }
+      out[stage] = { worst: +worst.toFixed(2), pair, areas: m.map(x => x.filter(Boolean).length) };
+    }
+    return out;
+  });
+  check(overlap.child.worst < .8 && overlap.adult.worst < .8, `race silhouettes differ: the most alike pair overlaps ${Math.round(overlap.child.worst * 100)}% as Buds (${overlap.child.pair}) and ${Math.round(overlap.adult.worst * 100)}% as adults (${overlap.adult.pair})`);
 
   /* 8. The compact look (the other layout) has the same features */
   await setState({ cfg: { look: 'compact', pace: 'quick' }, sick: true, disease: 'moonflu', doses: 2, inv: { drops: 2, pie: 1 }, points: 20 });
@@ -173,7 +214,7 @@ try {
   check(await cp.isVisible('#btnShop') && (await cp.textContent('#btnShop')).includes('20'), 'compact look: the points button is in the header');
   check((await cp.evaluate(() => document.documentElement.scrollWidth)) <= 360, 'compact look fits 360 px wide');
   await cp.keyboard.press('m'); await cp.waitForTimeout(300);
-  check(await cp.isVisible('#ovPick') && /Moon Drops/.test(await cp.textContent('#pickCard')), 'compact look: the cabinet starts on Moon Drops for Moonflu');
+  check(await cp.isVisible('#ovPick') && /Valerian Root/.test(await cp.textContent('#pickCard')), 'compact look: the cabinet starts on Valerian Root for Dancing Plague');
   await shot(cp, '8a-compact-cabinet');
   await cp.keyboard.press('Escape'); await cp.waitForTimeout(150);
   await cp.click('#btnShop'); await cp.waitForTimeout(300);
@@ -193,7 +234,7 @@ try {
   pop = await openPopup('upgrade');
   await pop.keyboard.press('s'); await pop.waitForTimeout(300);
   check(/Leafling Thistle/.test(await pop.textContent('#stName')) && (await pop.textContent('#stRace')).trim() === 'Leafling', 'an old Bubby becomes a Leafling and keeps its form: ' + (await pop.textContent('#stName')));
-  check(/Spore Cough/.test(await pop.textContent('#stCall')), 'its ongoing sickness is now a Spore Cough: ' + (await pop.textContent('#stCall')).trim());
+  check(/Ague/.test(await pop.textContent('#stCall')), 'its ongoing sickness is now a Ague: ' + (await pop.textContent('#stCall')).trim());
   s = await saved(); check(s.points === 35 && s.gen === 4 && s.dex.includes('leafling:thistle'), `it keeps its generation, gets the starter points plus today's bonus (${s.points}), and its form is in the Bubbydex`);
   await pop.close();
 

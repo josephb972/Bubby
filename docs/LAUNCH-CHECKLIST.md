@@ -76,7 +76,7 @@ Tick items as they are done (`[x]`). Owner: **Claude** = can be done in a coding
 ## 6. Version 1.1.0: races, illnesses, points and the shop
 
 - [x] **Built (Claude):** races with a rare Starling reveal and the Bubbydex; four illnesses with matching medicine, Garden
-      Tea and the Cure-All; points, daily quests, goals and the shop. Rules in `core/rules.js` and `core/content.js`.
+      Tea and the Theriac; points, daily quests, goals and the shop. Rules in `core/rules.js` and `core/content.js`.
 - [x] **Checked (Claude):** `node tools/rules-check.mjs` (102 checks), `node tools/sim-check.mjs` (everyone who checks in still
       reaches a full life, as in 1.0.0), `node tools/check-extension.mjs` and `node tools/check-v11.mjs` (the real extension in
       Chromium, both looks).
@@ -86,6 +86,8 @@ Tick items as they are done (`[x]`). Owner: **Claude** = can be done in a coding
 - [ ] **Refresh the store images (You or Claude):** `node tools/store-images.mjs`, and update the listing text from
       `docs/STORE-LISTING.md`.
 - [ ] **Upload `dist/bubby-1.1.0.zip` as an update (You)**, then copy it into `release/`.
+- [x] Races have their own body shapes; illnesses use historical names (see `memory/bubby-points-and-shop.md`, *Naming*).
+- [ ] **Before submitting:** follow `docs/TEST-AND-PUBLISH.md` (test, then publish the update).
 - [ ] Decide what comes next: visiting (v1.2) needs a server or shareable Bubby Cards; see `memory/bubby-update-roadmap.md`.
 
 ---

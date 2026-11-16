@@ -55,45 +55,59 @@ const seq = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // a fak
   eq(r.points, R.PTS.bud + R.PTS.dexRace + R.PTS.rare + 40, 'the rare race pays a bonus (plus the Starstruck goal, 40)');
 }
 
+/* ---------- Test helper, historical names ---------- */
+{
+  const S = bubby('quick', 'baby'); S.nextRace = 'puddle';
+  eq(R.rollRace(S, () => .99), 'puddle', 'the nextRace test helper forces the next race'); eq(S.nextRace, null, '... once');
+  const R2 = bubby('quick', 'baby'); R2.nextRace = 'starling'; R2.rareMiss = 4; R.rollRace(R2); eq(R2.rareMiss, 0, 'a forced Starling resets the miss counter');
+  const names = Object.values(R.DISEASES).map(d => d.name);
+  check(JSON.stringify(names) === JSON.stringify(['Ague', 'Scurvy', 'Dancing Plague', 'The Plague']), 'the illnesses are old medieval ones: ' + names.join(', '));
+  check(!names.some(n => /lepro|leper|syphil|chlamyd|cholera|tubercul|covid/i.test(n)), 'no illness that still stigmatises people today');
+  check(Object.values(R.DISEASES).every(d => d.lore && d.lore.length > 30), 'every illness has a short historical note');
+  check(R.loreOf('salve') === R.DISEASES.itchymoss.lore && R.loreOf('elixir').includes('cure-all') && R.loreOf('shield').includes('herbs') && R.loreOf('pie') === '', 'items show the note of the illness they cure');
+  check(R.DISCLAIMER.includes('not') && /game/i.test(R.DISCLAIMER), 'there is a not-medical-advice disclaimer');
+  check(['Cinchona Bark', 'Lime Juice', 'Valerian Root', 'Four Thieves Vinegar', 'Theriac'].every(n => Object.values(R.ITEMS).some(i => i.name === n)), 'medicines are named after the old remedies');
+}
+
 /* ---------- Illness and medicine ---------- */
 {
   const picks = ['poop', 'sweets', 'weight', 'light', 'neglect'].map(c => R.pickDisease(c, () => .5));
   check(JSON.stringify(picks) === JSON.stringify(['sporecough', 'itchymoss', 'itchymoss', 'moonflu', 'blight']), 'causes pick the right illness: ' + picks.join(', '));
-  eq(R.pickDisease('poop', () => .9), 'itchymoss', 'a dirty garden sometimes gives Itchy Moss');
+  eq(R.pickDisease('poop', () => .9), 'itchymoss', 'a dirty garden sometimes gives Scurvy');
 
   // Wrong medicine is refused and not used up; right medicine takes the full dose count
   const S = bubby('quick', 'child', { inv: { syrup: 1, salve: 2 }, points: 0 });
   R.getSick(S, 'x', T0, 'itchymoss');
-  eq(S.disease, 'itchymoss', 'forced illness'); eq(S.doses, 2, 'Itchy Moss needs 2 doses');
+  eq(S.disease, 'itchymoss', 'forced illness'); eq(S.doses, 2, 'Scurvy needs 2 doses');
   let r = R.useItem(S, 'syrup', T0);
   check(!r.ok && S.inv.syrup === 1 && S.doses === 2, 'wrong medicine refused and not used: ' + r.msg);
   r = R.useItem(S, 'salve', T0); check(r.ok && S.sick && S.doses === 1 && S.inv.salve === 1, 'first dose: ' + r.msg);
   r = R.useItem(S, 'salve', T0); check(r.ok && r.cured && !S.sick && S.disease === null && S.inv.salve === 0, 'second dose cures: ' + r.msg);
   check(S.points >= R.PTS.cure, 'curing pays points'); eq(S.tot.cure, 1, 'cure is counted');
 
-  // Garden Tea: two cups cure Spore Cough; it only soothes the others, with a cooldown
+  // Garden Tea: two cups cure Ague; it only soothes the others, with a cooldown
   const c = bubby('quick', 'child'); R.getSick(c, 'poop', T0, 'sporecough');
   r = R.useItem(c, 'tea', T0); check(r.ok && c.sick && /1 more dose/.test(r.msg), 'tea cup 1 of 2: ' + r.msg);
-  r = R.useItem(c, 'tea', T0); check(r.ok && r.cured && !c.sick, 'tea cup 2 cures Spore Cough');
+  r = R.useItem(c, 'tea', T0); check(r.ok && r.cured && !c.sick, 'tea cup 2 cures Ague');
   const m = bubby('quick', 'child'); R.getSick(m, 'x', T0, 'moonflu'); m.sickT = 100;
-  r = R.useItem(m, 'tea', T0); check(r.ok && m.sick && m.sickT === 70 && m.doses === 2, 'tea only soothes Moonflu: sickT 100 -> ' + m.sickT);
+  r = R.useItem(m, 'tea', T0); check(r.ok && m.sick && m.sickT === 70 && m.doses === 2, 'tea only soothes Dancing Plague: sickT 100 -> ' + m.sickT);
   r = R.useItem(m, 'tea', T0); check(!r.ok && /moment/.test(r.msg), 'tea has a cooldown: ' + r.msg);
   m.teaCd = 0; R.useItem(m, 'tea', T0); eq(m.sickT, 40, 'soothing works again after the cooldown');
 
-  // Cure-All, and the Medicine button picks the best medicine you have
+  // Theriac, and the Medicine button picks the best medicine you have
   const b = bubby('quick', 'child', { inv: { elixir: 1 } }); R.getSick(b, 'x', T0, 'blight');
   eq(R.bestMed(b), 'elixir', 'with no matching medicine the Elixir is picked');
   b.inv.tonic = 1; eq(R.bestMed(b), 'tonic', 'the matching medicine beats the Elixir');
   R.doAction(b, 'med', T0); R.doAction(b, 'med', T0); r = R.doAction(b, 'med', T0);
-  check(!b.sick && b.inv.tonic === 0, 'three Blight Tonics cure The Blight via the Medicine button');
+  check(!b.sick && b.inv.tonic === 0, 'three Four Thieves Vinegars cure The Plague via the Medicine button');
   const e = bubby('quick', 'child', { inv: { elixir: 1 } }); R.getSick(e, 'x', T0, 'blight');
-  r = R.useItem(e, 'elixir', T0); check(r.cured && !e.sick && e.inv.elixir === 0, 'Cure-All cures at once');
+  r = R.useItem(e, 'elixir', T0); check(r.cured && !e.sick && e.inv.elixir === 0, 'Theriac cures at once');
   eq(R.bestMed(bubby('quick')), 'tea', 'a healthy Bubby: tea');
   r = R.doAction(bubby('quick'), 'med', T0); check(!r.ok && /isn.t sick/.test(r.msg), 'medicine for a healthy Bubby is refused');
 
-  // Immunity Tonic blocks illness for a while (scaled by pace) and runs out
+  // Plague Doctor’s Posy blocks illness for a while (scaled by pace) and runs out
   const i = bubby('quick', 'child', { inv: { shield: 1 } });
-  r = R.useItem(i, 'shield', T0); check(r.ok && i.immuneT === 240, 'Immunity Tonic: 240 s on Quick');
+  r = R.useItem(i, 'shield', T0); check(r.ok && i.immuneT === 240, 'Plague Doctor’s Posy: 240 s on Quick');
   R.getSick(i, 'poop', T0); check(!i.sick, 'no illness while protected');
   R.step(i, 300, T0 + 300e3, null); eq(i.immuneT, 0, 'protection runs out');
   const ic = bubby('chill', 'child', { inv: { shield: 1 } }); R.useItem(ic, 'shield', T0);
@@ -108,14 +122,14 @@ const seq = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // a fak
 
 /* ---------- Nothing new punishes absence ---------- */
 {
-  // Chill, asleep with the lights on, nobody watching for a whole night: no Moonflu, and no sleep bonus
+  // Chill, asleep with the lights on, nobody watching for a whole night: no Dancing Plague, and no sleep bonus
   const S = bubby('chill', 'adult', { hunger: 4, happy: 4, variant: 'daisy', race: 'puddle' });
   R.fallAsleep ? 0 : 0;
   Object.assign(S, { asleep: true, lights: true, sleepT: 0, litSleep: 0, litTotal: 0, lastT: new Date('2026-11-16T22:30:00').getTime() });
   S.nextTantrum = 1e9;
   const before = S.points;
   R.advance(S, new Date('2026-11-17T07:00:00').getTime(), null);
-  check(!S.sick || S.disease !== 'moonflu', 'no Moonflu from lights left on overnight while away');
+  check(!S.sick || S.disease !== 'moonflu', 'no Dancing Plague from lights left on overnight while away');
   check(S.litTotal > 3 * 3600, 'the lit hours are still counted: ' + Math.round(S.litTotal / 3600) + ' h');
   R.advance(S, new Date('2026-11-17T08:30:00').getTime(), null);
   check(!S.asleep, 'Bubby woke up'); eq(S.tot.sleep || 0, 0, 'no good-night bonus when the lights stayed on');
@@ -125,15 +139,15 @@ const seq = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // a fak
   R.advance(G, new Date('2026-11-17T08:30:00').getTime(), null);
   eq(G.tot.sleep, 1, 'a good night with the lights off pays the sleep bonus');
   check(G.ptsDay && G.ptsDay.care >= R.PTS.sleep, 'sleep points count toward the care cap');
-  // Watching (popup open) a lit sleep for 18 seconds does give Moonflu
+  // Watching (popup open) a lit sleep for 18 seconds does give Dancing Plague
   const NIGHT = new Date('2026-11-16T23:00:00').getTime();
   const W = bubby('chill', 'adult', { asleep: true, lights: true, hunger: 4, happy: 4, variant: 'daisy' });
   for (let t = 0; t < 20 && !W.sick; t++) R.step(W, 1, NIGHT + t * 1000, { game: false, busy: false });
-  eq(W.disease, 'moonflu', 'watching a lit sleep for ~18 s gives Moonflu');
+  eq(W.disease, 'moonflu', 'watching a lit sleep for ~18 s gives Dancing Plague');
   // Quick pace: same
   const Q = bubby('quick', 'child', { asleep: true, lights: true, hunger: 4, happy: 4 });
   for (let t = 0; t < 20 && !Q.sick; t++) R.step(Q, 1, T0 + t * 1000, null);
-  eq(Q.disease, 'moonflu', 'on Quick a lit sleep gives Moonflu');
+  eq(Q.disease, 'moonflu', 'on Quick a lit sleep gives Dancing Plague');
   // A whole 10-day life with nobody there still ends exactly as before (no new way to die)
   const L = R.fresh(1, { pace: 'chill' }, T0); R.advance(L, T0 + 14 * DAY);
   check(L.ended && ['away', 'garden'].includes(L.ended.kind), 'an unattended life still ends: ' + (L.ended && L.ended.kind));
@@ -231,7 +245,7 @@ const seq = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // a fak
   for (const k of ['race', 'dex', 'disease', 'points', 'inv', 'tot', 'ach', 'quests', 'ptsDay', 'streak', 'streakMs', 'lastCheckIn', 'rareMiss', 'immuneT', 'teaCd', 'litSleep', 'litTotal']) delete old[k];
   Object.assign(old, { stage: 'adult', variant: 'thistle', sick: true, doses: 2 });
   const M = R.migrate(old, T0);
-  check(M && M.race === 'leafling' && M.disease === 'sporecough' && M.points === 25 && Array.isArray(M.dex), 'an old save becomes a Leafling with Spore Cough and the starter points');
+  check(M && M.race === 'leafling' && M.disease === 'sporecough' && M.points === 25 && Array.isArray(M.dex), 'an old save becomes a Leafling with Ague and the starter points');
   check(M.dex.includes('leafling') && M.dex.includes('leafling:thistle'), 'its adult form is in the Bubbydex');
   eq(R.migrate({ v: 1 }), null, 'unknown versions are still rejected');
 }

@@ -384,6 +384,7 @@ body.win.toy .app { width: 468px; } /* the fallback window shows the whole toy p
 .shop-row canvas { width: 36px; height: 36px; }
 .shop-row b { font: 600 13.5px/1.2 var(--font-display); }
 .shop-row small { display: block; font-size: 11.5px; color: var(--ink-2); line-height: 1.3; }
+.shop-row small.lore { font-style: italic; margin-top: 2px; }
 .buy { border: 2px solid var(--ink); border-bottom-width: 4px; background: var(--ink); color: var(--cream-hi); border-radius: 999px; padding: 6px 11px; font: 700 12.5px/1 var(--font-body); min-width: 64px; font-variant-numeric: tabular-nums; }
 .buy:active { border-bottom-width: 2px; transform: translateY(2px); }
 .buy:disabled { opacity: .4; cursor: default; transform: none; }

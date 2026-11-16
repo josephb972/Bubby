@@ -32,16 +32,18 @@ Take care of it
 • How you raise it decides who it becomes: a Radiant Blossom, a Daisy Blossom or a Thistle.
 
 Collect them all
-• When the Bulb grows into a Bud it becomes one of six races, picked at random. One race, the Starling, is very rare and arrives with a special reveal.
+• When the Bulb grows into a Bud it becomes one of six races, picked at random, and every race has its own body: a flower, a mossy tortoise, a water droplet, a mushroom, a flame spirit or a star. One race, the Starling, is very rare and arrives with a special reveal.
 • Fill the Bubbydex: every race in every adult form, 18 in all.
 
 When Bubby gets sick
-• Four illnesses, each with its own medicine: Spore Cough, Itchy Moss, Moonflu and The Blight.
-• Garden Tea is always free and cures a Spore Cough. Other medicine comes from the Shop.
+• Four old illnesses from history, each with its own medicine named after the old remedy: Ague, Scurvy, the Dancing Plague and The Plague.
+• Garden Tea is always free and cures a Ague. Other medicine comes from the Shop.
 
 Earn points, spend them in the Shop
 • Open Bubby each day, look after it, win games, finish daily quests and reach goals to earn points.
-• Spend them on better food, medicine and an Immunity Tonic. Points are earned by playing, never bought.
+• Spend them on better food, medicine and a Plague Doctor’s Posy. Points are earned by playing, never bought.
+
+Bubby is a game. The history is simplified and nothing in it is medical advice.
 
 It lives while you're away
 • Bubby keeps going even when the browser is closed. When you come back, a short card tells you what happened.

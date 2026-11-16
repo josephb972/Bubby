@@ -1,5 +1,5 @@
 // Draws Bubby's garden on the 100×75 pixel screen (ported from the original game).
-import { SW, SH, GROUND, E, R, P, petSprite, HEADTOP, art, restingMood } from '../art/sprites.js';
+import { SW, SH, GROUND, E, R, P, petSprite, headTop, art, restingMood } from '../art/sprites.js';
 import { pace, RACES, RARE_RACE } from '../core/rules.js';
 
 function sparkles(sx, cx, cy, t, r = 16) {
@@ -72,7 +72,7 @@ function moodNow(S, A, G) {
   return { mood, mouth };
 }
 
-export function catchY(S) { return GROUND - 46 + HEADTOP[S.stage] + 3; }
+export function catchY(S) { return GROUND - 46 + headTop(S.stage, S.race) + 3; }
 
 export function drawScene(sx, S, A, G, PET, time) {
   const { BG, POOP, ICONS, BANG, SKULL, PUFF, BUBBLE, ZED, SEEDI, GOLDSEED, PEBBLE, STARS, SLOTS } = art();
@@ -120,7 +120,7 @@ export function drawScene(sx, S, A, G, PET, time) {
   if (stage !== 'seed') E(sx, px, GROUND + 1.5, 9, 1.6, 'rgba(64,120,52,.45)');
   blit(spr, px - 24 + shake, GROUND - 46 + bob);
   if (S.race === RARE_RACE && stage !== 'seed' && !(A && A.type === 'evolve' && A.rare)) twinkle(sx, px, GROUND - 24, time);
-  const top = GROUND - 46 + HEADTOP[stage] + bob;
+  const top = GROUND - 46 + headTop(stage, S.race) + bob;
 
   // Action effects
   if (A) {

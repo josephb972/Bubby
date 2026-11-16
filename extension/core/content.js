@@ -23,15 +23,24 @@ export const DEX_TOTAL = Object.keys(RACES).length * TIERS.length;
 export const dexFound = S => (S.dex || []).filter(k => k.includes(':')).length;
 
 /* ---------- Illnesses ----------
-   Every illness has its own medicine. Garden Tea is free and always available: it cures Spore Cough slowly
-   (two cups) and only soothes the others. Times are the Quick-pace seconds; the rules scale them to the pace.
-   limitK scales how long an untreated illness may last before Bubby moves away (1 = the pace's normal limit). */
+   Old diseases that once swept medieval towns, drawn as cartoon sniffles: no gore, and everything is fiction. The ids stay the
+   same as in the first 1.1 build so saved games keep working (sporecough = Ague, itchymoss = Scurvy, moonflu = Dancing Plague,
+   blight = The Plague). Every illness has its own medicine; Garden Tea is free and always available: it cures Ague slowly
+   (two cups) and only soothes the others. Times are Quick-pace seconds; the rules scale them to the pace.
+   limitK scales how long an untreated illness may last before Bubby moves away (1 = the pace's normal limit).
+   `lore` is one simplified true fact shown in the shop. Chosen on purpose: no illness that still stigmatises people today
+   (such as leprosy), and no sexually transmitted infection. */
 export const DISEASES = {
-  sporecough: { name: 'Spore Cough', sev: 'Mild',   doses: 1, decay: 1.3, limitK: 1.06, med: 'syrup', tint: 'rgba(170,200,60,.30)',  sign: 'sneezes puffs of spores',      contagious: true },
-  itchymoss:  { name: 'Itchy Moss',  sev: 'Medium', doses: 2, decay: 1.5, limitK: 1,    med: 'salve', tint: 'rgba(240,110,150,.32)', sign: 'scratches itchy moss',          contagious: true },
-  moonflu:    { name: 'Moonflu',     sev: 'Medium', doses: 2, decay: 1.6, limitK: 1,    med: 'drops', tint: 'rgba(100,140,240,.34)', sign: 'shivers with a moonlit chill',  contagious: true },
-  blight:     { name: 'The Blight',  sev: 'Severe', doses: 3, decay: 2.0, limitK: 0.81, med: 'tonic', tint: 'rgba(90,50,130,.42)',   sign: 'wilts under a dark blight',     contagious: true },
+  sporecough: { name: 'Ague', sev: 'Mild', doses: 1, decay: 1.3, limitK: 1.06, med: 'syrup', tint: 'rgba(170,200,60,.30)', sign: 'shivers with chills and a fever', contagious: true,
+    lore: 'An old word for fevers and chills, once blamed on marsh air. Cinchona bark, the source of quinine, really helped.' },
+  itchymoss:  { name: 'Scurvy', sev: 'Medium', doses: 2, decay: 1.5, limitK: 1, med: 'salve', tint: 'rgba(240,110,150,.32)', sign: 'looks pale and tired from too many sweets', contagious: true,
+    lore: 'Sailors got it without fresh fruit. Lime and lemon juice (vitamin C) cure it.' },
+  moonflu:    { name: 'Dancing Plague', sev: 'Medium', doses: 2, decay: 1.6, limitK: 1, med: 'drops', tint: 'rgba(100,140,240,.34)', sign: 'cannot stop dancing and cannot rest', contagious: true,
+    lore: 'In 1518 people in Strasbourg danced for days and nobody knows why. Valerian is an old herb for restless nights.' },
+  blight:     { name: 'The Plague', sev: 'Severe', doses: 3, decay: 2.0, limitK: 0.81, med: 'tonic', tint: 'rgba(90,50,130,.42)', sign: 'has dark spots and feels very weak', contagious: true,
+    lore: 'The Black Death swept medieval Europe from 1347 to 1351. Four Thieves Vinegar is a legend, not a real cure.' },
 };
+export const DISCLAIMER = 'Bubby is a game. The history is simplified and nothing here is medical advice.';
 
 /* ---------- Shop items ----------
    kind: food (Feed menu), med (Medicine cabinet), care (cabinet, prevents illness). Prices are in points. */
@@ -41,15 +50,19 @@ export const ITEMS = {
   pie:    { kind: 'food', name: 'Sunberry Pie',    price: 10, hunger: 1, happy: 1,  weight: 1, icon: '#c04a86', desc: '+1 hunger, +1 happy, never a toothache' },
   stew:   { kind: 'food', name: 'Hearty Stew',     price: 14, hunger: 2, happy: 0,  weight: 1, icon: '#d98a3a', desc: '+2 hunger' },
   feast:  { kind: 'food', name: 'Golden Feast',    price: 30, hunger: 4, happy: 4,  weight: 2, icon: '#f2c230', desc: 'Fills hunger and happiness' },
-  syrup:  { kind: 'med',  name: 'Spore Syrup',     price: 8,  cures: ['sporecough'], dose: 1, icon: '#9bc53d', desc: 'Cures Spore Cough in 1 dose' },
-  salve:  { kind: 'med',  name: 'Moss Salve',      price: 10, cures: ['itchymoss'],  dose: 1, icon: '#e86b8c', desc: 'Cures Itchy Moss, 1 dose each' },
-  drops:  { kind: 'med',  name: 'Moon Drops',      price: 10, cures: ['moonflu'],    dose: 1, icon: '#6e96f0', desc: 'Cures Moonflu, 1 dose each' },
-  tonic:  { kind: 'med',  name: 'Blight Tonic',    price: 25, cures: ['blight'],     dose: 1, icon: '#7a4aa8', desc: 'Cures The Blight, 1 dose each' },
-  elixir: { kind: 'med',  name: 'Cure-All Elixir', price: 45, cures: 'all',          dose: 99, icon: '#f2c230', desc: 'Cures any illness at once' },
-  shield: { kind: 'care', name: 'Immunity Tonic',  price: 20, icon: '#58c4b8', desc: 'Protects from illness for a while' },
+  syrup:  { kind: 'med',  name: 'Cinchona Bark',   price: 8,  cures: ['sporecough'], dose: 1, icon: '#9b6a3a', desc: 'Cures Ague in 1 dose' },
+  salve:  { kind: 'med',  name: 'Lime Juice',      price: 10, cures: ['itchymoss'],  dose: 1, icon: '#8fc93a', desc: 'Cures Scurvy, 1 dose each' },
+  drops:  { kind: 'med',  name: 'Valerian Root',   price: 10, cures: ['moonflu'],    dose: 1, icon: '#b58ad6', desc: 'Cures the Dancing Plague, 1 dose each' },
+  tonic:  { kind: 'med',  name: 'Four Thieves Vinegar', price: 25, cures: ['blight'], dose: 1, icon: '#7a4aa8', desc: 'Cures The Plague, 1 dose each' },
+  elixir: { kind: 'med',  name: 'Theriac',         price: 45, cures: 'all',          dose: 99, icon: '#f2c230', desc: 'The old cure-all: cures any illness at once',
+    lore: 'A medieval cure-all made from dozens of ingredients.' },
+  shield: { kind: 'care', name: 'Plague Doctor’s Posy', price: 20, icon: '#58c4b8', desc: 'Keeps illness away for a while',
+    lore: 'Plague doctors carried sweet-smelling herbs, believing they kept bad air away.' },
 };
-export const TEA = { name: 'Garden Tea', cures: ['sporecough'], dose: .5, soothes: true };
+export const TEA = { name: 'Garden Tea', cures: ['sporecough'], dose: .5, soothes: true, desc: 'Free. Cures Ague slowly, soothes the rest' };
 export const IMMUNITY_SECS = 240;   // Quick pace; real-time paces stretch it by their grace multiplier
+// One true, simplified fact about an item (the illness it cures, for medicine)
+export const loreOf = id => (ITEMS[id] && (ITEMS[id].lore || (ITEMS[id].cures && ITEMS[id].cures !== 'all' && DISEASES[ITEMS[id].cures[0]] && DISEASES[ITEMS[id].cures[0]].lore))) || '';
 export const medIds = () => Object.keys(ITEMS).filter(k => ITEMS[k].kind !== 'food');
 export const foodIds = () => Object.keys(ITEMS).filter(k => ITEMS[k].kind === 'food');
 

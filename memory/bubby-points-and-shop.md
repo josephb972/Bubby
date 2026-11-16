@@ -7,9 +7,9 @@ and drafted in the web game `index.html`. Checked by `node tools/rules-check.mjs
 ## Principles
 1. **Points are earned by playing and never sold.** No purchase, no cash-out, no exchange. They only buy things in the Shop.
 2. **Nothing punishes absence.** Illness only comes from the same causes as before (poop, sweets, weight, neglect). Sleeping with
-   the lights on gives Moonflu only while the popup is open (or on Quick), never overnight. Time away never costs points.
+   the lights on gives Dancing Plague only while the popup is open (or on Quick), never overnight. Time away never costs points.
 3. **Reward being there, but cap the farmable parts.** Care and game points have a daily cap; milestones are one-time.
-4. **A broke player is never stuck.** Garden Tea is free, cures Spore Cough (2 cups) and soothes every other illness
+4. **A broke player is never stuck.** Garden Tea is free, cures Ague (2 cups) and soothes every other illness
    (it slows the clock to a quarter), so there is always time to earn the right medicine.
 5. **Money never touches this loop.** Paid features stay cosmetic (see `bubby-monetization-and-marketing.md`).
 
@@ -43,29 +43,49 @@ and drafted in the web game `index.html`. Checked by `node tools/rules-check.mjs
 | Sunberry Pie | 10 | +1 hunger, +1 happy, never a toothache |
 | Hearty Stew | 14 | +2 hunger |
 | Golden Feast | 30 | fills hunger and happiness |
-| Spore Syrup | 8 | cures Spore Cough (1 dose) |
-| Moss Salve | 10 | cures Itchy Moss (2 doses) |
-| Moon Drops | 10 | cures Moonflu (2 doses) |
-| Blight Tonic | 25 | cures The Blight (3 doses) |
-| Cure-All Elixir | 45 | cures any illness at once |
-| Immunity Tonic | 20 | no illness for a while (240 s on Quick; 30 h on Chill) |
+| Cinchona Bark | 8 | cures Ague (1 dose) |
+| Lime Juice | 10 | cures Scurvy (2 doses) |
+| Valerian Root | 10 | cures Dancing Plague (2 doses) |
+| Four Thieves Vinegar | 25 | cures The Plague (3 doses) |
+| Theriac | 45 | cures any illness at once |
+| Plague Doctor’s Posy | 20 | no illness for a while (240 s on Quick; 30 h on Chill) |
 
-A full cure costs: cough 8 (or free with tea), Itchy Moss 20, Moonflu 20, The Blight 75 (or 45 with the Elixir). Stock is capped at 9 per item.
+A full cure costs: cough 8 (or free with tea), Scurvy 20, Dancing Plague 20, The Plague 75 (or 45 with the Elixir). Stock is capped at 9 per item.
 
 ## Illness
 
 | Illness | Severity | Usually from | Medicine | Doses | Drain | Time before Bubby leaves* |
 |---|---|---|---|---|---|---|
-| Spore Cough | mild | dirty garden (70%) | Spore Syrup / Tea | 1 | ×1.3 | 106% |
-| Itchy Moss | medium | sweets, weight, dirty garden (30%) | Moss Salve | 2 | ×1.5 | 100% |
-| Moonflu | medium | lit sleep while watched; later: visits | Moon Drops | 2 | ×1.6 | 100% |
-| The Blight | severe | neglect | Blight Tonic | 3 | ×2.0 | 81% |
+| Ague | mild | dirty garden (70%) | Cinchona Bark / Tea | 1 | ×1.3 | 106% |
+| Scurvy | medium | sweets, weight, dirty garden (30%) | Lime Juice | 2 | ×1.5 | 100% |
+| Dancing Plague | medium | lit sleep while watched; later: visits | Valerian Root | 2 | ×1.6 | 100% |
+| The Plague | severe | neglect | Four Thieves Vinegar | 3 | ×2.0 | 81% |
 
 \*of the pace's normal limit (Quick 160 s, Classic 24 h, Chill 48 h). All four are marked `contagious` for the visiting update
 (`catchDisease()` is the entry point; a visit passes an illness on, and a sick Bubby's card will carry a badge).
 
+## Naming (decided 16 Nov 2026)
+The illnesses are old diseases that once swept medieval towns, drawn as cartoon sniffles, and each medicine is named after the
+old remedy. Internal ids stay `sporecough`, `itchymoss`, `moonflu`, `blight` so saves keep working.
+
+| Illness | Fits because | Medicine (id) |
+|---|---|---|
+| Ague | fevers and chills once blamed on marsh air: a dirty garden | Cinchona Bark (`syrup`), the real source of quinine; Garden Tea is the herbal free cure |
+| Scurvy | sailors' disease from too little fresh food: too many sweets | Lime Juice (`salve`), vitamin C |
+| Dancing Plague | the 1518 Strasbourg dancing mania: a restless night | Valerian Root (`drops`), an old herb for sleep |
+| The Plague | the Black Death, 1347 to 1351: neglect | Four Thieves Vinegar (`tonic`), a legendary remedy |
+| (cure-all) | | Theriac (`elixir`), the medieval cure-all |
+| (protection) | | Plague Doctor's Posy (`shield`), sweet herbs against bad air |
+
+**Left out on purpose:** leprosy (still affects people today, and the word is a stigma), cholera, tuberculosis and malaria by name
+(still killing people), and any sexually transmitted infection. Smallpox ("the Pox", eradicated) is a good future name for a
+contagious illness spread by visits. **Reach:** historical disease names are common in family games (Plague Inc., The Oregon Trail,
+Assassin's Creed). Keep it cartoon, keep the disclaimer, never claim a real cure, and word social posts about "medieval history"
+and "pet game" rather than "cure" or "treatment". This is judgement, not a ruling: check the current Chrome Web Store policies
+and any future app-store age-rating questionnaire (they ask about medical references) before each submission.
+
 ## Races (extension)
-Random at Bulb to Bud: five common races equally, plus the rare Starling. Real-time lives last days, so the base rare chance is
+Random at Bulb to Bud: five common races equally, plus the rare Starling. Each race has its own body plan (flower, tortoise, droplet, mushroom, flame, star); the care tier changes colour and decoration on every body. Real-time lives last days, so the base rare chance is
 higher on slow paces (Quick 5%, Classic 8%, Chill 12%) and every miss in a row adds 5% (cap 60%), reset on a rare. Care quality
 still decides Radiant / Daisy / Thistle. Old Bubbies become Leaflings (their original look).
 
@@ -79,6 +99,6 @@ still decides Radiant / Daisy / Thistle. Old Bubbies become Leaflings (their ori
 
 ## Open questions
 - Is the Blight (3 doses, 75 points) too harsh? The Elixir (45) is the cheaper cure, which is intended.
-- Should Immunity Tonics be bought in bulk, or stay one at a time?
+- Should Plague Doctor’s Posys be bought in bulk, or stay one at a time?
 - Visiting (v1.2) will need a rule for a contagious visit (warning, quarantine badge) and for who may be infected.
 - If a paid tier is added later, it may sell card frames and cosmetics, never points, medicine or illness protection.
