@@ -155,7 +155,8 @@ if (AppPlugin) {
   AppPlugin.addListener('resume', cameBack);
   // Android back button: close settings or an overlay first, then leave the app (Bubby keeps living).
   AppPlugin.addListener('backButton', () => {
-    const back = document.querySelector('#viewSettings:not([hidden]) #btnBack');
+    if (!document.getElementById('viewName').hidden) return;   // a newborn needs a name first
+    const back = document.querySelector('#viewSettings:not([hidden]) #btnBack, #viewShop:not([hidden]) #btnShopBack');
     if (back) return back.click();
     const close = [...document.querySelectorAll('.ov:not([hidden]) [data-close]')][0];
     if (close) return close.click();
@@ -217,7 +218,7 @@ addEventListener('DOMContentLoaded', () => {
   const padWatch = new MutationObserver(gamePad);
   padWatch.observe(document.getElementById('ovGame'), { attributes: true, attributeFilter: ['hidden'] });
   padWatch.observe(document.getElementById('app'), { attributes: true, attributeFilter: ['class'] });
-  for (const id of ['viewMain', 'viewSettings', 'viewShop']) watch.observe(document.getElementById(id), { attributes: true, attributeFilter: ['hidden'] });
+  for (const id of ['viewMain', 'viewSettings', 'viewShop', 'viewName']) watch.observe(document.getElementById(id), { attributes: true, attributeFilter: ['hidden'] });
   watch.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] }); // safe-area sizes arrive late
   new ResizeObserver(fit).observe(document.getElementById('compactWrap')); // the sheet's height decides the pod's
   // The suggestion button's keyboard hint becomes a touch one.

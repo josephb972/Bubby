@@ -318,11 +318,12 @@ function showAway(evs, ms) {
 
 function showEnd() {
   const e = S.ended; if (!e) return;
-  $('#endTitle').textContent = e.kind === 'garden' ? 'Bubby returned to the garden' : 'Bubby packed up and moved away';
+  const who = e.pet || 'Bubby';
+  $('#endTitle').textContent = e.kind === 'garden' ? `${who} returned to the garden` : `${who} packed up and moved away`;
   $('#endText').textContent = (e.kind === 'garden'
     ? `A full life of ${e.day} days as a ${e.name}. It left a seed behind for you.`
-    : `After ${e.day} days as a ${e.name}, Bubby went looking for a better garden. It left a seed behind.`)
-    + ` Care mistakes: ${e.mistakes}.`;
+    : `After ${e.day} days as a ${e.name}, ${who} went looking for a better garden. It left a seed behind.`)
+    + ` Care mistakes: ${e.mistakes}. Its ID card is in your album.`;
   $('#ovEnd').hidden = false;
 }
 
@@ -366,7 +367,7 @@ function sickLine() {
 }
 function renderStatus() {
   if (OV !== 'status') return;
-  $('#stName').textContent = Rules.fullName(S);
+  $('#stName').textContent = S.name ? `${S.name} the ${Rules.fullName(S)}` : Rules.fullName(S);
   const hm = Rules.healthyMax(S.stage);
   $('#stWeight').textContent = S.stage === 'seed' ? '–' : `${S.weight}g ${S.weight > hm ? '(heavy)' : '(healthy)'}`;
   hearts($('#stHunger'), S.stage === 'seed' ? 4 : S.hunger, 'Hunger');
@@ -410,7 +411,7 @@ let lastSmart = '';
 function renderUI() {
   if (!S) return;
   const P = Rules.pace(S);
-  $('#sub').textContent = `Gen ${S.gen} · ${S.ended ? 'New seed' : Rules.fullName(S)} · Day ${Rules.dayNumber(S)}`;
+  $('#sub').textContent = S.ended ? `Gen ${S.gen + 1} · New seed` : `${S.name || `Gen ${S.gen}`} · ${Rules.fullName(S)} · Day ${Rules.dayNumber(S)}`;
   renderPoints();
   const low = n => n <= 1 && S.stage !== 'seed' && !S.ended;
   $('#mHunger').parentElement.classList.toggle('low', low(hearts($('#mHunger'), S.stage === 'seed' ? 4 : S.hunger, 'Hunger')));
@@ -581,6 +582,25 @@ function renderShop() {
     const tip = document.createElement('p'); tip.className = 'note';
     tip.textContent = `Every illness needs its own medicine. Garden Tea is free and always in the cabinet, but it only cures ${Rules.DISEASES.sporecough.name}, slowly. Points are earned by caring for Bubby and are never sold. ${Rules.DISCLAIMER}`;
     body.appendChild(tip);
+  } else if (SHOP_TAB === 'album') {
+    if (!S.ended && S.stage !== 'seed') {
+      const now = document.createElement('section'); now.className = 'shop-sec';
+      now.innerHTML = '<h3>Now</h3>';
+      now.appendChild(idCardEl(Rules.idCard(S, Date.now())));
+      body.appendChild(now);
+    }
+    const past = document.createElement('section'); past.className = 'shop-sec';
+    const list = (S.album || []).slice().reverse();
+    past.innerHTML = `<h3>Photo album <small>${list.length} Bubb${list.length === 1 ? 'y' : 'ies'}</small></h3>`;
+    if (!list.length) {
+      const p = document.createElement('p'); p.className = 'note';
+      p.textContent = 'Every Bubby you raise gets an ID card when it hatches. When it leaves, its card comes here, with a photo of how it looked last.';
+      past.appendChild(p);
+    }
+    const grid = document.createElement('div'); grid.className = 'album';
+    list.forEach(c => grid.appendChild(idCardEl(c)));
+    past.appendChild(grid);
+    body.appendChild(past);
   } else if (SHOP_TAB === 'today') {
     const Q = Rules.ensureQuests(S, Date.now()), d = Rules.ptsDay(S, Date.now());
     const sec = document.createElement('section'); sec.className = 'shop-sec';
@@ -665,6 +685,54 @@ function renderSettings() {
   $$('[data-skip]').forEach(b => { b.disabled = !clock || !!S.ended || S.paused; });
 }
 function openSettings() { closeOverlays(); G = null; renderSettings(); $('#viewMain').hidden = true; $('#viewSettings').hidden = false; $('#btnBack').focus(); }
+/* ---------------- ID card and naming ---------------- */
+const fmtDate = ms => new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+const LEFT = { garden: 'Full life', away: 'Moved away', reset: 'Started over' };
+// The ID card: a little photo of Bubby in its latest form, its name, race and form, birthday and age (or when it left).
+// Built with textContent only: names are typed by players.
+function idCardEl(c, el = document.createElement('div')) {
+  el.className = 'idcard' + (c.left ? ' left' : '');
+  el.textContent = '';
+  const photo = document.createElement('div'); photo.className = 'id-photo';
+  photo.appendChild(copyCanvas(petSprite(c.stage === 'senior' || c.stage === 'adult' || c.stage === 'child' || c.stage === 'baby' ? c.stage : 'seed',
+    { race: c.race, variant: c.variant, chubby: c.chubby, mood: 'happy' })));
+  const info = document.createElement('div'); info.className = 'id-info';
+  const add = (tag, cls, text) => { const e = document.createElement(tag); e.className = cls; e.textContent = text; info.appendChild(e); return e; };
+  add('span', 'id-kicker', `Bubby ID · Gen ${c.gen}`);
+  add('b', 'id-name', c.name);
+  add('span', 'id-title', c.title);
+  const dl = document.createElement('dl'); info.appendChild(dl);
+  const row = (k, v) => { const dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = k; dd.textContent = v; dl.append(dt, dd); };
+  row('Born', fmtDate(c.born));
+  if (c.left) row('Left', `${fmtDate(c.left)} · ${LEFT[c.kind] || ''}${c.day ? ` · ${c.day} day${c.day === 1 ? '' : 's'}` : ''}`);
+  else row('Age', `Day ${c.day}`);
+  el.append(photo, info);
+  return el;
+}
+let naming = false;
+function openNaming() {
+  if (naming) return;
+  naming = true; closeOverlays(); G = null;
+  $('#viewMain').hidden = true; $('#viewSettings').hidden = true; $('#viewShop').hidden = true; $('#viewName').hidden = false;
+  $('#inName').value = '';
+  $('#nameMsg').textContent = 'This is its ID card. Its photo updates as it grows, and the card goes in your photo album when it leaves.';
+  renderNameCard();
+  setTimeout(() => $('#inName').focus(), 50);
+}
+function renderNameCard() {
+  const c = Rules.idCard(S, Date.now());
+  c.name = Rules.cleanName($('#inName').value) || '…';
+  idCardEl(c, $('#nameCard'));
+}
+function saveName() {
+  if (!Rules.setName(S, $('#inName').value)) { $('#nameMsg').textContent = 'Type a name first (or tap Surprise me).'; $('#inName').focus(); return; }
+  naming = false;
+  S.lastT = Date.now();
+  $('#viewName').hidden = true; $('#viewMain').hidden = false;
+  persist(); renderUI();
+  unlockAudio(); beepUp();
+  toast(`Say hi to ${S.name}! It's hungry and wants to play`);
+}
 function closeSettings() { $('#viewSettings').hidden = true; $('#viewMain').hidden = false; resetBox(); renderUI(); }
 const RESET_HTML = '<button class="chip" id="btnTestNote">Test notification</button><button class="chip danger" id="btnReset">Start over</button>';
 function resetBox() { $('#resetBox').innerHTML = RESET_HTML; }
@@ -706,6 +774,10 @@ function wire() {
   $('#stCall').addEventListener('click', () => { const a = $('#stCall').dataset.need; closeOverlays(); if (a) runAction(a); });
   $('#looks').addEventListener('change', e => { if (e.target.name === 'look') { S.cfg.look = e.target.value; applyLook(); persist(); } });
   $('#btnBack').addEventListener('click', closeSettings);
+  // Naming a newborn
+  $('#nameForm').addEventListener('submit', e => { e.preventDefault(); saveName(); });
+  $('#inName').addEventListener('input', renderNameCard);
+  $('#btnNameIdea').addEventListener('click', () => { $('#inName').value = Rules.nameIdea(Math.random, $('#inName').value); renderNameCard(); });
   $('#btnAwayOk').addEventListener('click', () => closeOverlays());
   $('#btnReplant').addEventListener('click', replant);
 
@@ -729,7 +801,7 @@ function wire() {
       $('#resetBox').innerHTML = '<button class="chip danger" id="btnResetYes">Yes, lose this Bubby</button><button class="chip" id="btnResetNo">Keep Bubby</button>';
       $('#btnResetNo').focus();
     } else if (id === 'btnResetYes') {
-      S = Rules.nextLife(S, 1, Date.now()); A = null; G = null; shownSeq = S.evSeq;
+      S = Rules.startOver(S, Date.now()); A = null; G = null; shownSeq = S.evSeq;   // the old Bubby's card goes in the album
       persist(); closeSettings(); toast('A new seed is planted');
     } else if (id === 'btnResetNo') resetBox();
   });
@@ -738,6 +810,7 @@ function wire() {
   const KEYS = { f: 'feed', p: 'play', c: 'clean', l: 'lights', m: 'med', d: 'scold', s: 'status', a: 'attn' };
   document.addEventListener('keydown', e => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (naming) return;   // typing a name
     if (!$('#viewSettings').hidden) { if (e.key === 'Escape') { e.preventDefault(); closeSettings(); } return; }
     if (!$('#viewShop').hidden) { if (e.key === 'Escape') { e.preventDefault(); closeShop(); } return; }
     const k = e.key.toLowerCase();
@@ -784,7 +857,8 @@ function wire() {
 let lastFrame = performance.now(), uiT = 0, saveT = 0, prevBlink = false;
 function frame(nowP) {
   const rdt = Math.min(.25, Math.max(0, (nowP - lastFrame) / 1000)); lastFrame = nowP;
-  Rules.advance(S, Date.now(), document.hidden ? null : { game: !!G, busy: !!A });
+  if (naming) S.lastT = Date.now();   // time stops while you choose a name
+  else Rules.advance(S, Date.now(), document.hidden ? null : { game: !!G, busy: !!A });
   if (A && !S.paused) { A.t += rdt; if (A.t >= A.dur) { const f = A.after; A = null; if (f) f(); } }
   if (!S.paused) { updateGame(rdt); updatePet(rdt); }
   handleEvents();
@@ -793,7 +867,11 @@ function frame(nowP) {
   const blinkOn = !!S.call && !S.ended && ((nowP / 1000 * 2.5) | 0) % 2 === 0;
   if (blinkOn !== prevBlink) { prevBlink = blinkOn; const t = $('.tile[data-act="attn"]'); if (t) t.classList.toggle('alert', blinkOn); }
   uiT += rdt; saveT += rdt;
-  if (uiT > .25) { uiT = 0; Rules.checkGoals(S, Date.now()); renderUI(); }
+  if (uiT > .25) {
+    uiT = 0; Rules.checkGoals(S, Date.now()); renderUI();
+    // Just hatched (after the hatching animation): ask for a name
+    if (Rules.needsName(S) && !A && !G && !naming && !document.hidden) openNaming();
+  }
   if (saveT > 1.5) { saveT = 0; persist(); }
   requestAnimationFrame(frame);
 }
@@ -818,7 +896,7 @@ async function boot() {
 
   const away = S.events.filter(e => e.id > seenBefore);
   if (S.ended) showEnd();
-  else if (!lastSeen && S.stage === 'seed') toast(`A seed! It sprouts in a minute. ${ciText}`.trim());
+  else if (!lastSeen && S.stage === 'seed') toast(`An egg! It hatches in about a minute. ${ciText}`.trim());
   else if (away.length && (!lastSeen || now - lastSeen > 2 * 60 * 1000)) {
     const goAway = () => showAway(away, now - (lastSeen || S.born || now));
     const rareAway = away.filter(e => e.type === 'evolve' && e.rare).pop();

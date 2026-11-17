@@ -2,7 +2,7 @@
 
 Works for the Chrome Web Store and Edge Add-ons. Everything here is true of the code; update it if the code changes.
 
-- **Upload:** `release/bubby-<!-- version -->1.1.1<!-- /version -->.zip`, the current version (`node tools/package.mjs` rebuilds it into `dist/`; older versions stay in `release/`).
+- **Upload:** `release/bubby-<!-- version -->1.1.2<!-- /version -->.zip`, the current version (`node tools/package.mjs` rebuilds it into `dist/`; older versions stay in `release/`).
 - **Images:** `store/`, made by `node tools/store-images.mjs` from the real popup.
 
 ## Listing
@@ -33,6 +33,7 @@ Take care of it
 Collect them all
 • Every seed is a surprise: its egg shows the colours of one of six races, picked at random, and when the Bulb grows into a Bud it shows that race's own body: a flower, a mossy tortoise, a water droplet, a mushroom, a flame spirit or a star. One race, the Starling, is very rare and arrives with a special reveal.
 • Fill the Bubbydex: every race in every adult form, 18 in all.
+• Name every Bubby when it hatches. It gets its own ID card with a photo that grows up with it, and every Bubby you raise keeps its card in your photo album.
 
 When Bubby gets sick
 • Four old illnesses from history, each with its own medicine named after the old remedy: Ague, Scurvy, the Dancing Plague and The Plague.

@@ -70,7 +70,7 @@ export function defaultCfg() {
 }
 
 // What carries over from one Bubby to the next: the collection, the points, and what you bought.
-export const META_KEYS = ['dex', 'rareMiss', 'points', 'inv', 'tot', 'ach', 'quests', 'ptsDay', 'streak', 'streakMs', 'lastCheckIn'];
+export const META_KEYS = ['album', 'dex', 'rareMiss', 'points', 'inv', 'tot', 'ach', 'quests', 'ptsDay', 'streak', 'streakMs', 'lastCheckIn'];
 
 export function fresh(gen = 1, cfg = defaultCfg(), now = Date.now()) {
   return {
@@ -82,9 +82,11 @@ export function fresh(gen = 1, cfg = defaultCfg(), now = Date.now()) {
     immuneT: 0, immuneNote: false, teaCd: 0,
     call: null, mistakes: 0, snacks: [], variant: null, chubby: false, race: null, seedRace: pickCommon(),
     ended: null, paused: false, nextPoop: 30, nextTantrum: 55,
+    // Its name and ID card (1.1.2): named when the egg hatches; the egg waits for you to be there (eggReady)
+    name: '', hatchedAt: 0, eggReady: false,
     stats: { meals: 0, snacks: 0, games: 0, wins: 0, cleans: 0, meds: 0, scolds: 0, sick: 0, bestCatch: 0 },
     // Kept across lives (see META_KEYS)
-    dex: [], rareMiss: 0, points: PTS.start, inv: {}, tot: {}, ach: {}, quests: null, ptsDay: null,
+    album: [], dex: [], rareMiss: 0, points: PTS.start, inv: {}, tot: {}, ach: {}, quests: null, ptsDay: null,
     streak: 0, streakMs: 0, lastCheckIn: '',
     events: [], evSeq: 0, notifiedSeq: 0, seenSeq: 0,
     notif: { day: '', count: 0, lastAt: 0 },
@@ -106,8 +108,52 @@ export function stageName(S) {
 }
 // "Puddle Radiant Blossom": the race in front of the form, once Bubby has one.
 export function fullName(S) {
-  const r = RACES[S.race];
-  return r && S.stage !== 'seed' && S.stage !== 'baby' ? `${r.name} ${stageName(S)}` : stageName(S);
+  const young = S.stage === 'seed' || S.stage === 'baby';
+  const r = RACES[young ? S.seedRace : S.race];
+  return r ? `${r.name} ${stageName(S)}` : stageName(S);
+}
+
+/* ---------- Name, ID card and photo album (1.1.2) ---------- */
+export const NAME_MAX = 14;
+// A safe display name: no control characters or angle brackets, trimmed, at most NAME_MAX characters.
+export function cleanName(raw) {
+  return [...String(raw ?? '').replace(/[\u0000-\u001f\u007f-\u009f<>]/g, '').replace(/\s+/g, ' ').trim()].slice(0, NAME_MAX).join('').trim();
+}
+export function setName(S, raw) {
+  const n = cleanName(raw);
+  if (!n) return false;
+  S.name = n;
+  return true;
+}
+// A Bubby that has hatched and still needs a name
+export const needsName = S => !S.ended && S.stage !== 'seed' && !S.name;
+const NAME_IDEAS = ['Pip', 'Mochi', 'Bean', 'Sprout', 'Nori', 'Pebble', 'Tofu', 'Clover', 'Biscuit', 'Fig', 'Puddin', 'Juniper',
+  'Mossy', 'Button', 'Pickle', 'Sunny', 'Maple', 'Olive', 'Tater', 'Wren', 'Poppy', 'Kiwi', 'Basil', 'Dumpling'];
+export function nameIdea(rng = Math.random, not = '') {
+  const pool = NAME_IDEAS.filter(n => n !== not);
+  return pool[Math.floor(rng() * pool.length)];
+}
+// What the ID card shows. Works for the living Bubby (S) and for album entries (already in this shape).
+export function idCard(S, now = Date.now()) {
+  const young = S.stage === 'seed' || S.stage === 'baby';
+  return {
+    name: S.name || 'Bubby', gen: S.gen, title: fullName(S),
+    race: (young ? S.seedRace : S.race) || null, stage: S.stage, variant: S.variant, chubby: !!S.chubby,
+    born: S.hatchedAt || S.born, day: dayNumber(S), left: null, kind: null,
+  };
+}
+// The album page for a Bubby that has left: its ID card with its last form.
+function albumAdd(S, kind, now) {
+  if (!S.album) S.album = [];
+  if (S.stage === 'seed' && !S.name) return;   // an egg that never hatched leaves no card
+  const card = { ...idCard(S, now), left: now, kind, mistakes: S.mistakes };
+  S.album.push(card);
+  if (S.album.length > 200) S.album.splice(0, S.album.length - 200);
+}
+// "Start over" in settings: the current Bubby goes into the album, then a new seed (keeps points, dex and album).
+export function startOver(S, now = Date.now()) {
+  if (!S.ended) albumAdd(S, 'reset', now);
+  return nextLife(S, 1, now);
 }
 export function healthyMax(stage) { return STAGE[stage].base ? Math.round(STAGE[stage].base * 1.6) : 99; }
 export function dayNumber(S) { return Math.floor(S.age / pace(S).day); }
@@ -294,9 +340,13 @@ export function evolve(S, to, now) {
   if (to === 'child') { S.race = rollRace(S); rare = !!RACES[S.race].rare; newRace = dexAdd(S, S.race); }
   S.stage = to; S.stageT = 0;
   S.nextPoop = rand(...STAGE[to].poop) * pace(S).kPoop;
-  if (to === 'baby') { S.awakeT = 0; S.nextTantrum = pace(S).clock ? rand(10, 25) : 55; }
+  if (to === 'baby') {
+    S.awakeT = 0; S.nextTantrum = pace(S).clock ? rand(10, 25) : 55;
+    // A newborn is hungry and wants to play: the first thing you do is feed it and play with it.
+    S.hunger = 0; S.happy = 0; S.neglectT = 0; S.starveT = 0; S.hatchedAt = now; S.eggReady = false;
+  }
   const rn = (RACES[S.race] || RACES.leafling).name, art = /^[AEIOU]/i.test(rn) ? 'an' : 'a';
-  const msg = to === 'baby' ? 'The seed sprouted! Meet Bubby the Bulb.'
+  const msg = to === 'baby' ? `The egg hatched! Meet your ${fullName(S)}.`
     : to === 'child' ? (rare ? `A rare ${rn}! Very few Bubbies become one.` : `Bubby grew into ${art} ${rn} Bud!`)
     : to === 'adult' ? `Bubby blossomed into ${art} ${rn} ${FORMS[S.variant]}!${newForm ? ' New in the Bubbydex!' : ''}`
     : 'Bubby is an Elder now. Take it easy.';
@@ -311,10 +361,12 @@ export function evolve(S, to, now) {
 }
 
 function end(S, kind, now) {
-  S.ended = { kind, age: S.age, stage: S.stage, name: fullName(S), mistakes: S.mistakes, gen: S.gen, day: dayNumber(S) };
+  S.ended = { kind, age: S.age, stage: S.stage, name: fullName(S), pet: S.name || 'Bubby', mistakes: S.mistakes, gen: S.gen, day: dayNumber(S) };
+  albumAdd(S, kind, now);
   S.call = null;
   if (kind === 'garden') earn(S, PTS.garden, 'bonus', now);
-  say(S, 'end', kind === 'garden' ? 'Bubby returned to the garden after a full life.' : 'Bubby packed up and moved away.', now, { kind });
+  const who = S.name || 'Bubby';
+  say(S, 'end', kind === 'garden' ? `${who} returned to the garden after a full life.` : `${who} packed up and moved away.`, now, { kind });
 }
 
 /* ---------- Simulation ----------
@@ -326,7 +378,13 @@ export function step(S, dt, now, live) {
   if (S.ended || S.paused) return;
   const P = pace(S), kN = P.kNeed, kG = P.kGrace;
   S.age += dt; S.stageT += dt;
-  if (S.stage === 'seed') { if (S.stageT >= P.dur.seed) evolve(S, 'baby', now); return; }
+  if (S.stage === 'seed') {
+    if (S.stageT < P.dur.seed) return;
+    // Real time: the egg only hatches while you're watching, so a newborn (which starts hungry and bored) is never alone.
+    if (live || !P.clock) evolve(S, 'baby', now);
+    else if (!S.eggReady) { S.eggReady = true; say(S, 'ready', 'Your egg is ready to hatch! Open Bubby to meet it.', now); }
+    return;
+  }
   const st = STAGE[S.stage];
   const inGame = !!(live && live.game);
   if (S.immuneT > 0) { S.immuneT = Math.max(0, S.immuneT - dt); if (S.immuneT === 0) S.immuneNote = false; }

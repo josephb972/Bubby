@@ -30,7 +30,7 @@ async function capture(state, { look = 'toy', size = [468, 600], then, el } = {}
   await sw.evaluate(async ({ state, look, dex }) => {
     const S = (await chrome.storage.local.get('bubby')).bubby, now = Date.now(), d = new Date();
     const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    Object.assign(S, { hunger: 4, happy: 4, poops: [], sick: false, disease: null, doses: 0, call: null, asleep: false, lights: true, paused: false, ended: null, mistakes: 0, discipline: 100, awakeT: 3600,
+    Object.assign(S, { name: 'Pip', hatchedAt: now - 5 * 86400e3, hunger: 4, happy: 4, poops: [], sick: false, disease: null, doses: 0, call: null, asleep: false, lights: true, paused: false, ended: null, mistakes: 0, discipline: 100, awakeT: 3600,
       race: null, dex, points: 120, inv: {}, streak: 3, streakMs: 3, lastCheckIn: today, ach: { dex6: true, dex12: true, star: true } }, state);
     Object.assign(S.cfg, { look, bed: 22 * 60, wake: 8 * 60 });
     S.lastT = now; S.lastSeenAt = now; S.seenSeq = S.evSeq; S.notifiedSeq = S.evSeq; // nothing "while you were away"

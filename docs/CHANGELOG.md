@@ -3,6 +3,43 @@
 Newest first. `extension/manifest.json` holds the current version; `node tools/version.mjs` checks that every doc agrees with it.
 Each entry says whether that version has been submitted to the stores (set with `node tools/version.mjs submitted X.Y.Z`).
 
+## 1.1.2 (17 Nov 2026): hatch, name and ID card, photo album, a hungry newborn
+Status: built and tested; **not submitted**. Package: `release/bubby-1.1.2.zip`. Android test build: `dist/bubby-android-1.1.2.apk`.
+
+Owner's requests: show the race name, start a newborn with empty hearts so you feed and play with it first, name it when the egg
+hatches with a little ID card, and keep every Bubby's card in a photo album.
+
+**Added**
+- **Naming and ID card.** When the egg hatches, "It hatched!" asks for a name (up to 14 characters, or "Surprise me"). The ID card
+  shows a photo of Bubby in its current form, its name, race and form, generation, birthday (the hatch) and age. The photo updates
+  as it grows. Time stops while you choose. A Bubby from an older version is asked for a name the next time you open it.
+- **Photo album** (★ Shop, Album tab): the current Bubby's card, then every Bubby that has left (full life, moved away or Start
+  over) with its last form, birthday and the day it left. Kept across lives, like the Bubbydex (up to 200 cards).
+- The name is used in the subtitle ("Pip · Puddle Bulb · Day 2"), the status card, the end card and notifications
+  ("Pip is hungry").
+- The race name shows from the egg on ("Puddle Seed", "Puddle Bulb").
+
+**Changed**
+- **A newborn starts hungry and bored** (hunger and happy at 0): the first things you do are feed it and play with it.
+- **The egg waits for you.** On Chill and Classic the egg is ready after a minute but only hatches while Bubby is open, so a
+  hungry newborn is never alone (and absence still never hurts). If it's ready while you're away you get one notification:
+  "Your egg is ready to hatch!". Quick pace was already paused while closed.
+- "Start over" puts the current Bubby's card in the album first.
+- Welcome page: "open Bubby to watch it hatch and give it a name".
+
+**Saves:** format `v: 2` unchanged. New fields `name`, `hatchedAt`, `eggReady` and `album` (kept across lives) come from `fresh()`
+in `migrate()`. Older hatched Bubbies have no name, so they are asked for one; their birthday is the day they were planted.
+Privacy policy updated: the name and album are stored on the device only.
+
+**Checks:** `rules-check` 137 (19 new: newborn hearts, birthday, race name, name cleaning and length, ID card, named notifications,
+album on start over and on a finished life, kept across lives, old saves asked for a name, the egg waits and sends one
+notification, an unattended life still ends after hatching), `sim-check` (every sensible player still reaches a full life; the
+simulated player names, feeds and plays with the newborn), `check-extension`, `check-v11` (an old Bubby is asked for a name),
+`check-mobile` (hatch, name, hungry newborn, album, start over).
+
+**Owner still to do:** play through a hatch on the phone and in the browser, then submit 1.1.2 (instead of 1.1.0/1.1.1 if those
+haven't gone in yet).
+
 ## 1.1.1 (17 Nov 2026): every Bubby wears its race's colours from the start
 Status: built and tested; **not submitted**. Package: `release/bubby-1.1.1.zip`.
 

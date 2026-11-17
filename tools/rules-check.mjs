@@ -1,6 +1,7 @@
 // Checks the version 1.1 rules (races, illnesses and medicine, points and the shop) without a browser.
 // Usage: node tools/rules-check.mjs
 import * as R from '../extension/core/rules.js';
+import { pickNotes } from '../extension/core/notes.js';
 
 let failed = 0, passed = 0;
 const check = (ok, what) => { if (ok) passed++; else failed++; console.log(`${ok ? 'ok  ' : 'FAIL'}  ${what}`); };
@@ -48,6 +49,37 @@ const seq = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // a fak
     check(R.COMMON_RACES.includes(old.seedRace), 'a save from before 1.1.1 gets a seed race when it loads: ' + old.seedRace);
     const life = R.nextLife(bubby('chill', 'adult', { race: 'puddle' }), 2, T0);
     check(R.COMMON_RACES.includes(life.seedRace) && life.race === null, 'a new life gets a new seed race');
+  }
+
+  // Hatching, names, ID card and album (1.1.2)
+  {
+    const H = R.fresh(1, { pace: 'chill' }, T0); H.seedRace = 'puddle';
+    R.advance(H, T0 + 90e3, { game: false, busy: false });
+    check(H.stage === 'baby' && H.hunger === 0 && H.happy === 0, 'a newborn starts hungry and bored (0 and 0)');
+    eq(H.hatchedAt > T0 && H.hatchedAt <= T0 + 90e3, true, 'the hatch time is its birthday');
+    eq(R.fullName(H), 'Puddle Bulb', 'the race name shows from the start');
+    check(/hatched! Meet your Puddle Bulb/.test(H.events.find(e => e.type === 'evolve').text), 'hatch message names the race');
+    check(R.needsName(H), 'a newborn needs a name');
+    eq(R.setName(H, '   '), false, 'an empty name is refused');
+    eq(R.cleanName('  <b>Pip</b>\u0007  the   Great and Wonderful'), 'bPip/b the Gre', 'names are cleaned and cut to 14 characters');
+    R.setName(H, 'Pip'); eq(H.name, 'Pip', 'named'); check(!R.needsName(H), '... and no longer asks');
+    const card = R.idCard(H, T0 + 90e3);
+    check(card.name === 'Pip' && card.title === 'Puddle Bulb' && card.race === 'puddle' && card.stage === 'baby' && card.born === H.hatchedAt, 'ID card: ' + JSON.stringify(card));
+    // Notifications use the name
+    const nH = { ...H, notif: { day: '', count: 0, lastAt: 0, lastKey: null }, asleep: false, call: { reason: 'hungry', t: 0 } };
+    const notes = pickNotes(nH, [], T0 + DAY);
+    check(notes.length && notes[0].title === 'Pip is hungry', 'notifications use the name: ' + (notes[0] && notes[0].title));
+    // Leaving: start over puts the card in the album; it survives the new life
+    const N = R.startOver(H, T0 + DAY);
+    check(N.stage === 'seed' && N.name === '' && N.album.length === 1 && N.album[0].name === 'Pip' && N.album[0].kind === 'reset' && N.album[0].left === T0 + DAY, 'start over: the card goes in the album');
+    const e2 = R.startOver(N, T0 + DAY); eq(e2.album.length, 1, 'an unhatched egg leaves no card');
+    // A life that ends puts its last form in the album
+    const G2 = bubby('quick', 'senior', { name: 'Mochi', race: 'emberling', variant: 'radiant', album: [] });
+    G2.stageT = 1e9; R.step(G2, 1, T0, null);
+    check(G2.ended && G2.album.length === 1 && G2.album[0].stage === 'senior' && G2.album[0].race === 'emberling' && G2.album[0].kind === 'garden', 'a finished life goes in the album with its last form');
+    check(R.nextLife(G2, 2, T0).album.length === 1, 'the album is kept across lives');
+    const old = R.migrate(JSON.parse(JSON.stringify({ ...bubby('chill', 'child'), name: undefined, album: undefined, hatchedAt: undefined })), T0);
+    check(old.name === '' && Array.isArray(old.album) && R.needsName(old), 'a Bubby from before 1.1.2 is asked for a name');
   }
 
   // Evolving: baby -> child rolls the race, adds it to the Bubbydex and pays points
@@ -164,8 +196,13 @@ const seq = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // a fak
   const Q = bubby('quick', 'child', { asleep: true, lights: true, hunger: 4, happy: 4 });
   for (let t = 0; t < 20 && !Q.sick; t++) R.step(Q, 1, T0 + t * 1000, null);
   eq(Q.disease, 'moonflu', 'on Quick a lit sleep gives Dancing Plague');
-  // A whole 10-day life with nobody there still ends exactly as before (no new way to die)
+  // Nobody there (1.1.2): the egg waits to hatch until you open Bubby, so a newborn is never left alone
   const L = R.fresh(1, { pace: 'chill' }, T0); R.advance(L, T0 + 14 * DAY);
+  check(L.stage === 'seed' && L.eggReady && !L.ended && L.mistakes === 0, 'an unattended egg waits to hatch, unharmed');
+  eq(L.events.filter(e => e.type === 'ready').length, 1, 'one "ready to hatch" event (one notification)');
+  // Once hatched, a whole life with nobody there still ends exactly as before (no new way to die)
+  R.advance(L, T0 + 14 * DAY + 1000, { game: false, busy: false }); eq(L.stage, 'baby', 'the egg hatches as soon as you look');
+  R.advance(L, T0 + 28 * DAY);
   check(L.ended && ['away', 'garden'].includes(L.ended.kind), 'an unattended life still ends: ' + (L.ended && L.ended.kind));
 }
 

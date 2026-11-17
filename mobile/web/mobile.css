@@ -106,7 +106,7 @@
 :root.mobile .app:not(.toy) .compact-wrap { display: flex; flex-direction: column; gap: 10px; }
 
 /* ---------------- Settings and Shop: full-width phone screens ---------------- */
-:root.mobile #viewSettings:not([hidden]), :root.mobile #viewShop:not([hidden]) {
+:root.mobile #viewSettings:not([hidden]), :root.mobile #viewShop:not([hidden]), :root.mobile #viewName:not([hidden]) {
   zoom: var(--uiz);
   min-height: calc(100% / var(--uiz));
   padding: calc(12px + var(--safe-t) / var(--uiz)) calc(16px + var(--safe-r)) calc(24px + var(--safe-b) / var(--uiz)) calc(16px + var(--safe-l));
@@ -115,7 +115,7 @@
 :root.mobile .app.toy .settings { padding: 0; }
 :root.mobile #viewShop .shop-body { max-height: none; overflow: visible; }
 /* The screen titles stay put while the page scrolls. */
-:root.mobile #viewSettings > .top, :root.mobile #viewShop > .top {
+:root.mobile #viewSettings > .top, :root.mobile #viewShop > .top, :root.mobile #viewName > .top {
   position: sticky; top: 0; z-index: 5;
   margin: calc(-12px - var(--safe-t) / var(--uiz)) -16px 0; padding: calc(12px + var(--safe-t) / var(--uiz)) 16px 10px;
   background: var(--mint-hi);
@@ -125,3 +125,8 @@
 :root.mobile .pace { padding-block: 6px; }
 /* With the arrows in the pad, the score sits alone in the middle of the pod's screen. */
 :root.mobile .app.toy .g-bot:not(:has(.g-btn)) { justify-content: center; }
+/* Naming a newborn: a roomier card and a big name field on a phone. */
+:root.mobile .naming .idcard { grid-template-columns: 104px 1fr; }
+:root.mobile .naming .id-photo { width: 104px; height: 104px; }
+:root.mobile .naming .id-photo canvas { width: 96px; height: 96px; }
+:root.mobile .name-row input { font-size: 19px; padding: 10px 12px; }

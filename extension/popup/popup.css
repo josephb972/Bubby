@@ -415,3 +415,45 @@ body.win.toy .app { width: 468px; } /* the fallback window shows the whole toy p
 .app.toy .pick-card small { font-size: 2.2cqw; color: #6b5d78; margin-top: .2cqw; line-height: 1.15; }
 .app.toy .pick-nav { gap: 1.6cqw; }
 .app.toy .pick-nav .back { padding: 1cqw 3cqw; }
+
+/* ================= ID card, photo album and naming (1.1.2) =================
+   A little laminated card: photo on a sky-and-grass backdrop, name, race and form, birthday. Same ink borders, cream
+   and fonts as the rest of the popup. */
+.idcard {
+  display: grid; grid-template-columns: 84px 1fr; gap: 12px; align-items: center;
+  background: var(--cream-hi); border: 2px solid var(--ink); border-radius: 14px; padding: 10px 12px 10px 10px;
+  box-shadow: 0 4px 0 var(--ink); position: relative; overflow: hidden;
+}
+.idcard::after { /* the card's coloured stripe */
+  content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 7px;
+  background: repeating-linear-gradient(180deg, var(--urgent) 0 10px, #ffd34a 10px 20px, var(--ok) 20px 30px);
+  opacity: .8;
+}
+.id-photo {
+  width: 84px; height: 84px; border: 2px solid var(--ink); border-radius: 10px; overflow: hidden;
+  display: grid; place-items: end center;
+  background: linear-gradient(180deg, #cdeefa 0 58%, #9ad67f 58% 100%);
+}
+.id-photo canvas { width: 80px; height: 80px; image-rendering: pixelated; display: block; }
+.id-info { display: flex; flex-direction: column; min-width: 0; padding-right: 8px; }
+.id-kicker { font: 400 10px/1.2 var(--font-pixel); color: var(--ink-2); text-transform: uppercase; letter-spacing: .6px; }
+.id-name { font: 600 21px/1.1 var(--font-display); color: var(--ink); overflow-wrap: anywhere; margin-top: 1px; }
+.id-title { font: 700 12.5px/1.25 var(--font-body); color: var(--ink-2); }
+.idcard dl { display: grid; grid-template-columns: auto 1fr; gap: 1px 8px; margin: 5px 0 0; font-size: 12px; line-height: 1.3; }
+.idcard dt { font: 400 11px/1.3 var(--font-pixel); color: var(--ink-2); }
+.idcard dd { margin: 0; color: var(--ink); }
+.idcard.left { background: #f7efdd; }
+.idcard.left .id-photo { filter: sepia(.25) saturate(.9); }
+.album { display: flex; flex-direction: column; gap: 10px; }
+
+.naming { gap: 10px; }
+.naming .brand p { margin: 2px 0 0; font: 400 12px/1.2 var(--font-pixel); color: var(--ink-2); }
+.name-form { display: flex; flex-direction: column; gap: 6px; }
+.name-form label { font: 600 13px/1 var(--font-pixel); color: var(--ink); }
+.name-row { display: flex; gap: 8px; align-items: stretch; }
+.name-row input {
+  flex: 1; min-width: 0; font: 600 17px var(--font-display); color: var(--ink); padding: 8px 10px;
+  border: 2px solid var(--ink); border-radius: 10px; background: #fff;
+}
+.name-row .chip { white-space: nowrap; }
+.name-go { margin-top: 4px; }

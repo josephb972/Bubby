@@ -78,11 +78,11 @@ for (const name of ['Pixel 7', 'Galaxy S9+']) {
   const { ctx, page, errors } = await phone('Pixel 7');
   // A grown, healthy Bubby that can play: a day and a half later (with the game's own rules), cured and cleaned.
   await page.evaluate(async () => {
-    const { advance } = await import('/core/rules.js');
     const S = JSON.parse(localStorage.getItem('bubby'));
     const now = Date.now();
-    S.lastT = now - 30 * 3600e3; advance(S, now);
-    Object.assign(S, { sick: false, disease: null, doses: 0, sickT: 0, sickCounted: false, sickMeter: 0, neglectT: 0, starveT: 0, litSleep: 0, call: null, poops: [], hunger: 4, happy: 2, asleep: false, lights: true, lastSeenAt: now, seenSeq: S.evSeq });
+    // (an egg waits for you to hatch it, so grow it straight to a Bud)
+    Object.assign(S, { stage: 'child', race: 'shroomling', seedRace: 'shroomling', stageT: 0, hatchedAt: now - 30 * 3600e3, weight: 10, lastT: now });
+    Object.assign(S, { name: 'Pip', sick: false, disease: null, doses: 0, sickT: 0, sickCounted: false, sickMeter: 0, neglectT: 0, starveT: 0, litSleep: 0, call: null, poops: [], hunger: 4, happy: 2, asleep: false, lights: true, lastSeenAt: now, seenSeq: S.evSeq });
     localStorage.setItem('bubby', JSON.stringify(S));
     Storage.prototype.setItem = () => {}; // keep the live page from saving over it before the reload
   });
@@ -113,6 +113,43 @@ for (const name of ['Pixel 7', 'Galaxy S9+']) {
     await page.waitForTimeout(1500);
   }
   check(!errors.length, `games: no page errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
+// Hatching (1.1.2): the egg hatches while you watch, asks for a name (its ID card), and the newborn starts hungry and bored.
+// Its card is in the album tab; starting over moves it to the photo album.
+{
+  const { ctx, page, errors } = await phone('Pixel 7');
+  const vp = page.viewportSize();
+  await page.evaluate(() => {
+    const S = JSON.parse(localStorage.getItem('bubby'));
+    S.seedRace = 'emberling'; S.stageT = 58; S.lastT = Date.now();
+    localStorage.setItem('bubby', JSON.stringify(S));
+    Storage.prototype.setItem = () => {};
+  });
+  await page.reload(); await page.waitForSelector('#app.toy');
+  check(/Emberling Seed/.test(await page.textContent('#photoSub')), 'the race name shows on the egg: ' + await page.textContent('#photoSub'));
+  await page.waitForSelector('#viewName:not([hidden])', { timeout: 10000 }).catch(() => {});
+  check(await page.isVisible('#viewName'), 'when the egg hatches, the app asks for a name');
+  check(await page.evaluate(() => document.documentElement.scrollWidth) <= vp.width + 1, 'the name screen fits the phone');
+  await page.fill('#inName', 'Ember');
+  check((await page.textContent('#nameCard .id-name')) === 'Ember' && /Emberling Bulb/.test(await page.textContent('#nameCard')), 'the ID card updates as you type, with the race');
+  if (shots) await page.screenshot({ path: join(shots, 'name.png') });
+  await page.tap('.name-go'); await page.waitForTimeout(500);
+  check(await page.isVisible('#viewMain') && /Ember · Emberling Bulb/.test(await page.textContent('#photoSub')), 'named: ' + await page.textContent('#photoSub'));
+  const st = await page.evaluate(() => JSON.parse(localStorage.getItem('bubby')));
+  check(st.name === 'Ember' && st.hunger < 0.1 && st.happy < 0.1, `the newborn starts hungry and bored (hunger ${st.hunger.toFixed(2)}, happy ${st.happy.toFixed(2)})`);
+  if (shots) await page.screenshot({ path: join(shots, 'newborn.png') });
+  await page.tap('#btnShopPhoto'); await page.tap('[data-tab="album"]'); await page.waitForTimeout(300);
+  check(/Ember/.test(await page.textContent('#shopBody .idcard')), 'the album tab shows its ID card');
+  // Start over: the card moves to the photo album
+  await page.tap('#btnShopBack'); await page.tap('#btnSettingsPhoto');
+  await page.tap('#btnReset'); await page.tap('#btnResetYes'); await page.waitForTimeout(300);
+  await page.tap('#btnShopPhoto'); await page.tap('[data-tab="album"]'); await page.waitForTimeout(300);
+  const cards = await page.locator('#shopBody .album .idcard').count();
+  check(cards === 1 && /Started over/.test(await page.textContent('#shopBody .album')), 'after starting over, its card is in the photo album');
+  if (shots) await page.screenshot({ path: join(shots, 'album.png'), fullPage: true });
+  check(!errors.length, `naming: no page errors ${errors.join(' | ')}`);
   await ctx.close();
 }
 

@@ -40,7 +40,9 @@ try {
   const cfg = (await saved()).cfg;
   check(cfg.bed === 23 * 60 && cfg.wake === 7 * 60 + 30 && cfg.bedAsked, `welcome page saves bedtime (bed ${cfg.bed}, wake ${cfg.wake})`);
 
-  // 2. Popup: time-skip buttons hidden; bubby.dev(true) shows them; Test notification always there
+  // 2. Popup: time-skip buttons hidden; bubby.dev(true) shows them; Test notification always there.
+  // Start from a hatched, named Bubby (a real egg hatches about a minute in and asks for a name, at a moment the test can't control).
+  await sw.evaluate(async () => { const s = (await chrome.storage.local.get('bubby')).bubby; Object.assign(s, { stage: 'baby', stageT: 0, name: 'Testy', hatchedAt: Date.now(), hunger: 4, happy: 4, lastT: Date.now() }); await chrome.storage.local.set({ bubby: s }); });
   const pop = await ctx.newPage();
   listen(pop, 'popup');
   await pop.setViewportSize({ width: 468, height: 600 });

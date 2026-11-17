@@ -10,13 +10,14 @@ A small virtual-pet game. Three parts (the web game shares no code or saves with
   forked) with a phone layer and a phone-shaped layout; see `mobile/README.md`. Build the test APK with
   `cd mobile && npm install && npm run apk`; check with `node tools/check-mobile.mjs`.
 
-The extension is the product that was launched. Version 1.1.1 plants every seed with a random race, so the egg and Bulb already
+The extension is the product that was launched. Version 1.1.2 hatches the egg while you watch, asks for a name (ID card),
+keeps every Bubby's card in a photo album and starts a newborn with empty hearts. Version 1.1.1 plants every seed with a random race, so the egg and Bulb already
 wear its colours. Version 1.1.0 adds races, the rare Starling reveal, the Bubbydex, named illnesses
 with matching medicine, points and the shop (design in `memory/`). The web game has the same features as a draft (its v1.3 still
 needs small-screen polish) and is not the priority. Anything else in `memory/` is still a plan.
 
 ## Version (read this first)
-- **Current version: <!-- version -->1.1.1<!-- /version -->.** `extension/manifest.json` is the single source of truth. The last version known to be submitted to the
+- **Current version: <!-- version -->1.1.2<!-- /version -->.** `extension/manifest.json` is the single source of truth. The last version known to be submitted to the
   stores is **<!-- submitted -->1.0.0<!-- /submitted -->** (confirm in the store dashboard). History: `docs/CHANGELOG.md`.
 - **Whenever there is a new version, do all of this in the same change (the owner asked for it every time):**
   1. `node tools/version.mjs bump X.Y.Z "short title"` sets the manifest and every version marker in the docs and memory and starts the changelog entry.

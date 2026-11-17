@@ -1,6 +1,6 @@
 # Bubby: browser extension
 
-Current version: **<!-- version -->1.1.1<!-- /version -->** (see `docs/CHANGELOG.md` for what changed).
+Current version: **<!-- version -->1.1.2<!-- /version -->** (see `docs/CHANGELOG.md` for what changed).
 
 Bubby is a tiny pixel pet that lives in your browser toolbar. Its face on the toolbar shows how it feels, a badge
 tells you when it needs something, and one click opens a pocket-sized version of the game.
@@ -111,6 +111,12 @@ cause a toothache), and clean poop quickly or Bubby gets sick.
 ---
 
 ## 2b. New in 1.1: races, illnesses, points and the shop
+
+**Hatching, names and the photo album (1.1.2).** The egg hatches while you watch (if it's ready while you're away, it waits
+and sends one notification). A newborn is hungry and bored, so feed it and play with it first. When it hatches you give it a
+name, which makes its **ID card**: a photo in its current form, name, race, generation and birthday. The ★ Shop's **Album**
+tab shows the card, and every Bubby that leaves (a full life, moving away or Start over) keeps its card there with its last
+form.
 
 **Races.** Every seed is planted with a random race, and its egg and Bulb wear that race's colours. When the Bulb grows into a
 Bud it shows the race's own body (any Bulb can also turn into the rare Starling instead). Each race has its own body, not just its

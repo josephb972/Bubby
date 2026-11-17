@@ -41,7 +41,7 @@ async function setState(patch) {
     const now = Date.now();
     const S = R.fresh(1, { pace: 'quick', look: 'toy', bedAsked: true }, now);
     const day = R.dayKey(now);
-    Object.assign(S, { stage: 'child', race: 'puddle', dex: ['puddle'], hunger: 3, happy: 3, lastCheckIn: day, streak: 1, quests: null, lastSeenAt: now, seenSeq: 0 }, patch);
+    Object.assign(S, { name: 'Testy', stage: 'child', race: 'puddle', dex: ['puddle'], hunger: 3, happy: 3, lastCheckIn: day, streak: 1, quests: null, lastSeenAt: now, seenSeq: 0 }, patch);
     S.cfg = { ...S.cfg, ...(patch.cfg || {}) };
     S.lastT = now;
     await chrome.storage.local.set({ bubby: S });
@@ -232,6 +232,11 @@ try {
     await chrome.storage.local.set({ bubby: old });
   });
   pop = await openPopup('upgrade');
+  // 1.1.2: a Bubby from before names were added is asked for one first
+  await pop.waitForSelector('#viewName:not([hidden])', { timeout: 3000 }).catch(() => {});
+  check(await pop.isVisible('#viewName'), 'an old Bubby is asked for a name first');
+  await pop.fill('#inName', 'Oldie'); await pop.click('.name-go'); await pop.waitForTimeout(300);
+  check((await saved()).name === 'Oldie' && await pop.isVisible('#viewMain'), 'naming it saves the name and goes back to Bubby');
   await pop.keyboard.press('s'); await pop.waitForTimeout(300);
   check(/Leafling Thistle/.test(await pop.textContent('#stName')), 'an old Bubby becomes a Leafling and keeps its form: ' + (await pop.textContent('#stName')));
   check(/Ague/.test(await pop.textContent('#stCall')), 'its ongoing sickness is now a Ague: ' + (await pop.textContent('#stCall')).trim());

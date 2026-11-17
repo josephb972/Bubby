@@ -1,6 +1,6 @@
 # Bubby for Android
 
-Current version: <!-- version -->1.1.1<!-- /version --> (the same as the extension: `android/app/build.gradle` reads
+Current version: <!-- version -->1.1.2<!-- /version --> (the same as the extension: `android/app/build.gradle` reads
 `extension/manifest.json`, and versionCode is 1.1.0 → 10100).
 
 The Android app runs the extension's game (rules, art, popup) in a native app made with
@@ -24,6 +24,7 @@ phone:
   Dragging on the garden still steers in Seed catch. The pod stays where it is; the arrows go back when the game ends.
 - **Settings and Shop:** full-width scrolling screens, larger text (scaled to the phone's width), and a title bar that
   stays on screen.
+- **Naming screen (1.1.2):** full screen like Settings, with a bigger ID card and name field; the back button can't skip it.
 - **Compact look:** scaled to the screen width and centred.
 - System bars: the app draws behind the status and navigation bars, with dark icons on the light background.
 

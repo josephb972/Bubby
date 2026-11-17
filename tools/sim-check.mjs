@@ -51,6 +51,8 @@ function life(paceId, player, { days = 20, seed } = {}) {
       // Spend ~40 seconds with the popup open: tantrums only happen while you watch.
       for (let i = 0; i < 40; i++) {
         R.advance(S, t + i * 1000, { game: false, busy: false });
+        // The egg hatches while you watch: a newborn starts hungry and bored, so name it, feed it and play.
+        if (R.needsName(S)) { R.setName(S, 'Sim'); R.doAction(S, 'meal', t + i * 1000); R.doAction(S, 'meal', t + i * 1000); R.finishGame(S, 1, { kind: 'guess', score: 4 }, t + i * 1000); R.finishGame(S, 1, { kind: 'guess', score: 4 }, t + i * 1000); games += 2; }
         if (S.call && S.call.reason === 'tantrum') R.doAction(S, 'scold', t + i * 1000);
       }
     }

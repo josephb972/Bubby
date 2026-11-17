@@ -168,10 +168,28 @@
       </div>
     </header>
     <div class="tabs" id="shopTabs" role="group" aria-label="Shop sections">
-      <button data-tab="shop" aria-pressed="true">Shop</button><button data-tab="today" aria-pressed="false">Today</button><button data-tab="goals" aria-pressed="false">Goals</button><button data-tab="dex" aria-pressed="false">Bubbydex</button>
+      <button data-tab="shop" aria-pressed="true">Shop</button><button data-tab="today" aria-pressed="false">Today</button><button data-tab="goals" aria-pressed="false">Goals</button><button data-tab="dex" aria-pressed="false">Bubbydex</button><button data-tab="album" aria-pressed="false">Album</button>
     </div>
     <p class="note shop-msg" id="shopMsg" role="status" aria-live="polite"></p>
     <div class="shop-body" id="shopBody"></div>
+  </section>
+
+  <!-- ============ Name view: the egg hatched, give Bubby a name (this makes its ID card) ============ -->
+  <section id="viewName" class="settings naming" aria-label="Name your Bubby" hidden>
+    <header class="top">
+      <div class="brand"><h1>It hatched!</h1><p>Give your Bubby a name</p></div>
+    </header>
+    <div class="idcard" id="nameCard"></div>
+    <form class="name-form" id="nameForm" autocomplete="off">
+      <label for="inName">Name</label>
+      <div class="name-row">
+        <input id="inName" type="text" maxlength="14" spellcheck="false" autocapitalize="words" enterkeyhint="done" placeholder="Pip">
+        <button type="button" class="chip" id="btnNameIdea" title="Pick a name for me">Surprise me</button>
+      </div>
+      <p class="note" id="nameMsg" role="status" aria-live="polite">This is its ID card. Its photo updates as it grows, and the card goes in your photo album when it leaves.</p>
+      <button type="submit" class="smart name-go" data-tone="ok"><span class="smart-txt"><b>Say hello</b><small>Then feed it and play with it: it’s hungry and bored</small></span></button>
+    </form>
+    <p class="note">Time stops for Bubby while you choose.</p>
   </section>
 
   <!-- ============ Settings view ============ -->
