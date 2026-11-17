@@ -2,7 +2,7 @@
 
 Works for the Chrome Web Store and Edge Add-ons. Everything here is true of the code; update it if the code changes.
 
-- **Upload:** `dist/bubby-1.0.0.zip`, made by `node tools/package.mjs`.
+- **Upload:** `release/bubby-<!-- version -->1.1.0<!-- /version -->.zip`, the current version (`node tools/package.mjs` rebuilds it into `dist/`; older versions stay in `release/`).
 - **Images:** `store/`, made by `node tools/store-images.mjs` from the real popup.
 
 ## Listing
@@ -14,7 +14,7 @@ Works for the Chrome Web Store and Edge Add-ons. Everything here is true of the 
 | Category | Lifestyle → Games (Lifestyle → Just for Fun also fits) |
 | Language | English |
 | Icon | `extension/icons/icon-128.png` |
-| Screenshots, in order | `store/screenshot-1.png` toy pod · `-2` status card · `-3` Seed catch · `-4` compact look (all 1280×800) |
+| Screenshots (refresh them for 1.1: `node tools/store-images.mjs`), in order | `store/screenshot-1.png` the toy pod with a Bubby · `-2` what Bubby needs · `-3` Seed catch · `-4` the six races and the Bubbydex · `-5` illness and medicine (all 1280×800; the store takes at most 5) |
 | Small promo tile | `store/promo-small.png` (440×280) |
 | Marquee (optional) | `store/promo-marquee.png` (1400×560) |
 
@@ -29,6 +29,20 @@ Take care of it
 • Feed it meals and snacks, play games, clean up after it, give medicine when it's sick, and turn off the lights at bedtime.
 • Scold its tantrums so it grows up well behaved.
 • How you raise it decides who it becomes: a Radiant Blossom, a Daisy Blossom or a Thistle.
+
+Collect them all
+• When the Bulb grows into a Bud it becomes one of six races, picked at random, and every race has its own body: a flower, a mossy tortoise, a water droplet, a mushroom, a flame spirit or a star. One race, the Starling, is very rare and arrives with a special reveal.
+• Fill the Bubbydex: every race in every adult form, 18 in all.
+
+When Bubby gets sick
+• Four old illnesses from history, each with its own medicine named after the old remedy: Ague, Scurvy, the Dancing Plague and The Plague.
+• Garden Tea is always free: two cups cure Ague, and it soothes the other illnesses for a while. The right medicine for each one comes from the Shop.
+
+Earn points, spend them in the Shop
+• Open Bubby each day, look after it, win games, finish daily quests and reach goals to earn points.
+• Spend them on better food, medicine and a Plague Doctor’s Posy. Points are earned by playing, never bought.
+
+Bubby is a game. The history is simplified and nothing in it is medical advice.
 
 It lives while you're away
 • Bubby keeps going even when the browser is closed. When you come back, a short card tells you what happened.

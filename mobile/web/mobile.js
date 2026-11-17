@@ -9,8 +9,8 @@
 // those notifications with Android. When the app comes back they are cancelled and the live game takes over again.
 //
 // Loaded as a module before popup.js, so `chrome` exists by the time the popup starts.
-import { advance, needKey, pace, stageName } from '../core/rules.js';
-import { NEED_COPY, DAILY_LIMIT, MIN_GAP, dayKey } from '../core/notes.js';
+import { advance, needKey, pace } from '../core/rules.js';
+import { pickNotes } from '../core/notes.js';
 
 const KEY = 'bubby';
 const Cap = window.Capacitor;
@@ -67,29 +67,16 @@ export function plan(saved, now = Date.now()) {
   const S = structuredClone(saved);
   if (!pace(S).offline) return [];
   const out = [];
-  const notif = { ...S.notif, lastKey: needKey(S) }; // what's on screen now has been seen
+  S.notif.lastKey = needKey(S); // what's on screen now has been seen
   let seq = S.evSeq;
   for (let t = now + CHECK; t <= now + HORIZON && out.length < MAX_NOTES; t += CHECK) {
     advance(S, t);
     const evs = S.events.filter(e => e.id > seq);
     seq = S.evSeq;
-    const end = evs.find(e => e.type === 'end');
-    if (end) { out.push({ at: t, title: end.text, body: `A new seed is waiting for you. Generation ${S.gen + 1} starts when you plant it.` }); break; }
-    const grew = evs.filter(e => e.type === 'evolve').pop();
-    if (grew) out.push({ at: t, title: grew.text, body: `Come and see Bubby the ${stageName(S)}.` });
-
-    const key = needKey(S);
-    if (!key) { notif.lastKey = null; continue; }
-    if (key === notif.lastKey) continue;
-    const today = dayKey(t);
-    if (notif.day !== today) { notif.day = today; notif.count = 0; }
-    const quiet = S.asleep && key !== 'sleep';
-    if (quiet || notif.count >= DAILY_LIMIT || t - (notif.lastAt || 0) < MIN_GAP) continue;
-    notif.lastKey = key; notif.lastAt = t; notif.count++;
-    const copy = NEED_COPY[key];
-    out.push({ at: t, title: copy.title, body: key === 'sick' && S.doses > 1 ? `It needs ${S.doses} doses of medicine.` : copy.message });
+    for (const n of pickNotes(S, evs, t)) out.push({ at: t, title: n.title, body: n.message });
+    if (S.ended) break;
   }
-  return out;
+  return out.slice(0, MAX_NOTES);
 }
 
 async function clearAll() {

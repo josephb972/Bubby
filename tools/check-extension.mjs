@@ -2,6 +2,7 @@
 // Usage: node tools/check-extension.mjs   (needs Playwright with Chromium)
 import { createRequire } from 'node:module';
 import { join, dirname } from 'node:path';
+import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 const { chromium } = createRequire(import.meta.url)('playwright');
@@ -24,7 +25,8 @@ let [sw] = ctx.serviceWorkers();
 if (!sw) sw = await ctx.waitForEvent('serviceworker');
 const base = `chrome-extension://${new URL(sw.url()).host}/`;
 try {
-  check((await sw.evaluate(() => chrome.runtime.getManifest().version)) === '1.0.0', 'manifest version 1.0.0');
+  const want = JSON.parse(await readFile(join(ext, 'manifest.json'), 'utf8')).version;
+  check((await sw.evaluate(() => chrome.runtime.getManifest().version)) === want, `the loaded extension is version ${want}, as in manifest.json`);
 
   // 1. Welcome page asks for bedtime and saves it as soon as a time changes
   const welcome = ctx.pages().find(p => p.url().includes('welcome'))

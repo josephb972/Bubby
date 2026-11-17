@@ -341,3 +341,77 @@ body.win.toy .app { width: 468px; } /* the fallback window shows the whole toy p
 .hot:focus-visible { outline: 3px solid var(--urgent); outline-offset: 2px; }
 .hot.power { width: 28px; height: 28px; margin: -14px 0 0 -14px; }
 .hot.power[aria-pressed="true"] { background: rgba(255, 211, 74, .55); box-shadow: 0 0 0 2px rgba(217, 165, 32, .8); }
+
+/* ================= Version 1.1: points, medicine picker, shop, Bubbydex ================= */
+.pill, .pshop {
+  position: relative; display: flex; align-items: center; gap: 4px; height: 34px; padding: 0 11px; border-radius: 999px;
+  font: 600 14px/1 var(--font-display); color: var(--ink);
+  background: var(--cream-hi); border: 2px solid var(--mint-line); border-bottom-width: 4px;
+}
+.pill:active, .pshop:active { border-bottom-width: 2px; transform: translateY(2px); }
+.pill > span, .pshop > span { color: var(--warn-d); font-size: 13px; }
+.pill b, .pshop b { font-variant-numeric: tabular-nums; }
+.pshop { position: absolute; right: 14px; top: 14px; height: 32px; background: #f4f5f7; border-color: #7f878f; }
+.gain { position: absolute; right: 8px; top: -6px; font: 700 12px/1 var(--font-pixel); font-style: normal; color: var(--urgent-d); opacity: 0; pointer-events: none; }
+.gain.show { animation: gain 1.7s ease-out; }
+@keyframes gain { 0% { opacity: 0; transform: translateY(6px); } 15% { opacity: 1; transform: none; } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(-8px); } }
+
+.ov-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: auto; }
+.pick-hint { margin: 0; font-size: 11px; color: var(--ink-2); }
+.pick-note { cursor: default; }
+.pick-card { display: flex; align-items: center; gap: 10px; background: #fff; border: 2px solid var(--ink); border-bottom-width: 4px; border-radius: 8px; padding: 8px 10px; }
+.pick-card.rec { background: #fff6c8; }
+.pick-card canvas { width: 44px; height: 44px; flex: none; }
+.pick-card b { display: block; font-size: 14px; font-weight: 600; line-height: 1.15; }
+.pick-card small { display: block; font-size: 10.5px; color: var(--ink-2); line-height: 1.25; margin-top: 2px; }
+.pick-card .tag { color: #b8860b; font-weight: 600; }
+.pick-nav { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; }
+.pick-nav .back { align-self: stretch; }
+.pick-nav .back:disabled { opacity: .4; }
+
+/* Shop view (also holds today's quests, goals and the Bubbydex) */
+.shop .brand p { font: 400 12px/1.2 var(--font-pixel); color: var(--ink-2); }
+.tabs { display: flex; gap: 3px; padding: 3px; background: rgba(255, 252, 243, .75); border: 2px solid rgba(94, 151, 140, .55); border-radius: 999px; }
+.tabs button { flex: 1; border: 0; background: transparent; border-radius: 999px; padding: 6px 2px; font: 600 12.5px/1 var(--font-display); color: var(--ink-2); }
+.tabs button[aria-pressed="true"] { background: var(--ink); color: var(--cream-hi); }
+.shop-msg { min-height: 1.4em; margin: 0; }
+.shop-body { display: flex; flex-direction: column; gap: 12px; overflow: auto; max-height: 430px; padding-right: 2px; user-select: text; }
+.shop-sec { display: flex; flex-direction: column; gap: 6px; }
+.shop-sec h3 { margin: 0; font: 600 14px/1.2 var(--font-pixel); color: var(--ink); }
+.shop-sec h3 small { font: 400 12px/1 var(--font-body); color: var(--ink-2); margin-left: 4px; }
+.shop-row, .quest, .dex-row { background: rgba(255, 252, 243, .85); border: 2px solid rgba(94, 151, 140, .55); border-radius: 11px; }
+.shop-row { display: grid; grid-template-columns: 40px 1fr auto; gap: 9px; align-items: center; padding: 6px 9px; }
+.shop-row canvas { width: 36px; height: 36px; }
+.shop-row b { font: 600 13.5px/1.2 var(--font-display); }
+.shop-row small { display: block; font-size: 11.5px; color: var(--ink-2); line-height: 1.3; }
+.shop-row small.lore { font-style: italic; margin-top: 2px; }
+.buy { border: 2px solid var(--ink); border-bottom-width: 4px; background: var(--ink); color: var(--cream-hi); border-radius: 999px; padding: 6px 11px; font: 700 12.5px/1 var(--font-body); min-width: 64px; font-variant-numeric: tabular-nums; }
+.buy:active { border-bottom-width: 2px; transform: translateY(2px); }
+.buy:disabled { opacity: .4; cursor: default; transform: none; }
+.quest { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; padding: 7px 10px; font-size: 12.5px; }
+.quest small { color: var(--ink-2); white-space: nowrap; font-size: 11.5px; }
+.quest.done { opacity: .7; }
+.earn { margin: 0; padding-left: 18px; display: grid; gap: 5px; font-size: 12px; color: var(--ink-2); line-height: 1.35; }
+.earn b { color: var(--ink); }
+.dex-row { display: grid; grid-template-columns: 78px repeat(3, 1fr); gap: 6px; align-items: center; padding: 6px 9px; }
+.dex-row > b { font: 600 13px/1.2 var(--font-display); }
+.dex-row > b small { display: block; font: 400 11px/1.3 var(--font-body); color: var(--ink-2); margin-top: 2px; }
+.dex-row.rare > b { color: #7a56d6; }
+.dex-row figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 1px; text-align: center; }
+.dex-row canvas { width: 44px; height: 44px; }
+.dex-row figcaption { font: 600 10.5px/1.1 var(--font-pixel); }
+.dex-row figure.locked canvas { filter: brightness(0); opacity: .2; }
+
+/* On the toy pod's small screen (only about 36cqw tall) the picker and the Feed menu are kept compact */
+.app.toy .ov-actions { gap: 1.4cqw; }
+.app.toy .ov-actions .back { padding: 1cqw 1.6cqw; }
+.app.toy #ovFeed .opts { flex: 0 0 auto; }
+.app.toy #ovFeed .opt { padding: .8cqw 1cqw; }
+.app.toy #ovPick { gap: .9cqw; padding: 1.3cqw 2.2cqw; }
+.app.toy .pick-note { margin: 0; font-size: 2.5cqw; padding: .5cqw 1.2cqw; }
+.app.toy .pick-card { gap: 2cqw; border: .5cqw solid var(--ink); border-radius: 1.4cqw; padding: .9cqw 1.6cqw; box-shadow: 0 .5cqw 0 var(--ink); }
+.app.toy .pick-card canvas { width: 9cqw; height: 9cqw; }
+.app.toy .pick-card b { font-size: 3cqw; font-weight: 400; line-height: 1.1; }
+.app.toy .pick-card small { font-size: 2.2cqw; color: #6b5d78; margin-top: .2cqw; line-height: 1.15; }
+.app.toy .pick-nav { gap: 1.6cqw; }
+.app.toy .pick-nav .back { padding: 1cqw 3cqw; }

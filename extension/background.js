@@ -1,13 +1,13 @@
 // Bubby's background worker.
 // Wakes once a minute, brings Bubby up to date, updates the toolbar icon and badge, and sends a
 // notification when Bubby really needs you. While the popup is open, the popup runs the game instead.
-import { advance, doAction, pace, needKey, stageName } from './core/rules.js';
+import { advance, doAction, pace, needKey, fullName, DISEASES, ITEMS, RACES, catchDisease, dexAdd } from './core/rules.js';
 import { loadState, saveState, updateAction } from './core/store.js';
 import * as store from './core/store.js';
-import { NEED_COPY, DAILY_LIMIT, MIN_GAP, dayKey } from './core/notes.js';
+import { pickNotes } from './core/notes.js';
 
 const ALARM = 'bubby-tick';
-const NOTE = 'bubby-need';
+const NOTE = 'bubby-need'; // the id pickNotes gives need notifications
 let popupPort = null;
 
 // Run state changes one at a time so two wake-ups never overwrite each other.
@@ -55,25 +55,7 @@ async function maybeNotify(S) {
   const newEvents = S.events.filter(e => e.id > S.notifiedSeq);
   S.notifiedSeq = S.evSeq;
   if (!S.cfg.notify || !pace(S).offline) return;
-
-  // Milestones always get through.
-  const end = newEvents.find(e => e.type === 'end');
-  if (end) { await show('bubby-life', { title: end.text, message: `A new seed is waiting for you. Generation ${S.gen + 1} starts when you plant it.`, buttons: [['open', 'Open Bubby']] }, S); return; }
-  const grew = newEvents.filter(e => e.type === 'evolve').pop();
-  if (grew) await show('bubby-life', { title: grew.text, message: `Come and see Bubby the ${stageName(S)}.`, buttons: [['open', 'Open Bubby']] }, S);
-
-  // Needs: one notification per new need, with a daily limit, a minimum gap, and quiet hours while Bubby sleeps.
-  const key = needKey(S);
-  if (!key) { S.notif.lastKey = null; return; }
-  if (key === S.notif.lastKey) return;
-  const today = dayKey(now);
-  if (S.notif.day !== today) { S.notif.day = today; S.notif.count = 0; }
-  const quiet = S.asleep && key !== 'sleep';
-  if (quiet || S.notif.count >= DAILY_LIMIT || now - (S.notif.lastAt || 0) < MIN_GAP) return;
-  S.notif.lastKey = key; S.notif.lastAt = now; S.notif.count++;
-  const copy = { ...NEED_COPY[key] };
-  if (key === 'sick' && S.doses > 1) copy.message = `It needs ${S.doses} doses of medicine.`;
-  await show(NOTE, copy, S);
+  for (const n of pickNotes(S, newEvents, now)) await show(n.id, n, S);
 }
 
 // Fallback window (outer size, so it includes the title bar and borders): the toy pod is 468×600, the compact look
@@ -153,6 +135,12 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
 //   bubby.act('meal')       do what a notification button does (meal, snack, clean, med, lights)
 //   bubby.dev(true)         show the time-skip test buttons in Settings → Try it out (bubby.dev(false) hides them)
 //   bubby.state()           show the saved state
+//   Test helpers (close the popup first; it owns the state while it is open):
+//   bubby.give(100)         add 100 points
+//   bubby.stock()           put 3 of every shop item in the bag
+//   bubby.nextRace('starling')   the next Bulb that grows into a Bud becomes this race (mossback, puddle, shroomling, emberling, starling)
+//   bubby.look('puddle', 'adult', 'radiant')   show a race at any stage and care tier (and add it to the Bubbydex)
+//   bubby.sick('blight')    make Bubby ill (sporecough = Ague, itchymoss = Scurvy, moonflu = Dancing Plague, blight = The Plague)
 self.bubby = {
   dev: (on = true) => setCfg({ dev: !!on }).then(() => `Time-skip buttons ${on ? 'shown' : 'hidden'}. Reopen the popup's settings.`),
   tick: () => serial(tick),
@@ -167,5 +155,16 @@ self.bubby = {
   }),
   act: a => serial(() => quickAction(a)),
   state: () => loadState(),
+  give: n => serial(async () => { const S = await loadState(); S.points += +n || 0; await saveState(S); return S.points; }),
+  stock: () => serial(async () => { const S = await loadState(); for (const id of Object.keys(ITEMS)) S.inv[id] = 3; await saveState(S); return S.inv; }),
+  nextRace: id => serial(async () => { if (!RACES[id]) return `Unknown race. Try: ${Object.keys(RACES).join(', ')}`; const S = await loadState(); S.nextRace = id; await saveState(S); return `The next Bud will be a ${RACES[id].name}.`; }),
+  look: (race, stage = 'adult', variant = 'radiant') => serial(async () => {
+    if (!RACES[race]) return `Unknown race. Try: ${Object.keys(RACES).join(', ')}`;
+    const S = await loadState();
+    Object.assign(S, { race, stage, variant: stage === 'child' ? null : variant, ended: null, stageT: 0 });
+    dexAdd(S, race); if (S.variant) dexAdd(S, `${race}:${S.variant}`);
+    await saveState(S); await updateAction(S); return fullName(S);
+  }),
+  sick: id => serial(async () => { if (!DISEASES[id]) return `Unknown illness. Try: ${Object.keys(DISEASES).join(', ')}`; const S = await loadState(); S.sick = false; catchDisease(S, id); await saveState(S); await updateAction(S); return DISEASES[id].name; }),
   iconError: () => store.lastIconError,
 };

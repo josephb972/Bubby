@@ -1,7 +1,7 @@
 // Bubby popup: runs the game live while open, then hands back to the background worker.
 import * as Rules from '../core/rules.js';
 import { loadState, saveState, updateAction } from '../core/store.js';
-import { art, SW, GROUND } from '../art/sprites.js';
+import { art, petSprite, SW, GROUND } from '../art/sprites.js';
 import { drawScene, catchY } from './scene.js';
 
 const { clamp, rand } = Rules;
@@ -62,6 +62,7 @@ function beep(f, d = .08, vol = .05) {
 const later = (ms, fn) => setTimeout(fn, ms);
 function beepCall() { beep(1046, .07); later(130, () => beep(1046, .07)); later(260, () => beep(1318, .1)); }
 function beepUp() { beep(523, .1); later(120, () => beep(659, .1)); later(240, () => beep(784, .16)); }
+function rareFanfare() { beepUp(); [988, 1175, 1319, 1568, 1760, 2093].forEach((f, i) => later(700 + i * 150, () => beep(f, .18, .06))); }
 
 /* ---------------- Toast ---------------- */
 let toastT = 0;
@@ -74,7 +75,7 @@ function toast(msg) {
 }
 
 /* ---------------- Overlays ---------------- */
-const OVS = { feed: '#ovFeed', play: '#ovPlay', game: '#ovGame', away: '#ovAway', status: '#ovStatus' };
+const OVS = { feed: '#ovFeed', pick: '#ovPick', play: '#ovPlay', game: '#ovGame', away: '#ovAway', status: '#ovStatus' };
 function showOv(name) {
   for (const k in OVS) $(OVS[k]).hidden = k !== name;
   OV = name;
@@ -89,7 +90,7 @@ const ANIM = {
   'eat-meal': { type: 'eat', food: 'meal', dur: 1.6 },
   'eat-snack': { type: 'eat', food: 'snack', dur: 1.6 },
   no: { type: 'no', dur: .9 }, scold: { type: 'scold', dur: 1.1 },
-  clean: { type: 'clean', dur: 1.2 }, med: { type: 'med', dur: 1.1 }, sparkle: { type: 'sparkle', dur: .7 },
+  clean: { type: 'clean', dur: 1.2 }, med: { type: 'med', dur: 1.1 }, sparkle: { type: 'sparkle', dur: .7 }, happy: { type: 'happy', dur: .9 },
 };
 
 function runAction(a) {
@@ -107,18 +108,30 @@ function runAction(a) {
     if (no) return toast(no);
     if (a === 'play' && S.sick) { A = { ...ANIM.no, t: 0 }; return toast('Bubby feels too sick to play'); }
     if (a === 'play') $('#bestCatch').textContent = S.stats.bestCatch ? `Best: ${S.stats.bestCatch} pts` : '20s · gold = 3';
+    if (a === 'feed') renderPantry();
     return showOv(a);
   }
-  const poopsBefore = S.poops.length, wasSick = S.sick;
-  const r = Rules.doAction(S, a, Date.now());
-  toast(r.msg);
-  if (r.anim) {
-    A = { ...ANIM[r.anim], t: 0, poops: poopsBefore };
-    if (r.anim === 'clean') { beep(520, .08); later(90, () => beep(440, .1)); }
-    if (r.anim === 'med' && wasSick && !S.sick) A.after = () => { A = { type: 'happy', t: 0, dur: .8 }; };
+  if (a === 'med') {   // the cabinet: Garden Tea plus whatever medicine you bought
+    const no = Rules.canCare(S);
+    if (no) return toast(no);
+    return openPick('med');
   }
+  const poopsBefore = S.poops.length;
+  const r = Rules.doAction(S, a, Date.now());
   if (a === 'lights') beep(S.lights ? 660 : 330, .08);
-  shownSeq = S.evSeq; // e.g. the toothache toast already came from the action message
+  applyResult(r, poopsBefore);
+}
+// Show what an action did: its message plus any points news, then play its animation.
+function applyResult(r, poopsBefore = S.poops.length) {
+  const news = S.events.filter(e => e.id > shownSeq && (e.type === 'pts' || e.type === 'info')).map(e => e.text);
+  toast([r.msg, ...news].filter(Boolean).join(' · '));
+  if (r.anim) {
+    const base = r.anim === 'eat' ? { type: 'eat', food: r.food, dur: 1.6 } : ANIM[r.anim];
+    A = { ...base, t: 0, poops: poopsBefore };
+    if (r.anim === 'clean') { beep(520, .08); later(90, () => beep(440, .1)); }
+    if (r.cured) A.after = () => { A = { type: 'happy', t: 0, dur: .8 }; };
+  }
+  shownSeq = S.evSeq; // e.g. the sickness toast already came from the action message
   persist();
   renderUI();
 }
@@ -134,9 +147,7 @@ function togglePause() {
 
 function replant() {
   const gen = S.ended ? S.ended.gen + 1 : S.gen + 1;
-  const keep = { stats: { bestCatch: S.stats.bestCatch || 0 } };
-  S = Rules.fresh(gen, S.cfg, Date.now());
-  S.stats.bestCatch = keep.stats.bestCatch;
+  S = Rules.nextLife(S, gen, Date.now());
   A = null; G = null; shownSeq = S.evSeq;
   $('#ovEnd').hidden = true; closeOverlays();
   toast('A new seed is planted');
@@ -153,8 +164,9 @@ function startGame(kind) {
   else G = { type: 'guess', round: 1, score: 0, phase: 'guess', look: 0, t: 0, last: false };
   showOv('game'); $('#ovGame').classList.toggle('catch', G.type === 'catch'); renderGame();
 }
-function endGame(gain, msg) {
-  Rules.finishGame(S, gain);
+function endGame(gain, msg, res) {
+  const pts = Rules.finishGame(S, gain, res, Date.now());
+  if (pts) msg += ` · +${pts} pts`;
   if (gain) A = { type: 'happy', t: 0, dur: 1 };
   G = null; closeOverlays();
   toast(msg); persist(); renderUI();
@@ -192,8 +204,7 @@ function updateCatch(rdt) {
     if (g.t > 1.8) {
       const gain = g.score >= 20 ? 2 : g.score >= 10 ? 1 : 0;
       const best = g.score > (S.stats.bestCatch || 0);
-      if (best) S.stats.bestCatch = g.score;
-      endGame(gain, (best ? 'New best! ' : '') + (gain ? `+${gain} happy, -1g` : 'Good exercise anyway. -1g'));
+      endGame(gain, (best ? 'New best! ' : '') + (gain ? `+${gain} happy, -1g` : 'Good exercise anyway. -1g'), { kind: 'catch', score: g.score });
     }
     return;
   }
@@ -236,7 +247,7 @@ function updateGame(rdt) {
     renderGame();
   } else if (G.phase === 'done' && G.t > 1.6) {
     const win = G.score >= 3;
-    endGame(win ? 1 : 0, win ? 'Bubby had fun! +1 happy, -1g' : 'Good exercise anyway. -1g');
+    endGame(win ? 1 : 0, win ? 'Bubby had fun! +1 happy, -1g' : 'Good exercise anyway. -1g', { kind: 'guess', score: G.score });
   }
 }
 
@@ -251,19 +262,24 @@ function updatePet(rdt) {
 }
 
 /* ---------------- Events from the simulation ---------------- */
+// A Bulb that becomes a rare race gets the long special reveal; every other growth is the short one.
+function evolveAnim(e) { return { type: 'evolve', t: 0, dur: e.rare ? 4.4 : 1.8, from: e.from, to: e.to, race: e.race, rare: !!e.rare }; }
 function handleEvents() {
   if (S.evSeq <= shownSeq) return;
+  const msgs = [];   // one toast for the whole batch, so a later event never wipes out an earlier one
+  const say = t => { if (t) msgs.push(t); };
   for (const e of S.events) {
     if (e.id <= shownSeq) continue;
     switch (e.type) {
-      case 'evolve': G = null; closeOverlays(); A = { type: 'evolve', t: 0, dur: 1.8, from: e.from }; beepUp(); toast(e.text); break;
+      case 'evolve': G = null; closeOverlays(); A = evolveAnim(e); if (e.rare) rareFanfare(); else beepUp(); say(e.text); break;
       case 'end': G = null; A = null; closeOverlays(); showEnd(); break;
-      case 'call': beepCall(); if (e.reason !== 'tantrum') toast(e.text); break;
+      case 'call': beepCall(); if (e.reason !== 'tantrum') say(e.text); break;
       case 'poop': beep(200, .08); break;
-      case 'sick': beep(330, .12); later(140, () => beep(260, .18)); toast(e.text); break;
-      default: toast(e.text);
+      case 'sick': beep(330, .12); later(140, () => beep(260, .18)); say(e.text); break;
+      default: say(e.text);
     }
   }
+  if (msgs.length) toast(msgs.slice(-2).join(' · '));
   shownSeq = S.evSeq;
   persist();
 }
@@ -344,9 +360,13 @@ function applyLook() {
   const slot = $(toy ? '#toySlot' : '#compactSlot');
   if ($('#sceneWrap').parentElement !== slot) slot.appendChild($('#sceneWrap'));
 }
+function sickLine() {
+  const d = Rules.DISEASES[S.disease] || Rules.DISEASES.sporecough, n = Rules.dosesLeft(S);
+  return `${d.name} (${d.sev}). Needs ${Rules.ITEMS[d.med].name}: ${n} dose${n === 1 ? '' : 's'}.`;
+}
 function renderStatus() {
   if (OV !== 'status') return;
-  $('#stName').textContent = Rules.stageName(S);
+  $('#stName').textContent = Rules.fullName(S);
   const hm = Rules.healthyMax(S.stage);
   $('#stWeight').textContent = S.stage === 'seed' ? '–' : `${S.weight}g ${S.weight > hm ? '(heavy)' : '(healthy)'}`;
   hearts($('#stHunger'), S.stage === 'seed' ? 4 : S.hunger, 'Hunger');
@@ -356,7 +376,7 @@ function renderStatus() {
   let msg, ok = false;
   if (S.stage === 'seed') { msg = 'The seed is about to sprout.'; ok = true; }
   else if (S.call) msg = Rules.CALL_TEXT[S.call.reason];
-  else if (S.sick) msg = `Bubby is sick. ${S.doses} dose${S.doses > 1 ? 's' : ''} of medicine needed.`;
+  else if (S.sick) msg = sickLine();
   else if (S.poops.length) msg = 'There is poop to clean up.';
   else if (S.asleep) { msg = 'Bubby is sleeping soundly.'; ok = true; }
   else if (S.hunger <= 1) msg = 'Bubby is getting hungry.';
@@ -369,7 +389,7 @@ function renderStatus() {
     const why = {
       meal: S.hunger <= 0 ? 'Bubby is starving!' : 'Bubby is getting hungry.',
       clean: 'There is poop to clean up.',
-      med: `Bubby is sick. ${S.doses} dose${S.doses > 1 ? 's' : ''} needed.`,
+      med: sickLine(),
       play: S.happy <= 0 ? 'Bubby feels lonely.' : 'Bubby could use some fun.',
       lights: S.asleep ? 'Bubby fell asleep with the lights on.' : 'It\u2019s dark, but Bubby is awake.',
     }[need.act];
@@ -390,7 +410,8 @@ let lastSmart = '';
 function renderUI() {
   if (!S) return;
   const P = Rules.pace(S);
-  $('#sub').textContent = `Gen ${S.gen} · ${S.ended ? 'New seed' : Rules.stageName(S)} · Day ${Rules.dayNumber(S)}`;
+  $('#sub').textContent = `Gen ${S.gen} · ${S.ended ? 'New seed' : Rules.fullName(S)} · Day ${Rules.dayNumber(S)}`;
+  renderPoints();
   const low = n => n <= 1 && S.stage !== 'seed' && !S.ended;
   $('#mHunger').parentElement.classList.toggle('low', low(hearts($('#mHunger'), S.stage === 'seed' ? 4 : S.hunger, 'Hunger')));
   $('#mHappy').parentElement.classList.toggle('low', low(hearts($('#mHappy'), S.stage === 'seed' ? 4 : S.happy, 'Happy')));
@@ -440,6 +461,189 @@ function renderUI() {
   $('#photoFoot').textContent = foot.split(' \u00b7 ').join('\n');
 }
 
+/* ---------------- Points ---------------- */
+let lastPts = null;
+function renderPoints() {
+  $$('[data-pts]').forEach(e => { e.textContent = S.points; });
+  const sp = $('#shopPts'); if (sp) sp.textContent = `★ ${S.points} point${S.points === 1 ? '' : 's'}`;
+  if (lastPts !== null && S.points > lastPts) {
+    const n = S.points - lastPts;
+    $$('[data-gain]').forEach(g => { g.textContent = `+${n}`; g.classList.remove('show'); void g.offsetWidth; g.classList.add('show'); });
+  }
+  lastPts = S.points;
+}
+
+/* ---------------- Medicine cabinet and pantry: one item at a time on the small screen ---------------- */
+let PICK = { mode: 'med', ids: [], i: 0 };
+function iconCanvas(id) {
+  const c = document.createElement('canvas'); c.width = c.height = 16; drawIcon(c, id);
+  return c;
+}
+function openPick(mode) {
+  const ids = Rules.pickIds(S, mode);
+  if (!ids.length) return;
+  // Start on the medicine that fits the illness
+  const best = mode === 'med' && S.sick ? ids.indexOf(Rules.bestMed(S)) : -1;
+  PICK = { mode, ids, i: Math.max(0, best) };
+  showOv('pick'); renderPick();
+}
+function renderPick() {
+  const ids = PICK.ids = Rules.pickIds(S, PICK.mode);
+  if (!ids.length) { closeOverlays(); renderPantry(); return; }
+  PICK.i = ((PICK.i % ids.length) + ids.length) % ids.length;
+  const id = ids[PICK.i], isTea = id === 'tea', it = isTea ? Rules.TEA : Rules.ITEMS[id], med = PICK.mode === 'med';
+  const d = S.sick ? (Rules.DISEASES[S.disease] || Rules.DISEASES.sporecough) : null, note = $('#pickNote');
+  $('#pickTitle').textContent = med ? 'Medicine' : 'Pantry';
+  $('#pickCount').textContent = `${PICK.i + 1} of ${ids.length}`;
+  if (med) {
+    const n = d ? Rules.dosesLeft(S) : 0;
+    note.textContent = d ? `${d.name}: needs ${Rules.ITEMS[d.med].name} ×${n}` : S.immuneT > 0 ? 'Healthy and protected.' : 'Bubby is healthy.';
+    note.classList.toggle('ok', !d);
+  }
+  note.hidden = !med;
+  const rec = med && d && (id === d.med || id === 'elixir' || (isTea && d.med === 'syrup'));
+  const card = $('#pickCard'); card.textContent = '';
+  card.classList.toggle('rec', !!rec);
+  card.appendChild(iconCanvas(id));
+  const info = document.createElement('div');
+  info.innerHTML = `<b>${it.name}${isTea ? '' : ` ×${S.inv[id]}`}${rec ? ' <span class="tag">★</span>' : ''}</b><small>${shortDesc(id, it)}</small>`;
+  card.appendChild(info);
+  $('#pickUse').textContent = med ? (id === 'shield' ? 'Drink' : 'Give') : 'Feed';
+  $$('#ovPick [data-pick]').forEach(b => { b.disabled = ids.length < 2; });
+}
+// One short line for the small screen (the shop has the full text)
+function shortDesc(id, it) {
+  if (id === 'tea') return `Free. ${Rules.DISEASES[Rules.TEA.cures[0]].name}, 2 cups`;
+  if (it.kind === 'food') return [it.hunger && `+${it.hunger} hunger`, it.happy && `+${it.happy} happy`].filter(Boolean).join(' ');
+  if (id === 'elixir') return 'Cures any illness';
+  if (id === 'shield') return 'Protects from illness';
+  return `Cures ${Rules.DISEASES[it.cures[0]].name}`;
+}
+function usePick() {
+  const id = PICK.ids[PICK.i];
+  if (!id || G) return;
+  closeOverlays();
+  const poops = S.poops.length;
+  applyResult(Rules.useItem(S, id, Date.now()), poops);
+}
+function renderPantry() {
+  const ids = Rules.pickIds(S, 'food'), b = $('#btnPantry');
+  b.hidden = !ids.length;
+  b.textContent = `Pantry (${ids.reduce((a, id) => a + (S.inv[id] || 0), 0)})`;
+  $('#pantryHint').hidden = ids.length > 0;
+}
+
+/* ---------------- Shop, daily quests, goals and the Bubbydex ---------------- */
+let SHOP_TAB = 'shop';
+function openShop(tab) {
+  if (G) return toast('Finish the game first');
+  closeOverlays();
+  if (tab) SHOP_TAB = tab;
+  $('#shopMsg').textContent = '';
+  renderShop();
+  $('#viewMain').hidden = true; $('#viewSettings').hidden = true; $('#viewShop').hidden = false;
+  $('#btnShopBack').focus();
+}
+function closeShop() { $('#viewShop').hidden = true; $('#viewMain').hidden = false; renderUI(); }
+function copyCanvas(src) {
+  const c = document.createElement('canvas'); c.width = src.width; c.height = src.height;
+  c.getContext('2d').drawImage(src, 0, 0);
+  return c;
+}
+function shopRow(id) {
+  const it = Rules.ITEMS[id], n = S.inv[id] || 0, row = document.createElement('div');
+  row.className = 'shop-row';
+  row.appendChild(iconCanvas(id));
+  const info = document.createElement('div');
+  const lore = Rules.loreOf(id);
+  info.innerHTML = `<b>${it.name}</b><small>${it.desc}${n ? ` · you have ${n}` : ''}</small>${lore ? `<small class="lore">${lore}</small>` : ''}`;
+  row.appendChild(info);
+  const b = document.createElement('button');
+  b.className = 'buy'; b.dataset.buy = id;
+  b.textContent = n >= Rules.MAX_STACK ? 'Full' : `${it.price} pts`;
+  b.disabled = n >= Rules.MAX_STACK || S.points < it.price;
+  b.setAttribute('aria-label', `Buy ${it.name} for ${it.price} points`);
+  row.appendChild(b);
+  return row;
+}
+function renderShop() {
+  renderPoints();
+  $$('#shopTabs [data-tab]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tab === SHOP_TAB)));
+  const body = $('#shopBody'); body.textContent = '';
+  const P = Rules.PTS, C = Rules.CAPS;
+  if (SHOP_TAB === 'shop') {
+    for (const [title, ids] of [['Better food', Rules.foodIds()], ['Medicine', Rules.medIds().filter(k => k !== 'shield')], ['Protection', ['shield']]]) {
+      const sec = document.createElement('section'); sec.className = 'shop-sec';
+      sec.innerHTML = `<h3>${title}</h3>`;
+      ids.forEach(id => sec.appendChild(shopRow(id)));
+      body.appendChild(sec);
+    }
+    const tip = document.createElement('p'); tip.className = 'note';
+    tip.textContent = `Every illness needs its own medicine. Garden Tea is free and always in the cabinet, but it only cures ${Rules.DISEASES.sporecough.name}, slowly. Points are earned by caring for Bubby and are never sold. ${Rules.DISCLAIMER}`;
+    body.appendChild(tip);
+  } else if (SHOP_TAB === 'today') {
+    const Q = Rules.ensureQuests(S, Date.now()), d = Rules.ptsDay(S, Date.now());
+    const sec = document.createElement('section'); sec.className = 'shop-sec';
+    sec.innerHTML = `<h3>Daily quests</h3>`;
+    for (const q of Q.list) {
+      const r = document.createElement('div'); r.className = 'quest' + (q.done ? ' done' : '');
+      r.innerHTML = `<span>${q.done ? '✓ ' : ''}${q.text}</span><small>${q.have}/${q.need} · +${P.quest} pts</small>`;
+      sec.appendChild(r);
+    }
+    const bonus = document.createElement('p'); bonus.className = 'note';
+    bonus.textContent = `Finish all three for +${P.questAll} bonus points. New quests every day.`;
+    sec.appendChild(bonus);
+    body.appendChild(sec);
+    const ways = document.createElement('section'); ways.className = 'shop-sec';
+    ways.innerHTML = `<h3>Ways to earn</h3><ul class="earn">
+      <li><b>Open Bubby each day:</b> ${P.daily} pts, plus ${P.streakStep} per streak day (up to ${P.daily + P.streakStep * P.streakSteps}). Streak bonuses at 3, 7, 14 and 30 days. Streak now: ${S.streak || 0}.</li>
+      <li><b>Care</b> (${d.care}/${C.care} today): meal or snack ${P.meal}, shop food ${P.premium}, each poop cleaned ${P.clean}, a good night's sleep ${P.sleep}, scolding a tantrum ${P.scold}.</li>
+      <li><b>Games</b> (${d.game}/${C.game} today): Which way? ${P.guess} per right guess, +${P.guessPerfect} for 5/5. Seed catch: 1 per ${P.catchDiv} score, +${P.catchBest} for a new best.</li>
+      <li><b>Curing an illness:</b> ${P.cure} pts.</li>
+      <li><b>Growing up:</b> Bud ${P.bud}, Blossom ${P.blossom}, Elder ${P.elder}, a full life ${P.garden}. A rare Starling ${P.rare}.</li>
+      <li><b>Bubbydex:</b> a new race ${P.dexRace}, a new adult form ${P.dexForm}.</li>
+      <li><b>Goals:</b> one-time rewards, see the Goals tab.</li></ul>`;
+    body.appendChild(ways);
+  } else if (SHOP_TAB === 'goals') {
+    const sec = document.createElement('section'); sec.className = 'shop-sec';
+    const done = Rules.GOALS.filter(g => S.ach[g.id]).length;
+    sec.innerHTML = `<h3>Goals <small>${done} / ${Rules.GOALS.length}</small></h3>`;
+    for (const g of Rules.GOALS) {
+      const got = !!S.ach[g.id], v = Math.min(g.of, g.val(S)), r = document.createElement('div');
+      r.className = 'quest' + (got ? ' done' : '');
+      r.innerHTML = `<span>${got ? '✓ ' : ''}<b>${g.name}</b> · ${g.desc}</span><small>${got ? 'Done' : `${v}/${g.of}`} · +${g.pts} pts</small>`;
+      sec.appendChild(r);
+    }
+    body.appendChild(sec);
+  } else {
+    const sec = document.createElement('section'); sec.className = 'shop-sec';
+    sec.innerHTML = `<h3>Bubbydex <small>${Rules.dexFound(S)} / ${Rules.DEX_TOTAL}</small></h3>
+      <p class="note">When a Bulb grows into a Bud it becomes a random race. One race is very rare (${Math.round(Rules.rareChance(S) * 100)}% for your next Bud, and it grows with every miss). Raise each race to every adult form to fill the dex.</p>`;
+    for (const [id, r] of Object.entries(Rules.RACES)) {
+      const seen = S.dex.includes(id), row = document.createElement('div');
+      row.className = 'dex-row' + (r.rare ? ' rare' : '');
+      row.innerHTML = `<b>${seen ? r.name + (r.rare ? ' ★' : '') : '???'}<small>${r.rare ? 'Very rare' : seen ? 'Race found' : 'Not found yet'}</small></b>`;
+      for (const [v, vn] of Rules.TIERS) {
+        const got = S.dex.includes(`${id}:${v}`), f = document.createElement('figure');
+        f.className = got ? '' : 'locked';
+        f.appendChild(copyCanvas(petSprite('adult', { variant: v, race: id, mood: 'normal' })));
+        f.insertAdjacentHTML('beforeend', `<figcaption>${got ? vn : '?'}</figcaption>`);
+        row.appendChild(f);
+      }
+      sec.appendChild(row);
+    }
+    body.appendChild(sec);
+  }
+}
+function buyItem(id) {
+  const r = Rules.buy(S, id, Date.now());
+  const news = S.events.filter(e => e.id > shownSeq && e.type === 'pts').map(e => e.text);
+  $('#shopMsg').textContent = [r.msg, ...news].join(' ');
+  shownSeq = S.evSeq;
+  if (r.ok) beep(988, .06);
+  persist(); renderShop();
+}
+
 /* ---------------- Settings ---------------- */
 function toMin(v) { const [h, m] = v.split(':').map(Number); return h * 60 + m; }
 function renderSettings() {
@@ -481,6 +685,10 @@ function wire() {
   $('#viewMain').addEventListener('click', e => {
     const t = e.target;
     const act = t.closest('[data-act]'); if (act) return runAction(act.dataset.act);
+    const pk = t.closest('[data-pick]'); if (pk) { PICK.i += +pk.dataset.pick; return renderPick(); }
+    if (t.closest('[data-use]')) return usePick();
+    if (t.closest('[data-pantry]')) return openPick('food');
+    if (t.closest('[data-shop]')) return openShop('shop');
     if (t.closest('[data-close]')) return closeOverlays();
     const d = t.closest('[data-do]'); if (d && d.id !== 'smart') return runAction(d.dataset.do);
     const g = t.closest('[data-g]'); if (g) return guess(+g.dataset.g);
@@ -490,6 +698,11 @@ function wire() {
   $('#btnPause').addEventListener('click', () => runAction('pause'));
   $('#btnSettings').addEventListener('click', openSettings);
   $('#btnSettingsPhoto').addEventListener('click', openSettings);
+  $('#btnShop').addEventListener('click', () => openShop());
+  $('#btnShopPhoto').addEventListener('click', () => openShop());
+  $('#btnShopBack').addEventListener('click', closeShop);
+  $('#shopTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) { SHOP_TAB = b.dataset.tab; $('#shopMsg').textContent = ''; renderShop(); } });
+  $('#shopBody').addEventListener('click', e => { const b = e.target.closest('[data-buy]'); if (b) buyItem(b.dataset.buy); });
   $('#stCall').addEventListener('click', () => { const a = $('#stCall').dataset.need; closeOverlays(); if (a) runAction(a); });
   $('#looks').addEventListener('change', e => { if (e.target.name === 'look') { S.cfg.look = e.target.value; applyLook(); persist(); } });
   $('#btnBack').addEventListener('click', closeSettings);
@@ -516,7 +729,7 @@ function wire() {
       $('#resetBox').innerHTML = '<button class="chip danger" id="btnResetYes">Yes, lose this Bubby</button><button class="chip" id="btnResetNo">Keep Bubby</button>';
       $('#btnResetNo').focus();
     } else if (id === 'btnResetYes') {
-      S = Rules.fresh(1, S.cfg, Date.now()); A = null; G = null; shownSeq = S.evSeq;
+      S = Rules.nextLife(S, 1, Date.now()); A = null; G = null; shownSeq = S.evSeq;
       persist(); closeSettings(); toast('A new seed is planted');
     } else if (id === 'btnResetNo') resetBox();
   });
@@ -526,7 +739,10 @@ function wire() {
   document.addEventListener('keydown', e => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (!$('#viewSettings').hidden) { if (e.key === 'Escape') { e.preventDefault(); closeSettings(); } return; }
+    if (!$('#viewShop').hidden) { if (e.key === 'Escape') { e.preventDefault(); closeShop(); } return; }
     const k = e.key.toLowerCase();
+    if (k === 'b') { e.preventDefault(); return openShop(); }
+    if (OV === 'pick' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); PICK.i += e.key === 'ArrowLeft' ? -1 : 1; return renderPick(); }
     if (G && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
       e.preventDefault();
       if (G.type === 'catch') { G.hold = e.key === 'ArrowLeft' ? -1 : 1; G.target = null; } else guess(e.key === 'ArrowLeft' ? -1 : 1);
@@ -577,7 +793,7 @@ function frame(nowP) {
   const blinkOn = !!S.call && !S.ended && ((nowP / 1000 * 2.5) | 0) % 2 === 0;
   if (blinkOn !== prevBlink) { prevBlink = blinkOn; const t = $('.tile[data-act="attn"]'); if (t) t.classList.toggle('alert', blinkOn); }
   uiT += rdt; saveT += rdt;
-  if (uiT > .25) { uiT = 0; renderUI(); }
+  if (uiT > .25) { uiT = 0; Rules.checkGoals(S, Date.now()); renderUI(); }
   if (saveT > 1.5) { saveT = 0; persist(); }
   requestAnimationFrame(frame);
 }
@@ -587,7 +803,10 @@ async function boot() {
   const now = Date.now();
   const seenBefore = S.seenSeq || 0, lastSeen = S.lastSeenAt || 0;
   Rules.advance(S, now); // catch up on the time Bubby spent alone
+  const ci = Rules.checkIn(S, now); // opening Bubby on a new day pays points and keeps the streak
+  Rules.checkGoals(S, now);
   shownSeq = S.evSeq;
+  const ciText = !ci.newDay ? '' : `${ci.gift ? 'Bubby missed you! Daily gift: +1 heart and ' : 'Daily bonus: '}+${ci.daily} pts. Streak: ${S.streak} day${S.streak === 1 ? '' : 's'}${ci.mile ? `. ${ci.mile}-day bonus +${ci.milePts}!` : ''}`;
 
   const a = art();
   HEART = { full: a.HEART_FULL.toDataURL(), empty: a.HEART_EMPTY.toDataURL() };
@@ -599,12 +818,24 @@ async function boot() {
 
   const away = S.events.filter(e => e.id > seenBefore);
   if (S.ended) showEnd();
-  else if (!lastSeen && S.stage === 'seed') toast('A seed! It sprouts in a minute');
+  else if (!lastSeen && S.stage === 'seed') toast(`A seed! It sprouts in a minute. ${ciText}`.trim());
   else if (away.length && (!lastSeen || now - lastSeen > 2 * 60 * 1000)) {
-    showAway(away, now - (lastSeen || S.born || now));
-    const grew = away.filter(e => e.type === 'evolve').pop();
-    if (grew) A = { type: 'evolve', t: 0, dur: 1.8, from: grew.from };
-  }
+    const goAway = () => showAway(away, now - (lastSeen || S.born || now));
+    const rareAway = away.filter(e => e.type === 'evolve' && e.rare).pop();
+    if (rareAway) {
+      // The reveal first (the away card would cover it), then the summary
+      A = { ...evolveAnim(rareAway), after: goAway };
+      toast(rareAway.text + (ciText ? ' · ' + ciText : ''));
+    } else {
+      goAway();
+      const grew = away.filter(e => e.type === 'evolve').pop();
+      if (grew) A = evolveAnim(grew);
+      if (ciText) toast(ciText);
+    }
+  } else if (ciText && lastSeen) toast(ciText);
+  // A rare reveal always plays, even when Bubby grew up only a minute after you closed it (no away card then)
+  const rareNews = away.filter(e => e.type === 'evolve' && e.rare).pop();
+  if (rareNews && !A && !S.ended) { A = evolveAnim(rareNews); toast(rareNews.text); }
   persist();
   connect();
   requestAnimationFrame(t => { lastFrame = t; frame(t); });

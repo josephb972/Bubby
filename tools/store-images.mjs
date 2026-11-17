@@ -1,6 +1,6 @@
 // Store images from the real extension: screenshots of the actual popup, nothing redrawn.
 // Usage: node tools/store-images.mjs   (needs Playwright with Chromium) → store/
-//   screenshot-1..4.png 1280×800 · promo-small.png 440×280 · promo-marquee.png 1400×560
+//   screenshot-1..5.png 1280×800 · promo-small.png 440×280 · promo-marquee.png 1400×560
 import { createRequire } from 'node:module';
 import { mkdir, readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
@@ -23,14 +23,19 @@ if (!sw) sw = await ctx.waitForEvent('serviceworker');
 const base = `chrome-extension://${new URL(sw.url()).host}/`;
 await sw.evaluate(async () => { for (let i = 0; i < 50 && !(await chrome.storage.local.get('bubby')).bubby; i++) await new Promise(r => setTimeout(r, 100)); });
 
-async function capture(state, { look = 'toy', size = [468, 600], then } = {}) {
-  await sw.evaluate(async ({ state, look }) => {
-    const S = (await chrome.storage.local.get('bubby')).bubby, now = Date.now();
-    Object.assign(S, { hunger: 4, happy: 4, poops: [], sick: false, call: null, asleep: false, lights: true, paused: false, ended: null, mistakes: 0, discipline: 100, awakeT: 3600 }, state);
+// A collector's Bubbydex: every race found, 14 of the 18 adult forms
+const races = ['leafling', 'mossback', 'puddle', 'shroomling', 'emberling', 'starling'];
+const dex = [...races, ...races.flatMap(r => [`${r}:radiant`, `${r}:daisy`]), 'leafling:thistle', 'puddle:thistle'];
+async function capture(state, { look = 'toy', size = [468, 600], then, el } = {}) {
+  await sw.evaluate(async ({ state, look, dex }) => {
+    const S = (await chrome.storage.local.get('bubby')).bubby, now = Date.now(), d = new Date();
+    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    Object.assign(S, { hunger: 4, happy: 4, poops: [], sick: false, disease: null, doses: 0, call: null, asleep: false, lights: true, paused: false, ended: null, mistakes: 0, discipline: 100, awakeT: 3600,
+      race: null, dex, points: 120, inv: {}, streak: 3, streakMs: 3, lastCheckIn: today, ach: { dex6: true, dex12: true, star: true } }, state);
     Object.assign(S.cfg, { look, bed: 22 * 60, wake: 8 * 60 });
     S.lastT = now; S.lastSeenAt = now; S.seenSeq = S.evSeq; S.notifiedSeq = S.evSeq; // nothing "while you were away"
     await chrome.storage.local.set({ bubby: S });
-  }, { state, look });
+  }, { state, look, dex });
   const p = await ctx.newPage();
   await p.setViewportSize({ width: size[0], height: size[1] });
   await p.goto(base + 'popup/popup.html');
@@ -40,29 +45,37 @@ async function capture(state, { look = 'toy', size = [468, 600], then } = {}) {
   if (then) await then(p);
   await p.evaluate(() => document.activeElement && document.activeElement.blur());
   await p.waitForTimeout(100);
-  const png = await p.locator(look === 'toy' ? '.pdev' : '#app').screenshot();
+  const png = await p.locator(el || (look === 'toy' ? '.pdev' : '#app')).screenshot();
   await p.close();
   return 'data:image/png;base64,' + png.toString('base64');
 }
 
 const bud = { stage: 'child', weight: 12, age: 2 * 86400, stageT: 3600 };
 const img = {
-  blossom: await capture({ stage: 'adult', variant: 'radiant', weight: 24, age: 5 * 86400, stageT: 3600 }),
-  status: await capture({ ...bud, hunger: 1, happy: 3, call: { reason: 'hungry', t: 0, counted: false } }, { then: p => p.keyboard.press('s') }),
-  game: await capture(bud, { then: async p => {
+  blossom: await capture({ stage: 'adult', variant: 'radiant', race: 'emberling', weight: 24, age: 5 * 86400, stageT: 3600 }),
+  status: await capture({ ...bud, race: 'shroomling', hunger: 1, happy: 3, call: { reason: 'hungry', t: 0, counted: false } }, { then: p => p.keyboard.press('s') }),
+  game: await capture({ ...bud, race: 'puddle' }, { then: async p => {
     await p.keyboard.press('p'); await p.waitForTimeout(200); await p.keyboard.press('2');
     await p.keyboard.down('ArrowRight'); await p.waitForTimeout(900); await p.keyboard.up('ArrowRight');
     await p.keyboard.down('ArrowLeft'); await p.waitForTimeout(1400); await p.keyboard.up('ArrowLeft');
     await p.waitForTimeout(1200);
   } }),
-  compact: await capture({ stage: 'baby', weight: 6, age: 5 * 3600, stageT: 3600, hunger: 3, happy: 2 }, { look: 'compact', size: [360, 600] }),
+  star: await capture({ stage: 'adult', variant: 'radiant', race: 'starling', weight: 22, age: 5 * 86400, stageT: 3600 }),
+  dex: await capture({ stage: 'adult', variant: 'radiant', race: 'starling', weight: 22, age: 5 * 86400, stageT: 3600 }, { el: '#viewShop', size: [468, 900], then: async p => { await p.keyboard.press('b'); await p.click('[data-tab="dex"]'); await p.addStyleTag({ content: '.shop-body{max-height:none!important;overflow:visible!important}' }); await p.waitForTimeout(400); } }),
+  cabinet: await capture({ ...bud, race: 'mossback', sick: true, disease: 'itchymoss', doses: 2, sickT: 60, inv: { salve: 2, syrup: 1 } }, { then: p => p.keyboard.press('m') }),
 };
 const page0 = await ctx.newPage();
 await page0.goto(base + 'welcome/welcome.html');
-img.bulb = await page0.evaluate(async () => {
+// The logo: the egg (seed) with no background, cropped to its outline, 14 screen pixels per sprite pixel.
+img.egg = await page0.evaluate(async () => {
   const { petSprite } = await import('/art/sprites.js');
-  const c = document.createElement('canvas'); c.width = c.height = 384;
-  const x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(petSprite('baby', { mood: 'happy' }), 0, 0, 384, 384);
+  const spr = petSprite('seed', {});
+  const d = spr.getContext('2d').getImageData(0, 0, 48, 48).data;
+  let x0 = 48, y0 = 48, x1 = -1, y1 = -1;
+  for (let y = 0; y < 48; y++) for (let x = 0; x < 48; x++) if (d[(y * 48 + x) * 4 + 3]) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+  const bw = x1 - x0 + 1, bh = y1 - y0 + 1, k = 14;
+  const c = document.createElement('canvas'); c.width = bw * k; c.height = bh * k;
+  const x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(spr, x0, y0, bw, bh, 0, 0, bw * k, bh * k);
   return c.toDataURL();
 });
 await ctx.close();
@@ -96,11 +109,12 @@ const shot = (title, line, src) => `<div class="page"><h1>${title}</h1><p>${line
 await render('screenshot-1.png', 1280, 800, shot('A tiny pixel pet for your <em>toolbar</em>', 'Feed it, play with it, clean up after it, and watch it grow.', img.blossom));
 await render('screenshot-2.png', 1280, 800, shot('See what Bubby <em>needs</em>', 'Hearts, weight and discipline, plus one button that does what it needs now.', img.status));
 await render('screenshot-3.png', 1280, 800, shot('Play <em>Seed catch</em>', 'Catch falling seeds for 20 seconds. Gold seeds are worth 3, pebbles cost 2.', img.game));
-await render('screenshot-4.png', 1280, 800, `<div class="page"><h1>Prefer it simple? Try the <em>compact</em> look</h1><p>Bigger hearts, one big "what to do now" button, and every action one click away.</p>
-  <div class="row"><img class="pod" style="width:450px;height:auto" src="${img.compact}"></div></div>`);
+await render('screenshot-4.png', 1280, 800, `<div class="page"><h1>Six kinds of Bubby to <em>collect</em></h1><p>A flower, a tortoise, a droplet, a mushroom, a flame, and one very rare star. Fill the Bubbydex.</p>
+  <div class="row"><img class="pod" src="${img.star}"><img class="pod" style="height:600px;width:auto" src="${img.dex}"></div></div>`);
+await render('screenshot-5.png', 1280, 800, shot('Old illnesses, old <em>remedies</em>', 'Ague, Scurvy, the Dancing Plague and The Plague. Earn points, then buy the right medicine.', img.cabinet));
 const promo = (w, h, s, t, l) => `<div style="height:100%;display:flex;align-items:center;justify-content:center;gap:${w * .03}px">
-  <img class="pix" src="${img.bulb}" style="width:${s}px;height:${s}px"><div><h1 style="font-size:${t}px;text-align:left">Bub<em>by</em></h1>
+  <img class="pix" src="${img.egg}" style="width:${s}px;height:auto"><div><h1 style="font-size:${t}px;text-align:left">Bub<em>by</em></h1>
   <p style="font-size:${l}px;text-align:left">A tiny pixel pet<br>for your toolbar</p></div></div>`;
-await render('promo-small.png', 440, 280, promo(440, 280, 192, 64, 22));
-await render('promo-marquee.png', 1400, 560, promo(1400, 560, 384, 128, 40));
+await render('promo-small.png', 440, 280, promo(440, 280, 180, 64, 22));      // egg at 6 screen pixels per sprite pixel
+await render('promo-marquee.png', 1400, 560, promo(1400, 560, 420, 128, 40)); // 14 per sprite pixel
 await browser.close();

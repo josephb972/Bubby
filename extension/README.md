@@ -1,5 +1,7 @@
 # Bubby: browser extension
 
+Current version: **<!-- version -->1.1.0<!-- /version -->** (see `docs/CHANGELOG.md` for what changed).
+
 Bubby is a tiny pixel pet that lives in your browser toolbar. Its face on the toolbar shows how it feels, a badge
 tells you when it needs something, and one click opens a pocket-sized version of the game.
 
@@ -107,6 +109,39 @@ it's acting out, so press **Scold**. Scolding a well-behaved Bubby only upsets i
 cause a toothache), and clean poop quickly or Bubby gets sick.
 
 ---
+
+## 2b. New in 1.1: races, illnesses, points and the shop
+
+**Races.** When the Bulb grows into a Bud it becomes one of six races, picked at random, and each has its own body, not just its
+own colours: the sprouting **Leafling** (a flower when grown), the mossy tortoise **Mossback**, the water droplet **Puddle**, the
+mushroom **Shroomling**, the flame spirit **Emberling**, and the very rare star **Starling**, which arrives with a special reveal. How you raise it still decides
+the adult form (Radiant, Daisy or Thistle). The **Bubbydex** (★ button, then the Bubbydex tab) shows the 18 forms you have
+found. If a rare race has not turned up, the chance grows a little with every Bubby that is not one.
+
+**Illness and medicine.** Sickness now has the names of old diseases that once swept medieval towns, drawn as cartoon sniffles,
+and each needs its own medicine, named after the old remedy. *Bubby is a game: the history is simplified and none of it is medical advice.*
+
+| Illness | Usually comes from | Medicine | Doses |
+|---|---|---|---|
+| Ague (mild) | a dirty garden | Cinchona Bark, or **Garden Tea** (free, 2 cups) | 1 |
+| Scurvy | too many sweets, extra weight, sometimes a dirty garden | Lime Juice | 2 |
+| Dancing Plague | sleeping with the lights on while you watch | Valerian Root | 2 |
+| The Plague (severe) | neglect | Four Thieves Vinegar | 3 |
+
+The **Medicine** button opens the cabinet: browse with ◀ ▶ and press *Give*. It starts on the medicine that fits.
+A wrong medicine is refused and not used up. Garden Tea is always there and only soothes the other illnesses for a while,
+so there is always time to earn the right medicine. The **Theriac** cures anything at once and the **Plague Doctor’s Posy**
+keeps Bubby well for a while. Notification buttons give the best medicine you have.
+
+**Points and the shop.** The ★ button (top right, or press **B**) shows your points and opens the shop. Points come from
+opening Bubby each day (and keeping a streak), caring for it, winning games, daily quests, goals, growing up and the
+Bubbydex. Care and game points stop at a daily limit so they cannot be farmed. Spend them on better food (Garden Salad,
+Sunberry Pie, Hearty Stew, Golden Feast), medicine and the Plague Doctor’s Posy. Points are earned by playing and are never sold.
+
+Nothing new punishes you for being away: illness still only comes from the same causes as before, and lights left on
+overnight never make Bubby ill while you are not looking.
+
+How to test all of this, and how to publish an update: `docs/TEST-AND-PUBLISH.md`.
 
 ## 3. A 10-minute test drive
 
