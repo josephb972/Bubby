@@ -18,6 +18,10 @@ Status: built and tested; **not yet confirmed as submitted**. Package: `release/
   Points are earned, never sold.
 - A medicine picker and pantry sized for the pod's small screen; the toolbar tooltip and notifications name the illness.
 - Test helpers in the service worker console: `give`, `stock`, `nextRace`, `look`, `sick`.
+- **Android app (test build, `mobile/`)**: the same game on a phone, with a phone layout (full-width toy pod, bottom sheet
+  with hearts and the "what Bubby needs" button, full-screen Settings and Shop), notifications planned ahead with the
+  same rules and wording (`core/notes.js`, now shared with the background worker), and the egg as its icon. Not in a
+  store: installed from `dist/bubby-android-1.1.0.apk`.
 
 **Changed**
 - Illness only comes from the same causes as before; lights left on overnight never cause illness while you are away.

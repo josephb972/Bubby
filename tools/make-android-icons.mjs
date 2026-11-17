@@ -1,5 +1,5 @@
-// Renders the Android app's launcher icons and splash screens from Bubby's pixel art (same art as the extension
-// icons). Usage: node tools/make-android-icons.mjs   (needs Playwright with Chromium; run after `npx cap add android`)
+// Renders the Android app's launcher icons and splash screens from Bubby's pixel art (the egg logo, like the
+// extension icons). Usage: node tools/make-android-icons.mjs   (needs Playwright with Chromium; run after `npx cap add android`)
 import { createRequire } from 'node:module';
 import { readFile, writeFile, readdir } from 'node:fs/promises';
 import { extname, join, dirname } from 'node:path';
@@ -30,9 +30,18 @@ await page.route('http://bubby.local/**', async route => {
 await page.goto('http://bubby.local/');
 const out = await page.evaluate(async ({ DENSITY, splashes, MINT, LINE, SKY }) => {
   const { petSprite } = await import('/art/sprites.js');
-  const spr = petSprite('baby', { mood: 'happy' }); // 48×48 pixel art
+  // The logo is the egg (Bubby as a seed), like the extension's icons. Cropped to its pixels, drawn at the largest
+  // whole-pixel scale that fits, so the pixel art stays crisp.
+  const spr = petSprite('seed', {});
+  const d = spr.getContext('2d').getImageData(0, 0, 48, 48).data;
+  let x0 = 48, y0 = 48, x1 = -1, y1 = -1;
+  for (let y = 0; y < 48; y++) for (let x = 0; x < 48; x++) if (d[(y * 48 + x) * 4 + 3]) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+  const bw = x1 - x0 + 1, bh = y1 - y0 + 1;
   const canvas = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.imageSmoothingEnabled = false; return [c, x]; };
-  const pet = (x, cx, cy, size) => { const w = Math.round(size); x.drawImage(spr, Math.round(cx - w / 2), Math.round(cy - w / 2), w, w); };
+  const pet = (x, cx, cy, size) => {
+    const k = Math.max(1, Math.floor(size / Math.max(bw, bh)));
+    x.drawImage(spr, x0, y0, bw, bh, Math.round(cx - bw * k / 2), Math.round(cy - bh * k / 2), bw * k, bh * k);
+  };
   const files = {};
   for (const [name, k] of Object.entries(DENSITY)) {
     // Legacy icons (48dp): Bubby on a mint disc, like the extension's 128px icon.
@@ -43,12 +52,12 @@ const out = await page.evaluate(async ({ DENSITY, splashes, MINT, LINE, SKY }) =
       if (round) x.arc(s / 2, s / 2, s / 2 - x.lineWidth, 0, Math.PI * 2);
       else x.roundRect(x.lineWidth, x.lineWidth, s - 2 * x.lineWidth, s - 2 * x.lineWidth, s * 0.22);
       x.fill(); x.stroke();
-      pet(x, s / 2, s / 2 - s / 32, s * 0.86);
+      pet(x, s / 2, s / 2, s * 0.62);
       files[`mipmap-${name}/ic_launcher${round ? '_round' : ''}.png`] = c.toDataURL('image/png');
     }
     // Adaptive icon foreground (108dp, the middle 66dp is always visible); the background colour is mint.
     const s = Math.round(108 * k); const [c, x] = canvas(s, s);
-    pet(x, s / 2, s / 2 - s / 54, s * 0.62);
+    pet(x, s / 2, s / 2, s * 0.44);
     files[`mipmap-${name}/ic_launcher_foreground.png`] = c.toDataURL('image/png');
   }
   for (const [file, [w, h]] of splashes) {
@@ -57,7 +66,7 @@ const out = await page.evaluate(async ({ DENSITY, splashes, MINT, LINE, SKY }) =
     const m = Math.min(w, h);
     x.fillStyle = MINT; x.strokeStyle = LINE; x.lineWidth = m / 90;
     x.beginPath(); x.arc(w / 2, h / 2, m * 0.2, 0, Math.PI * 2); x.fill(); x.stroke();
-    pet(x, w / 2, h / 2 - m * 0.01, Math.floor(m * 0.34 / 48) * 48 || m * 0.34);
+    pet(x, w / 2, h / 2, m * 0.26);
     files[file] = c.toDataURL('image/png');
   }
   return files;

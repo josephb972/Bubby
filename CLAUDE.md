@@ -46,7 +46,8 @@ needs small-screen polish) and is not the priority. Anything else in `memory/` i
   loads the extension into Chromium) and `node tools/check-v11.mjs [screenshot-folder]` (the 1.1 features, both looks).
 - Keep existing saves working: saved state is versioned; update `migrate()` in `core/rules.js` when the format changes.
 - Don't change Bubby's existing UI design (layouts, colours, fonts, artwork) unless the owner asks. New screens (shop and so on)
-  must match it.
+  must match it. The Android app's phone layout (owner's request, Nov 2026) lives only in `mobile/web/mobile.css` and reuses
+  the popup's own elements; keep the extension's `popup.css` as it is for the app's sake.
 - Store package: `node tools/package.mjs` → `dist/` (gitignored). `release/` keeps the exact zip of every version built for the stores (the changelog says which were submitted). Store images: `node tools/store-images.mjs` →
   `store/` (committed; re-run after visible changes). Listing and privacy text: `docs/STORE-LISTING.md`, `docs/PRIVACY.md`.
 - Time-skip buttons are hidden test tools: `bubby.dev(true)` in the service worker console shows them.

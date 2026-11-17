@@ -13,7 +13,7 @@ const at = p => join(repo, p);
 const MANIFEST = 'extension/manifest.json', CHANGELOG = 'docs/CHANGELOG.md';
 // Files that must carry a version marker (the project instructions, the docs and the memory)
 const WITH_VERSION = ['CLAUDE.md', 'extension/README.md', 'docs/LAUNCH-CHECKLIST.md', 'docs/STORE-LISTING.md', 'docs/TEST-AND-PUBLISH.md',
-  'memory/bubby-update-roadmap.md', 'memory/bubby-points-and-shop.md'];
+  'memory/bubby-update-roadmap.md', 'memory/bubby-points-and-shop.md', 'mobile/README.md'];
 const WITH_SUBMITTED = ['CLAUDE.md', 'docs/TEST-AND-PUBLISH.md'];
 const V = /<!-- version -->(.*?)<!-- \/version -->/g, SUB = /<!-- submitted -->(.*?)<!-- \/submitted -->/g;
 const semver = /^\d+\.\d+\.\d+$/;

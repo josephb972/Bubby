@@ -163,31 +163,37 @@ if (AppPlugin) {
   });
 }
 
-/* ---------------- Fit the toy pod to the phone screen ---------------- */
-// The popup is designed at a fixed size (468×600 toy pod, 360 wide compact look and settings). Scale it as a whole
-// (CSS zoom, see mobile.css) to fit the screen, without changing the design.
+/* ---------------- Phone layout ---------------- */
+// mobile.css lays out the screens; this works out two scales:
+//   --uiz   text and controls (the popup is designed 360 wide; phones are 360–480 wide)
+//   --podz  the toy pod artwork (468×600): as big as fits between the status bar and the bottom sheet
 function fit() {
-  const body = document.body, app = document.getElementById('app');
-  if (!body || !app) return;
-  const toy = body.classList.contains('toy');
-  const main = document.getElementById('viewSettings').hidden;
-  const cs = getComputedStyle(document.documentElement);
-  const px = n => parseFloat(cs.getPropertyValue(n)) || 0;
-  const availW = innerWidth - px('--safe-l') - px('--safe-r') - 12;
-  const availH = innerHeight - px('--safe-t') - px('--safe-b') - 12;
-  let z = availW / (toy ? 468 : 360);
-  if (toy && main) z = Math.min(z, availH / 600); // the whole pod on screen at once
-  z = Math.max(0.5, Math.min(z, 3));
-  const root = document.documentElement, v = z.toFixed(4);
-  if (root.style.getPropertyValue('--fit') !== v) root.style.setProperty('--fit', v);
-  root.classList.toggle('scrolls', !(toy && main));
+  const root = document.documentElement, app = document.getElementById('app');
+  if (!app) return;
+  const set = (k, v) => { if (root.style.getPropertyValue(k) !== v) root.style.setProperty(k, v); };
+  const main = !document.getElementById('viewMain').hidden;
+  root.classList.toggle('scrolls', !(main && app.classList.contains('toy')));
+  set('--uiz', Math.min(1.25, Math.max(1, innerWidth / 360)).toFixed(4));
+  const wrap = document.getElementById('photoWrap');
+  if (main && app.classList.contains('toy') && wrap.clientHeight) {
+    const cs = getComputedStyle(wrap);
+    const w = wrap.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const h = wrap.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    set('--podz', Math.max(0.4, Math.min(w / 468, h / 600, 1.6)).toFixed(4));
+  }
 }
 addEventListener('resize', fit);
 addEventListener('DOMContentLoaded', () => {
   fit();
   const watch = new MutationObserver(fit);
-  watch.observe(document.body, { attributes: true, attributeFilter: ['class'] });
-  watch.observe(document.getElementById('viewSettings'), { attributes: true, attributeFilter: ['hidden'] });
+  watch.observe(document.getElementById('app'), { attributes: true, attributeFilter: ['class'] });
+  for (const id of ['viewMain', 'viewSettings', 'viewShop']) watch.observe(document.getElementById(id), { attributes: true, attributeFilter: ['hidden'] });
   watch.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] }); // safe-area sizes arrive late
+  new ResizeObserver(fit).observe(document.getElementById('compactWrap')); // the sheet's height decides the pod's
+  // The suggestion button's keyboard hint becomes a touch one.
+  const hint = document.getElementById('smartHint');
+  const touchHint = () => { if (hint.textContent === 'Press Enter') hint.textContent = 'Tap to do it'; };
+  new MutationObserver(touchHint).observe(hint, { childList: true, characterData: true, subtree: true });
+  touchHint();
   setupNotifications();
 });

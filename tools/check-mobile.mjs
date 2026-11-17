@@ -54,6 +54,19 @@ for (const name of ['Pixel 7', 'Galaxy S9+']) {
   check(w <= vp.width + 1, `${name}: settings have no sideways scroll`);
   if (shots) await page.screenshot({ path: join(shots, `${name.replace(/\W/g, '')}-settings.png`), fullPage: true });
 
+  await page.tap('#btnBack');
+  await page.waitForTimeout(200);
+  await page.tap('#btnShopPhoto');
+  await page.waitForTimeout(300);
+  check(await page.locator('#viewShop').isVisible(), `${name}: shop opens`);
+  check(await page.evaluate(() => document.documentElement.scrollWidth) <= vp.width + 1, `${name}: shop has no sideways scroll`);
+  if (shots) await page.screenshot({ path: join(shots, `${name.replace(/\W/g, '')}-shop.png`), fullPage: true });
+  await page.tap('#btnShopBack');
+  await page.waitForTimeout(300);
+  const sheet = await page.locator('#compactWrap').boundingBox();
+  const pod = await page.locator('.pdev').boundingBox();
+  check(sheet && pod && pod.y + pod.height <= sheet.y + 2 && sheet.y + sheet.height <= vp.height + 1, `${name}: pod and bottom sheet don't overlap and the sheet is on screen`);
+
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('bubby') || 'null'));
   check(saved && saved.v, `${name}: game saved to localStorage`);
   check(!errors.length, `${name}: no page errors ${errors.join(' | ')}`);
