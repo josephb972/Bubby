@@ -15,7 +15,7 @@ Works for the Chrome Web Store and Edge Add-ons. Everything here is true of the 
 | Category | Lifestyle → Games (Lifestyle → Just for Fun also fits) |
 | Language | English |
 | Icon | `extension/icons/icon-128.png` |
-| Screenshots (refresh them for 1.1: `node tools/store-images.mjs`), in order | `store/screenshot-1.png` toy pod · `-2` status card · `-3` Seed catch · `-4` compact look (all 1280×800) |
+| Screenshots (refresh them for 1.1: `node tools/store-images.mjs`), in order | `store/screenshot-1.png` the toy pod with a Bubby · `-2` what Bubby needs · `-3` Seed catch · `-4` the six races and the Bubbydex · `-5` illness and medicine (all 1280×800; the store takes at most 5) |
 | Small promo tile | `store/promo-small.png` (440×280) |
 | Marquee (optional) | `store/promo-marquee.png` (1400×560) |
 
@@ -37,7 +37,7 @@ Collect them all
 
 When Bubby gets sick
 • Four old illnesses from history, each with its own medicine named after the old remedy: Ague, Scurvy, the Dancing Plague and The Plague.
-• Garden Tea is always free and cures a Ague. Other medicine comes from the Shop.
+• Garden Tea is always free: two cups cure Ague, and it soothes the other illnesses for a while. The right medicine for each one comes from the Shop.
 
 Earn points, spend them in the Shop
 • Open Bubby each day, look after it, win games, finish daily quests and reach goals to earn points.

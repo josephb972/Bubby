@@ -367,7 +367,6 @@ function sickLine() {
 function renderStatus() {
   if (OV !== 'status') return;
   $('#stName').textContent = Rules.fullName(S);
-  $('#stRace').textContent = S.race && Rules.RACES[S.race] ? Rules.RACES[S.race].name + (Rules.RACES[S.race].rare ? ' ★' : '') : '–';
   const hm = Rules.healthyMax(S.stage);
   $('#stWeight').textContent = S.stage === 'seed' ? '–' : `${S.weight}g ${S.weight > hm ? '(heavy)' : '(healthy)'}`;
   hearts($('#stHunger'), S.stage === 'seed' ? 4 : S.hunger, 'Hunger');

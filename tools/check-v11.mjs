@@ -233,7 +233,7 @@ try {
   });
   pop = await openPopup('upgrade');
   await pop.keyboard.press('s'); await pop.waitForTimeout(300);
-  check(/Leafling Thistle/.test(await pop.textContent('#stName')) && (await pop.textContent('#stRace')).trim() === 'Leafling', 'an old Bubby becomes a Leafling and keeps its form: ' + (await pop.textContent('#stName')));
+  check(/Leafling Thistle/.test(await pop.textContent('#stName')), 'an old Bubby becomes a Leafling and keeps its form: ' + (await pop.textContent('#stName')));
   check(/Ague/.test(await pop.textContent('#stCall')), 'its ongoing sickness is now a Ague: ' + (await pop.textContent('#stCall')).trim());
   s = await saved(); check(s.points === 35 && s.gen === 4 && s.dex.includes('leafling:thistle'), `it keeps its generation, gets the starter points plus today's bonus (${s.points}), and its form is in the Bubbydex`);
   await pop.close();

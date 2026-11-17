@@ -76,7 +76,7 @@ them automatically.
 4. **Package** tab → **Upload new package** → choose the zip. The dashboard reads the manifest and shows the new version.
 5. **Store listing** tab: paste the new description from `docs/STORE-LISTING.md` (it now mentions the races, the illnesses and the
    shop, and says the game is not medical advice). Refresh the screenshots first: `node tools/store-images.mjs`, then upload
-   `store/screenshot-1.png` to `-4`.
+   `store/screenshot-1.png` to `-5` (the store takes at most 5; the old compact-look shot is gone).
 6. **Privacy** tab: there are **no new permissions** (still `storage`, `alarms`, `notifications`), and Bubby still collects nothing, so
    answers stay as they were. Make sure the privacy policy link points at the updated `docs/PRIVACY.md` (it now lists the points,
    shop items and Bubbydex stored on the device).
