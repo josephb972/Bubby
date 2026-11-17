@@ -81,6 +81,7 @@ rules when the app goes to the background.
 - [x] Brought up to extension 1.1.0 (races, illnesses, shop); the app's version now follows the manifest.
 - [x] Phone layout: full-width pod with faded photo edges, bottom sheet (hearts, need button, status line),
       full-screen Settings and Shop, egg app icon, dark status-bar icons.
+- [x] Mini-game arrows move into a big thumb pad in the bottom sheet during a game (owner's request).
 - [ ] **Install the test APK on your phone (You)** and play for a few days. Check: does the pod fit your screen,
       do notifications arrive while the app is closed (also after a restart), does the sound work?
 - [ ] Notification buttons (Feed a meal, Clean up…) like the extension's.

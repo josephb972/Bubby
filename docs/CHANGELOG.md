@@ -20,7 +20,8 @@ Status: built and tested; **not yet confirmed as submitted**. Package: `release/
 - Test helpers in the service worker console: `give`, `stock`, `nextRace`, `look`, `sick`.
 - **Android app (test build, `mobile/`)**: the same game on a phone, with a phone layout (full-width toy pod, bottom sheet
   with hearts and the "what Bubby needs" button, full-screen Settings and Shop), notifications planned ahead with the
-  same rules and wording (`core/notes.js`, now shared with the background worker), and the egg as its icon. Not in a
+  same rules and wording (`core/notes.js`, now shared with the background worker), the egg as its icon, and a big
+  thumb pad for the mini-games' arrows. Not in a
   store: installed from `dist/bubby-android-1.1.0.apk`.
 
 **Changed**

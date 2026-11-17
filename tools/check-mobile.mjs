@@ -73,6 +73,49 @@ for (const name of ['Pixel 7', 'Galaxy S9+']) {
   await ctx.close();
 }
 
+// Mini-games: the arrows move out of the pod's small screen into a big pad in the bottom sheet, and back afterwards.
+{
+  const { ctx, page, errors } = await phone('Pixel 7');
+  // A grown, healthy Bubby that can play: a day and a half later (with the game's own rules), cured and cleaned.
+  await page.evaluate(async () => {
+    const { advance } = await import('/core/rules.js');
+    const S = JSON.parse(localStorage.getItem('bubby'));
+    const now = Date.now();
+    S.lastT = now - 30 * 3600e3; advance(S, now);
+    Object.assign(S, { sick: false, disease: null, doses: 0, sickT: 0, sickCounted: false, sickMeter: 0, neglectT: 0, starveT: 0, litSleep: 0, call: null, poops: [], hunger: 4, happy: 2, asleep: false, lights: true, lastSeenAt: now, seenSeq: S.evSeq });
+    localStorage.setItem('bubby', JSON.stringify(S));
+    Storage.prototype.setItem = () => {}; // keep the live page from saving over it before the reload
+  });
+  await page.reload(); await page.waitForSelector('#app.toy'); await page.waitForTimeout(800);
+  await page.evaluate(() => document.querySelector('#btnAwayOk:not([hidden])')?.click());
+  const vp = page.viewportSize();
+  for (const game of ['guess', 'catch']) {
+    await page.tap('.hot[data-act="play"]'); await page.waitForTimeout(300);
+    if (!(await page.locator('#ovPlay').isVisible())) console.log('     PLAY said:', await page.locator('#toast').textContent());
+    await page.tap(`[data-game="${game}"]`); await page.waitForTimeout(400);
+    const inPad = await page.evaluate(() => document.getElementById('gLeft').parentElement.id === 'mPad' && document.getElementById('gRight').parentElement.id === 'mPad');
+    check(inPad, `${game}: the arrows move into the game pad`);
+    const L = await page.locator('#gLeft').boundingBox(), R = await page.locator('#gRight').boundingBox();
+    check(L && R && L.width >= vp.width * 0.35 && L.height >= 64 && R.x > L.x + L.width && R.y + R.height <= vp.height,
+      `${game}: big thumb-sized arrows at the bottom (${L && Math.round(L.width)}×${L && Math.round(L.height)})`);
+    if (shots) await page.screenshot({ path: join(shots, `game-${game}.png`) });
+    if (game === 'guess') {
+      for (let i = 0; i < 5; i++) { await page.waitForSelector('#gLeft:not([disabled])', { timeout: 5000 }); await page.tap('#gLeft'); }
+    } else {
+      const b = await page.locator('#gRight').boundingBox();
+      await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2); await page.mouse.down(); await page.waitForTimeout(700); await page.mouse.up();
+    }
+    await page.waitForSelector('#ovGame', { state: 'hidden', timeout: 30000 });
+    await page.waitForTimeout(200);
+    const back = await page.evaluate(() => document.getElementById('gLeft').closest('.g-bot') && !document.getElementById('compactWrap').classList.contains('gaming'));
+    check(back, `${game}: after the game the arrows go back and the sheet shows the hearts`);
+    await page.evaluate(() => document.querySelector('#ovAway:not([hidden]) #btnAwayOk, .ov:not([hidden]) [data-close]')?.click());
+    await page.waitForTimeout(1500);
+  }
+  check(!errors.length, `games: no page errors ${errors.join(' | ')}`);
+  await ctx.close();
+}
+
 // Notification forecast: a Bubby left alone for a day and a half.
 {
   const { ctx, page } = await phone('Pixel 7');

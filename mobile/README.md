@@ -19,6 +19,9 @@ phone:
   discipline, weight and mistakes, the big "what Bubby needs" button (it turns orange or red and says
   "Tap to do it"), and the "grows up in…" line. These are the compact look's own elements, so the game keeps them up to
   date.
+- **Mini-games:** while a game is on, the bottom sheet becomes a game pad: the game's ◀ ▶ buttons move out of the
+  pod's small screen into two big yellow buttons, one under each thumb (hold for Seed catch, tap for Which way?).
+  Dragging on the garden still steers in Seed catch. The pod stays where it is; the arrows go back when the game ends.
 - **Settings and Shop:** full-width scrolling screens, larger text (scaled to the phone's width), and a title bar that
   stays on screen.
 - **Compact look:** scaled to the screen width and centred.

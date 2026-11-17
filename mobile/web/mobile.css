@@ -77,6 +77,25 @@
 :root.mobile .app.toy #compactWrap .smart { min-height: 56px; border-radius: 16px; }
 :root.mobile .app.toy #compactWrap .foot { font-size: 11.5px; }
 
+/* Mini-game pad: while a game is on, the sheet keeps its size (so the pod doesn't move) and shows two big arrow
+   buttons instead of the hearts. Same yellow game buttons as on the pod's screen, sized for thumbs. */
+:root.mobile .mpad { display: none; }
+:root.mobile .app.toy #compactWrap.gaming > :not(.mpad) { visibility: hidden; }
+:root.mobile .app.toy #compactWrap.gaming .mpad {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  position: absolute; inset: 20px calc(16px + var(--safe-r)) calc(16px + var(--safe-b) / var(--uiz)) calc(16px + var(--safe-l));
+}
+:root.mobile .mpad .g-btn {
+  width: auto; height: auto; min-height: 72px; opacity: 1;
+  display: grid; place-items: center; padding: 0;
+  background: #ffd34a; border: 3px solid var(--ink); border-radius: 20px; box-shadow: 0 6px 0 var(--ink);
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  transition: transform .05s, box-shadow .05s;
+}
+:root.mobile .mpad .g-btn svg { width: 34%; max-width: 44px; height: auto; aspect-ratio: 1; fill: var(--ink); pointer-events: none; }
+:root.mobile .mpad .g-btn:active { transform: translateY(5px); box-shadow: 0 1px 0 var(--ink); }
+:root.mobile .mpad .g-btn:disabled { opacity: .4; box-shadow: 0 6px 0 var(--ink); transform: none; }
+
 /* ---------------- Main screen, compact look ---------------- */
 :root.mobile .app:not(.toy) #viewMain:not([hidden]) {
   zoom: var(--uiz);
@@ -104,3 +123,5 @@
 :root.mobile .settings .group { padding: 10px 14px 12px; border-radius: 16px; }
 :root.mobile .chip { padding: 10px 14px; }
 :root.mobile .pace { padding-block: 6px; }
+/* With the arrows in the pad, the score sits alone in the middle of the pod's screen. */
+:root.mobile .app.toy .g-bot:not(:has(.g-btn)) { justify-content: center; }

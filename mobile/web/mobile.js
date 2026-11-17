@@ -183,10 +183,40 @@ function fit() {
   }
 }
 addEventListener('resize', fit);
+
+/* ---------------- Mini-game pad ---------------- */
+// On the pod, the game's ◀ ▶ buttons sit on the toy's small screen: hard to hit with a thumb. While a game is on,
+// the bottom sheet becomes a game pad and the same two buttons move into it, big, one under each thumb. They are the
+// game's own buttons (moved, not copied), so holding (Seed catch), tapping (Which way?) and disabling all still work.
+// When the game ends they go back.
+function gamePad() {
+  const ov = document.getElementById('ovGame'), sheet = document.getElementById('compactWrap');
+  const L = document.getElementById('gLeft'), R = document.getElementById('gRight');
+  let pad = document.getElementById('mPad');
+  if (!pad) {
+    pad = document.createElement('div');
+    pad.id = 'mPad'; pad.className = 'mpad'; pad.setAttribute('role', 'group'); pad.setAttribute('aria-label', 'Game controls');
+    pad.addEventListener('contextmenu', e => e.preventDefault()); // a long press is a hold, not a menu
+    sheet.appendChild(pad);
+  }
+  const on = !ov.hidden && document.getElementById('app').classList.contains('toy');
+  if (on && L.parentElement !== pad) {
+    pad.append(L, R);
+    sheet.classList.add('gaming');
+  } else if (!on && L.parentElement === pad) {
+    const home = ov.querySelector('.g-bot');
+    home.insertBefore(L, home.firstChild); home.appendChild(R);
+    sheet.classList.remove('gaming');
+  }
+}
+
 addEventListener('DOMContentLoaded', () => {
   fit();
   const watch = new MutationObserver(fit);
   watch.observe(document.getElementById('app'), { attributes: true, attributeFilter: ['class'] });
+  const padWatch = new MutationObserver(gamePad);
+  padWatch.observe(document.getElementById('ovGame'), { attributes: true, attributeFilter: ['hidden'] });
+  padWatch.observe(document.getElementById('app'), { attributes: true, attributeFilter: ['class'] });
   for (const id of ['viewMain', 'viewSettings', 'viewShop']) watch.observe(document.getElementById(id), { attributes: true, attributeFilter: ['hidden'] });
   watch.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] }); // safe-area sizes arrive late
   new ResizeObserver(fit).observe(document.getElementById('compactWrap')); // the sheet's height decides the pod's
