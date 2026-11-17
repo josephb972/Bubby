@@ -1,6 +1,6 @@
 # Bubby: browser extension
 
-Current version: **<!-- version -->1.1.0<!-- /version -->** (see `docs/CHANGELOG.md` for what changed).
+Current version: **<!-- version -->1.1.1<!-- /version -->** (see `docs/CHANGELOG.md` for what changed).
 
 Bubby is a tiny pixel pet that lives in your browser toolbar. Its face on the toolbar shows how it feels, a badge
 tells you when it needs something, and one click opens a pocket-sized version of the game.
@@ -112,7 +112,8 @@ cause a toothache), and clean poop quickly or Bubby gets sick.
 
 ## 2b. New in 1.1: races, illnesses, points and the shop
 
-**Races.** When the Bulb grows into a Bud it becomes one of six races, picked at random, and each has its own body, not just its
+**Races.** Every seed is planted with a random race, and its egg and Bulb wear that race's colours. When the Bulb grows into a
+Bud it shows the race's own body (any Bulb can also turn into the rare Starling instead). Each race has its own body, not just its
 own colours: the sprouting **Leafling** (a flower when grown), the mossy tortoise **Mossback**, the water droplet **Puddle**, the
 mushroom **Shroomling**, the flame spirit **Emberling**, and the very rare star **Starling**, which arrives with a special reveal. How you raise it still decides
 the adult form (Radiant, Daisy or Thistle). The **Bubbydex** (★ button, then the Bubbydex tab) shows the 18 forms you have

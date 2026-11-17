@@ -1,6 +1,6 @@
 # Bubby for Android
 
-Current version: <!-- version -->1.1.0<!-- /version --> (the same as the extension: `android/app/build.gradle` reads
+Current version: <!-- version -->1.1.1<!-- /version --> (the same as the extension: `android/app/build.gradle` reads
 `extension/manifest.json`, and versionCode is 1.1.0 → 10100).
 
 The Android app runs the extension's game (rules, art, popup) in a native app made with

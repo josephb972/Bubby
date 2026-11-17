@@ -1,7 +1,7 @@
 # Bubby: Update Roadmap (v1.1 to v1.6)
 
 Status (updated 15 Nov 2026): **v1.1 (races, rare Starling reveal, Bubbydex) and v1.3 (illnesses, medicine, points, shop) are built in the
-launched Chrome extension (current version <!-- version -->1.1.0<!-- /version -->).** Everything else is still planned. The web game `index.html` has a draft of the same
+launched Chrome extension (current version <!-- version -->1.1.1<!-- /version -->).** Everything else is still planned. The web game `index.html` has a draft of the same
 features (v1.3 there still needs small-screen polish). The roadmap below was written for the web game; for the extension,
 real-time lives last days, so rarity has a pity counter and illness timers scale with the pace. Details: `bubby-points-and-shop.md`.
 Not built yet: solo jump rope, visiting (v1.2), cross-breeding, more minigames, the Lab.
@@ -49,7 +49,8 @@ Target months (adjust to real progress): v1.1 Dec 2026, v1.2 Jan to Feb 2027, v1
 **Design decision (changed from the first draft):** races are **random**, not earned by care style. Care quality still decides the adult tier (Radiant, Daisy, Thistle). This keeps every new life a surprise and gives the rare race a real "pull".
 
 **What ships**
-- When the Bulb grows into a Bud, Bubby is **randomly assigned a race**:
+- Every seed is planted with a random common race (since 1.1.1: its egg and Bulb wear the race's colours). When the Bulb
+  grows into a Bud, Bubby **becomes that race, or the rare Starling**:
   - Five common races share the odds equally: Leafling, Mossback, Puddle, Shroomling, Emberling.
   - One **rare race, Starling, rolls at 5%** (about 1 in 20 lives). Tunable with `RARE_CHANCE`.
 - **Rare reveal animation (Starling):** the garden dims, a glow and spinning rays build behind the Bulb, stars fall, the sprite flickers between forms, a golden shockwave ring marks the reveal, and a rising fanfare plays. About 4.4 seconds. Starlings keep a gold twinkle for life. Common races get a short color-ring reveal.

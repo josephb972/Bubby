@@ -618,7 +618,7 @@ function renderShop() {
   } else {
     const sec = document.createElement('section'); sec.className = 'shop-sec';
     sec.innerHTML = `<h3>Bubbydex <small>${Rules.dexFound(S)} / ${Rules.DEX_TOTAL}</small></h3>
-      <p class="note">When a Bulb grows into a Bud it becomes a random race. One race is very rare (${Math.round(Rules.rareChance(S) * 100)}% for your next Bud, and it grows with every miss). Raise each race to every adult form to fill the dex.</p>`;
+      <p class="note">Every seed is planted with a random race: its egg and Bulb wear the race’s colours, and it shows its full body as a Bud. One race is very rare and can come from any Bulb (${Math.round(Rules.rareChance(S) * 100)}% for your next Bud, and it grows with every miss). Raise each race to every adult form to fill the dex.</p>`;
     for (const [id, r] of Object.entries(Rules.RACES)) {
       const seen = S.dex.includes(id), row = document.createElement('div');
       row.className = 'dex-row' + (r.rare ? ' rare' : '');

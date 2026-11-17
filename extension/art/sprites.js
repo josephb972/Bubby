@@ -81,23 +81,43 @@ function palette(variant, senior) {
   return { ring: m(p.ring), petal: m(p.petal), face: m(p.face), faceRing: m(p.faceRing), suit: [m(p.suit[0]), m(p.suit[1])], blush: m(p.blush),
     wings: p.wings && [mix(p.wings[0], '#bfb3a3', .6), mix(p.wings[1], '#e2d8ca', .6)] };
 }
+// The egg and the Bulb wear the colours of the race the seed was planted with (o.race). The Leafling, and a seed with no
+// race, keep the original colours (that egg is also the logo).
+function seedTones(race) {
+  const r = RACES[race];
+  if (!r || race === 'leafling') return { ring: '#55702f', base: '#7f9f4e', stripe: '#8c6a3a', shine: '#b5cf86' };
+  // Stripes picked per race so they show up on the shell (and so the Mossback egg isn't the Leafling's)
+  const EGG = {
+    mossback: { base: r.body[2], stripe: r.body[0] },
+    puddle: { base: r.body[1], stripe: r.body[2] },
+    emberling: { base: r.body[1], stripe: r.bud[3] },
+  }[race] || { base: r.body[1], stripe: r.bud[2] };
+  return { ring: r.body[0], base: EGG.base, stripe: EGG.stripe, shine: race === 'mossback' ? '#e4efc8' : r.body[2] };
+}
+function bulbTones(race) {
+  const r = RACES[race];
+  if (!r || race === 'leafling') return { foot: ['#23706b', '#2f8f8a'], body: ['#2a8580', '#4cb8af'], shine: '#86dcd2', stem: '#3c8f45', leaf: ['#2f7d3a', '#5cc46a'], leafHi: '#8be095' };
+  return { foot: [r.body[0], r.foot], body: [r.body[0], r.body[1]], shine: r.body[2], stem: r.leaf[0], leaf: [r.leaf[0], r.leaf[1]], leafHi: mix(r.leaf[1], '#ffffff', .35) };
+}
 function drawSeed(x, o) {
+  const t = seedTones(o.race);
   ER(x, 24, 44, 14, 3.6, '#6b4226', '#8a5a36');
   P(x, [15, 44, 20, 43, 27, 45, 31, 43, 34, 44], '#a8724a');
   const sx = 24 + (o.wobble || 0);
-  E(x, sx, 34, 8, 10, '#55702f');
-  E(x, sx, 34, 7, 9, (px, py) => { const v = py + 1.6 * Math.sin(px * .9); return ((v % 6) + 6) % 6 < 2 ? '#8c6a3a' : '#7f9f4e'; });
-  P(x, [sx - 4, 29, sx - 4, 30, sx - 3, 28], '#b5cf86');
+  E(x, sx, 34, 8, 10, t.ring);
+  E(x, sx, 34, 7, 9, (px, py) => { const v = py + 1.6 * Math.sin(px * .9); return ((v % 6) + 6) % 6 < 2 ? t.stripe : t.base; });
+  P(x, [sx - 4, 29, sx - 4, 30, sx - 3, 28], t.shine);
   if (o.crack) P(x, [sx - 1, 25, sx, 26, sx + 1, 27, sx, 28, sx + 1, 29, sx + 2, 28], INK);
 }
 function drawBaby(x, o) {
-  ER(x, 18.5, 44.5, 3.5, 2, '#23706b', '#2f8f8a'); ER(x, 29.5, 44.5, 3.5, 2, '#23706b', '#2f8f8a');
-  ER(x, 24, 35, 11.5, 10, '#2a8580', '#4cb8af');
-  E(x, 19, 30, 3, 2, '#86dcd2');
-  R(x, 23, 21, 2, 5, '#3c8f45');
-  ER(x, 19, 21, 5, 2.6, '#2f7d3a', '#5cc46a', -.45);
-  ER(x, 29, 20, 5.5, 2.8, '#2f7d3a', '#5cc46a', .45);
-  P(x, [18, 21, 20, 21, 28, 20, 30, 20], '#8be095');
+  const t = bulbTones(o.race);
+  ER(x, 18.5, 44.5, 3.5, 2, t.foot[0], t.foot[1]); ER(x, 29.5, 44.5, 3.5, 2, t.foot[0], t.foot[1]);
+  ER(x, 24, 35, 11.5, 10, t.body[0], t.body[1]);
+  E(x, 19, 30, 3, 2, t.shine);
+  R(x, 23, 21, 2, 5, t.stem);
+  ER(x, 19, 21, 5, 2.6, t.leaf[0], t.leaf[1], -.45);
+  ER(x, 29, 20, 5.5, 2.8, t.leaf[0], t.leaf[1], .45);
+  P(x, [18, 21, 20, 21, 28, 20, 30, 20], t.leafHi);
   face(x, 24, 36, { ...o, blush: '#f59aa6' });
 }
 /* ---- Race bodies ----

@@ -2,7 +2,7 @@
 
 Works for the Chrome Web Store and Edge Add-ons. Everything here is true of the code; update it if the code changes.
 
-- **Upload:** `release/bubby-<!-- version -->1.1.0<!-- /version -->.zip`, the current version (`node tools/package.mjs` rebuilds it into `dist/`; older versions stay in `release/`).
+- **Upload:** `release/bubby-<!-- version -->1.1.1<!-- /version -->.zip`, the current version (`node tools/package.mjs` rebuilds it into `dist/`; older versions stay in `release/`).
 - **Images:** `store/`, made by `node tools/store-images.mjs` from the real popup.
 
 ## Listing
@@ -31,7 +31,7 @@ Take care of it
 • How you raise it decides who it becomes: a Radiant Blossom, a Daisy Blossom or a Thistle.
 
 Collect them all
-• When the Bulb grows into a Bud it becomes one of six races, picked at random, and every race has its own body: a flower, a mossy tortoise, a water droplet, a mushroom, a flame spirit or a star. One race, the Starling, is very rare and arrives with a special reveal.
+• Every seed is a surprise: its egg shows the colours of one of six races, picked at random, and when the Bulb grows into a Bud it shows that race's own body: a flower, a mossy tortoise, a water droplet, a mushroom, a flame spirit or a star. One race, the Starling, is very rare and arrives with a special reveal.
 • Fill the Bubbydex: every race in every adult form, 18 in all.
 
 When Bubby gets sick

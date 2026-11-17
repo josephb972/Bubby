@@ -10,12 +10,13 @@ A small virtual-pet game. Three parts (the web game shares no code or saves with
   forked) with a phone layer and a phone-shaped layout; see `mobile/README.md`. Build the test APK with
   `cd mobile && npm install && npm run apk`; check with `node tools/check-mobile.mjs`.
 
-The extension is the product that was launched. Version 1.1.0 adds races, the rare Starling reveal, the Bubbydex, named illnesses
+The extension is the product that was launched. Version 1.1.1 plants every seed with a random race, so the egg and Bulb already
+wear its colours. Version 1.1.0 adds races, the rare Starling reveal, the Bubbydex, named illnesses
 with matching medicine, points and the shop (design in `memory/`). The web game has the same features as a draft (its v1.3 still
 needs small-screen polish) and is not the priority. Anything else in `memory/` is still a plan.
 
 ## Version (read this first)
-- **Current version: <!-- version -->1.1.0<!-- /version -->.** `extension/manifest.json` is the single source of truth. The last version known to be submitted to the
+- **Current version: <!-- version -->1.1.1<!-- /version -->.** `extension/manifest.json` is the single source of truth. The last version known to be submitted to the
   stores is **<!-- submitted -->1.0.0<!-- /submitted -->** (confirm in the store dashboard). History: `docs/CHANGELOG.md`.
 - **Whenever there is a new version, do all of this in the same change (the owner asked for it every time):**
   1. `node tools/version.mjs bump X.Y.Z "short title"` sets the manifest and every version marker in the docs and memory and starts the changelog entry.
@@ -62,5 +63,5 @@ needs small-screen polish) and is not the priority. Anything else in `memory/` i
 - Don't make absence punish the player. Illness and other bad things only happen during active play.
 - Paid features must never change difficulty or revive a dead Bubby. Cosmetics only. Points are earned, never bought with money.
 - Illness names: old historical diseases in a cartoon, clearly fictional way, with the "not medical advice" note. Never an illness that still stigmatises people today (leprosy) and never a sexually transmitted infection.
-- Races are random (`rollRace`, `RARE_CHANCE`). Care quality only decides the adult tier. The Bubbydex must survive resets.
+- Races are random: a common race is picked when the seed is planted (`seedRace`, the egg and Bulb wear its colours), and `rollRace` makes the Bud that race or, by `RARE_CHANCE`, the rare Starling. Care quality only decides the adult tier. The Bubbydex must survive resets.
 - Work on `claude/practical-faraday-wxk9us`.

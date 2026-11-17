@@ -3,6 +3,32 @@
 Newest first. `extension/manifest.json` holds the current version; `node tools/version.mjs` checks that every doc agrees with it.
 Each entry says whether that version has been submitted to the stores (set with `node tools/version.mjs submitted X.Y.Z`).
 
+## 1.1.1 (17 Nov 2026): every Bubby wears its race's colours from the start
+Status: built and tested; **not submitted**. Package: `release/bubby-1.1.1.zip`.
+
+Why: the owner restarted 7 times and always got the same Bulb. The race was only picked when the Bulb became a Bud (12 hours in
+on Chill), so every new Bubby looked the same for its first half day.
+
+**Added**
+- Every new seed is planted with a random common race (`seedRace`). Its egg and Bulb wear that race's colours: green (Leafling,
+  the original look and the logo), sage (Mossback), blue (Puddle), tan with red stripes (Shroomling), orange (Emberling).
+- **Android app:** the same, plus everything since 1.1.0 (phone layout, game pad); test APK `dist/bubby-android-1.1.1.apk`.
+
+**Changed**
+- At the Bud, the rare Starling is still rolled with the same chance and pity counter, so any Bulb can still turn into a
+  Starling as a surprise; otherwise the Bud becomes the seed's race. The odds of every race are unchanged.
+- Bubbydex note: explains that the egg and Bulb show the race.
+
+**Saves:** format `v: 2` unchanged. A seed or Bulb saved before 1.1.1 gets a seed race when it loads (from `fresh()` in
+`migrate()`); Buds and older keep their race.
+
+**Checks:** `rules-check` 118 (7 new: seed races are common only and evenly spread, the Bud becomes the seed's race unless rare,
+the rare roll and miss counter still work, old saves and new lives get a seed race), `sim-check`, `check-extension`, `check-v11`,
+`check-mobile`.
+
+**Owner still to do:** test it (Start over a few times: the egg colour should change), then submit 1.1.1 instead of 1.1.0 if
+1.1.0 hasn't gone in yet.
+
 ## 1.1.0 (17 Nov 2026): races, illnesses, points and the shop
 Status: built and tested; **not yet confirmed as submitted**. Package: `release/bubby-1.1.0.zip`.
 

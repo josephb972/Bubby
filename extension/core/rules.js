@@ -80,7 +80,7 @@ export function fresh(gen = 1, cfg = defaultCfg(), now = Date.now()) {
     poops: [], sick: false, disease: null, doses: 0, sickT: 0, sickCounted: false, sickMeter: 0, neglectT: 0, starveT: 0,
     asleep: false, lights: true, awakeT: 0, sleepT: 0, litSleep: 0, litTotal: 0,
     immuneT: 0, immuneNote: false, teaCd: 0,
-    call: null, mistakes: 0, snacks: [], variant: null, chubby: false, race: null,
+    call: null, mistakes: 0, snacks: [], variant: null, chubby: false, race: null, seedRace: pickCommon(),
     ended: null, paused: false, nextPoop: 30, nextTantrum: 55,
     stats: { meals: 0, snacks: 0, games: 0, wins: 0, cleans: 0, meds: 0, scolds: 0, sick: 0, bestCatch: 0 },
     // Kept across lives (see META_KEYS)
@@ -147,12 +147,17 @@ export function dexAdd(S, key) {
 export function rareChance(S) {
   return Math.min(RARE_MAX, (RARE_BASE[S.cfg && S.cfg.pace] ?? RARE_BASE.chill) + RARE_PITY * (S.rareMiss || 0));
 }
+// A random common race. Every new seed gets one (S.seedRace): the egg and the Bulb wear its colours, so every Bubby
+// looks different from the start.
+export function pickCommon(rng = Math.random) { return COMMON_RACES[Math.floor(rng() * COMMON_RACES.length)]; }
+// The race, decided when the Bulb grows into a Bud: the rare race by its own chance (so it stays a surprise, whatever
+// colours the Bulb wore), otherwise the race the seed was planted with.
 export function rollRace(S, rng = Math.random) {
   // Test helper (service worker console: bubby.nextRace('starling')): the next Bud is this race
   if (S.nextRace && RACES[S.nextRace]) { const r = S.nextRace; S.nextRace = null; if (r === RARE_RACE) S.rareMiss = 0; return r; }
   if (rng() < rareChance(S)) { S.rareMiss = 0; return RARE_RACE; }
   S.rareMiss = (S.rareMiss || 0) + 1;
-  return COMMON_RACES[Math.floor(rng() * COMMON_RACES.length)];
+  return COMMON_RACES.includes(S.seedRace) ? S.seedRace : pickCommon(rng);
 }
 
 /* ---------- Points, quests and goals ---------- */

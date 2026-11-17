@@ -15,8 +15,8 @@ export function iconCanvas(stage, o, size) {
 }
 
 export function iconOptions(S) {
-  if (!S || S.ended || S.stage === 'seed') return { stage: 'seed', o: { crack: S && S.stage === 'seed' && S.stageT > 30 } };
-  return { stage: S.stage, o: { mood: restingMood(S), variant: S.variant, chubby: S.chubby, sick: S.sick && !S.asleep ? (S.disease || true) : false, race: S.race } };
+  if (!S || S.ended || S.stage === 'seed') return { stage: 'seed', o: { crack: S && S.stage === 'seed' && S.stageT > 30, race: S && !S.ended ? S.seedRace : null } };
+  return { stage: S.stage, o: { mood: restingMood(S), variant: S.variant, chubby: S.chubby, sick: S.sick && !S.asleep ? (S.disease || true) : false, race: S.stage === 'baby' ? S.seedRace : S.race } };
 }
 
 export function actionImageData(S) {

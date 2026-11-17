@@ -101,12 +101,13 @@ export function drawScene(sx, S, A, G, PET, time) {
   const px = stage === 'seed' ? 50 : (G ? (G.type === 'catch' ? G.px : 50) : PET.x);
   let o = {}, bob = 0, shake = 0;
   if (stage === 'seed') {
+    o.race = S.seedRace; // the egg wears the colours of the race it was planted with
     const prog = S.stage === 'seed' ? S.stageT / pace(S).dur.seed : 1;
     if (prog > .45) o.wobble = (((time * (prog > .8 ? 10 : 4)) | 0) % 2) ? 1 : -1;
     o.crack = prog > .65;
   } else {
     const mn = moodNow(S, A, G);
-    o = { mood: mn.mood, mouth: mn.mouth, variant: S.variant, chubby: S.chubby, sick: S.sick && !S.asleep ? (S.disease || true) : false, blink: !S.asleep && (time % 3.4) < .13, race: S.race, fl: (S.race === 'emberling' || S.race === 'starling') ? ((time * 3) | 0) % 2 : 0 };
+    o = { mood: mn.mood, mouth: mn.mouth, variant: S.variant, chubby: S.chubby, sick: S.sick && !S.asleep ? (S.disease || true) : false, blink: !S.asleep && (time % 3.4) < .13, race: stage === 'baby' ? S.seedRace : S.race, fl: (S.race === 'emberling' || S.race === 'starling') ? ((time * 3) | 0) % 2 : 0 };
     o.look = G ? (G.type === 'catch' ? (G.moving ? G.dir : 0) : (G.phase === 'reveal' ? G.look * 2 : 0)) : (PET.moving ? PET.dir : 0);
     if (S.asleep) bob = ((time * 1.1) | 0) % 2;
     else if (A && A.type === 'happy') bob = -(((time * 8) | 0) % 2) * 2;

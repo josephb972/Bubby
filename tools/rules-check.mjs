@@ -11,7 +11,7 @@ const DAY = 86400e3;
 // A Bubby of the given stage, awake with the lights on, ready to be cared for.
 function bubby(pace = 'quick', stage = 'child', extra = {}) {
   const S = R.fresh(1, { pace }, T0);
-  Object.assign(S, { stage, hunger: 2, happy: 2, ...extra });
+  Object.assign(S, { stage, hunger: 2, happy: 2, seedRace: null, ...extra });   // no seed race: the Bud rolls one (tests below cover seedRace)
   // A dummy unfinished quest, so today's random quests never add surprise points to a test
   S.quests = { day: R.dayKey(T0), all: false, list: [{ id: 'x', ev: 'never', need: 1, text: 'x', have: 0, done: false }] };
   return S;
@@ -33,6 +33,22 @@ const seq = (...v) => { let i = 0; return () => v[i++ % v.length]; };   // a fak
   check(Math.abs(R.rareChance(m) - .22) < 1e-9, 'each miss adds 5% (12% -> 22%)');
   R.rollRace(m, seq(.0)); eq(m.rareMiss, 0, 'a rare roll resets the miss counter');
   const big = bubby('chill', 'child', { rareMiss: 99 }); eq(R.rareChance(big), .6, 'the chance is capped at 60%');
+
+  // The seed's race (1.1.1): every new seed is planted with a random common race; the egg and Bulb wear its colours and the
+  // Bud becomes it, unless the rare roll turns it into a Starling.
+  {
+    const counts = {};
+    for (let i = 0; i < 6000; i++) { const s = R.fresh(1, { pace: 'chill' }, T0).seedRace; counts[s] = (counts[s] || 0) + 1; }
+    check(Object.keys(counts).sort().join() === [...R.COMMON_RACES].sort().join() && !counts.starling, 'new seeds get every common race, never the rare one: ' + JSON.stringify(counts));
+    check(Object.values(counts).every(n => Math.abs(n - 6000 / R.COMMON_RACES.length) < 160), 'seed races are evenly spread');
+    eq(R.rollRace(bubby('chill', 'baby', { seedRace: 'emberling' }), seq(.99, .01)), 'emberling', 'not rare: the Bud becomes the seed\'s race');
+    eq(R.rollRace(bubby('chill', 'baby', { seedRace: 'emberling' }), seq(.01)), 'starling', 'rare: any Bulb can still become a Starling');
+    const miss = bubby('chill', 'baby', { seedRace: 'puddle' }); R.rollRace(miss, seq(.99)); eq(miss.rareMiss, 1, 'the seed race still counts as a rare miss');
+    const old = R.migrate(JSON.parse(JSON.stringify({ ...bubby('chill', 'baby'), seedRace: undefined })), T0);
+    check(R.COMMON_RACES.includes(old.seedRace), 'a save from before 1.1.1 gets a seed race when it loads: ' + old.seedRace);
+    const life = R.nextLife(bubby('chill', 'adult', { race: 'puddle' }), 2, T0);
+    check(R.COMMON_RACES.includes(life.seedRace) && life.race === null, 'a new life gets a new seed race');
+  }
 
   // Evolving: baby -> child rolls the race, adds it to the Bubbydex and pays points
   const e = bubby('quick', 'baby', { points: 0 });
