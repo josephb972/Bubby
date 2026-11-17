@@ -1,8 +1,8 @@
 # Bubby extension: launch plan and checklist
 
-Status: extension **v1.0.0**. The coding fixes are done without changing Bubby's UI design; the store package, images,
-listing text and privacy policy are ready. What's left needs the owner. Goal: publish on the Chrome Web Store, then
-Edge Add-ons.
+Status: extension **v<!-- version -->1.1.0<!-- /version -->** is built and tested; version 1.0.0 was the first store release (see `docs/CHANGELOG.md`). The
+store package, images, listing text and privacy policy are ready. What's left needs the owner. Goal: publish on the Chrome Web
+Store, then Edge Add-ons.
 
 Tick items as they are done (`[x]`). Owner: **Claude** = can be done in a coding session, **You** = needs the owner.
 

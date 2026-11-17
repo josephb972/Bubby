@@ -2,8 +2,7 @@
 
 Works for the Chrome Web Store and Edge Add-ons. Everything here is true of the code; update it if the code changes.
 
-- **Upload:** version 1.0.0 is `release/bubby-1.0.0.zip`. Version 1.1.0 is built with `node tools/package.mjs` into `dist/bubby-1.1.0.zip`
-  (copy it into `release/` once it is submitted).
+- **Upload:** `release/bubby-<!-- version -->1.1.0<!-- /version -->.zip`, the current version (`node tools/package.mjs` rebuilds it into `dist/`; older versions stay in `release/`).
 - **Images:** `store/`, made by `node tools/store-images.mjs` from the real popup.
 
 ## Listing

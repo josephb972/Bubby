@@ -3,7 +3,7 @@
 A small virtual-pet game. Two parts that do NOT share code or saves:
 
 - `index.html`: the single-file **web game** (its own rules and save in localStorage, draws its own pod in code, PostHog analytics).
-- `extension/`: the **launched** Chrome / Edge / Brave extension (Manifest V3, store package v1.0.0 submitted). Real-time pet in the
+- `extension/`: the **launched** Chrome / Edge / Brave extension (Manifest V3). Real-time pet in the
   toolbar; the popup shows the toy pod artwork (`extension/art/photo/toy.webp`) with the live game on its screen, or a compact
   layout. See `extension/README.md`.
 
@@ -11,7 +11,20 @@ The extension is the product that was launched. Version 1.1.0 adds races, the ra
 with matching medicine, points and the shop (design in `memory/`). The web game has the same features as a draft (its v1.3 still
 needs small-screen polish) and is not the priority. Anything else in `memory/` is still a plan.
 
+## Version (read this first)
+- **Current version: <!-- version -->1.1.0<!-- /version -->.** `extension/manifest.json` is the single source of truth. The last version known to be submitted to the
+  stores is **<!-- submitted -->1.0.0<!-- /submitted -->** (confirm in the store dashboard). History: `docs/CHANGELOG.md`.
+- **Whenever there is a new version, do all of this in the same change (the owner asked for it every time):**
+  1. `node tools/version.mjs bump X.Y.Z "short title"` sets the manifest and every version marker in the docs and memory and starts the changelog entry.
+  2. Fill in the new `docs/CHANGELOG.md` entry (added, changed, saves, checks, what the owner must do).
+  3. Update `memory/` (status lines, designs that changed) and the "what is in this version" lines in this file.
+  4. Update `docs/STORE-LISTING.md` (description, screenshots) and re-run `node tools/store-images.mjs` if anything visible changed; update `docs/PRIVACY.md` if what is stored changes.
+  5. Keep old saves working (`migrate()` in `core/rules.js`) and run every check: `rules-check`, `sim-check`, `check-extension`, `check-v11`, then `node tools/version.mjs` (it fails if any doc is out of step).
+  6. `node tools/package.mjs`, copy `dist/bubby-X.Y.Z.zip` to `release/`, commit, push, and send the owner the zip.
+  7. When the owner says it is submitted: `node tools/version.mjs submitted X.Y.Z`.
+
 ## Key files
+- `docs/CHANGELOG.md`: what changed in each version, and whether it has been submitted.
 - `docs/TEST-AND-PUBLISH.md`: how to test a build (including the upgrade test and the console test helpers) and publish an update.
 - `docs/LAUNCH-CHECKLIST.md`: extension launch plan. Read it at the start of a session about the extension and tick items off.
 - `memory/bubby-monetization-and-marketing.md`: monetization options (Bubby Plus ranked 1, cosmetic packs ranked 2), marketing plan, TikTok strategy.
@@ -31,7 +44,7 @@ needs small-screen polish) and is not the priority. Anything else in `memory/` i
 - Keep existing saves working: saved state is versioned; update `migrate()` in `core/rules.js` when the format changes.
 - Don't change Bubby's existing UI design (layouts, colours, fonts, artwork) unless the owner asks. New screens (shop and so on)
   must match it.
-- Store package: `node tools/package.mjs` → `dist/` (gitignored). The version submitted to the stores is committed in `release/` (copy the new zip there for each release). Store images: `node tools/store-images.mjs` →
+- Store package: `node tools/package.mjs` → `dist/` (gitignored). `release/` keeps the exact zip of every version built for the stores (the changelog says which were submitted). Store images: `node tools/store-images.mjs` →
   `store/` (committed; re-run after visible changes). Listing and privacy text: `docs/STORE-LISTING.md`, `docs/PRIVACY.md`.
 - Time-skip buttons are hidden test tools: `bubby.dev(true)` in the service worker console shows them.
 - `bubby-extension.zip` is a local build artifact (gitignored).

@@ -1,6 +1,6 @@
 # Bubby: points, shop, illness and medicine (design)
 
-Status: **built** in the extension v1.1.0 (`extension/core/content.js` holds every number, `extension/core/rules.js` the logic)
+Status: **built** in the extension (current version <!-- version -->1.1.0<!-- /version -->; `extension/core/content.js` holds every number, `extension/core/rules.js` the logic)
 and drafted in the web game `index.html`. Checked by `node tools/rules-check.mjs`, `node tools/sim-check.mjs` and
 `node tools/check-v11.mjs`.
 

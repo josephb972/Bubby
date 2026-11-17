@@ -1,5 +1,7 @@
 # Bubby: browser extension
 
+Current version: **<!-- version -->1.1.0<!-- /version -->** (see `docs/CHANGELOG.md` for what changed).
+
 Bubby is a tiny pixel pet that lives in your browser toolbar. Its face on the toolbar shows how it feels, a badge
 tells you when it needs something, and one click opens a pocket-sized version of the game.
 
