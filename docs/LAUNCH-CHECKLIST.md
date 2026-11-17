@@ -47,7 +47,7 @@ Tick items as they are done (`[x]`). Owner: **Claude** = can be done in a coding
 - [ ] **Register as a Chrome Web Store developer** (one-time US$5 fee). (You)
 - [x] **Store assets** (`node tools/store-images.mjs`, screenshots of the real popup):
   - [x] 128×128 icon (`extension/icons/icon-128.png`)
-  - [x] Four 1280×800 screenshots: toy pod, status card, Seed catch, compact look (`store/screenshot-1..4.png`).
+  - [x] Five 1280×800 screenshots: toy pod, status card, Seed catch, compact look, the three adult forms (`store/screenshot-1..5.png`).
         No notification shot: a real system notification can't be captured automatically, and a drawn one wouldn't be
         the real UI. Add your own screenshot of one if you'd like (1280×800).
   - [x] Small promo tile, 440×280 (`store/promo-small.png`), plus optional marquee 1400×560

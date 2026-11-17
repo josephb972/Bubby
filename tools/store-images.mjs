@@ -1,6 +1,6 @@
 // Store images from the real extension: screenshots of the actual popup, nothing redrawn.
 // Usage: node tools/store-images.mjs   (needs Playwright with Chromium) → store/
-//   screenshot-1..4.png 1280×800 · promo-small.png 440×280 · promo-marquee.png 1400×560
+//   screenshot-1..5.png 1280×800 · promo-small.png 440×280 · promo-marquee.png 1400×560
 import { createRequire } from 'node:module';
 import { mkdir, readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
@@ -65,6 +65,16 @@ img.bulb = await page0.evaluate(async () => {
   const x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(petSprite('baby', { mood: 'happy' }), 0, 0, 384, 384);
   return c.toDataURL();
 });
+// The three adult forms, drawn by the game's own sprite code.
+img.forms = await page0.evaluate(async () => {
+  const { petSprite } = await import('/art/sprites.js');
+  const { FORMS } = await import('/core/rules.js');
+  return ['radiant', 'daisy', 'thistle'].map(v => {
+    const c = document.createElement('canvas'); c.width = c.height = 384;
+    const x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(petSprite('adult', { mood: 'happy', variant: v }), 0, 0, 384, 384);
+    return { name: FORMS[v], src: c.toDataURL() };
+  });
+});
 await ctx.close();
 
 // Lay out at exact store sizes, in the popup's own fonts and colours.
@@ -98,6 +108,10 @@ await render('screenshot-2.png', 1280, 800, shot('See what Bubby <em>needs</em>'
 await render('screenshot-3.png', 1280, 800, shot('Play <em>Seed catch</em>', 'Catch falling seeds for 20 seconds. Gold seeds are worth 3, pebbles cost 2.', img.game));
 await render('screenshot-4.png', 1280, 800, `<div class="page"><h1>Prefer it simple? Try the <em>compact</em> look</h1><p>Bigger hearts, one big "what to do now" button, and every action one click away.</p>
   <div class="row"><img class="pod" style="width:450px;height:auto" src="${img.compact}"></div></div>`);
+const card = (f, line) => `<div style="text-align:center;background:#fffcf3;border:6px solid #fffcf3;border-radius:24px;box-shadow:0 0 0 2px #5e978c,0 16px 36px rgba(40,60,70,.25);padding:20px 28px 24px;width:340px">
+  <img class="pix" src="${f.src}" style="width:288px;height:288px"><div style="font:600 32px Fredoka,sans-serif;margin-top:6px">${f.name}</div><div style="font-size:21px;color:#5d5070;margin-top:4px">${line}</div></div>`;
+await render('screenshot-5.png', 1280, 800, `<div class="page"><h1>Raise it well, and it grows into something <em>special</em></h1><p>How you care for Bubby decides which form it blossoms into.</p>
+  <div class="row" style="gap:40px;margin-top:90px">${img.forms.map((f, i) => card(f, ['Well looked after', 'Mostly looked after', 'Needs more care'][i])).join('')}</div></div>`);
 const promo = (w, h, s, t, l) => `<div style="height:100%;display:flex;align-items:center;justify-content:center;gap:${w * .03}px">
   <img class="pix" src="${img.bulb}" style="width:${s}px;height:${s}px"><div><h1 style="font-size:${t}px;text-align:left">Bub<em>by</em></h1>
   <p style="font-size:${l}px;text-align:left">A tiny pixel pet<br>for your toolbar</p></div></div>`;

@@ -14,7 +14,7 @@ Works for the Chrome Web Store and Edge Add-ons. Everything here is true of the 
 | Category | Lifestyle → Games (Lifestyle → Just for Fun also fits) |
 | Language | English |
 | Icon | `extension/icons/icon-128.png` |
-| Screenshots, in order | `store/screenshot-1.png` toy pod · `-2` status card · `-3` Seed catch · `-4` compact look (all 1280×800) |
+| Screenshots, in order | `store/screenshot-1.png` toy pod · `-2` status card · `-3` Seed catch · `-4` compact look · `-5` the three adult forms (all 1280×800) |
 | Small promo tile | `store/promo-small.png` (440×280) |
 | Marquee (optional) | `store/promo-marquee.png` (1400×560) |
 
