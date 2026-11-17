@@ -65,6 +65,8 @@ Tick items as they are done (`[x]`). Owner: **Claude** = can be done in a coding
 
 ## 5. Right after launch
 
+- [ ] **TikTok launch videos (You):** two videos are ready in `marketing/tiktok/out/` (intro + funny), with captions,
+      hashtags and a posting plan in `marketing/tiktok/README.md`. Post once the store link is in the bio.
 - [ ] Add a "Send feedback" link in Settings and keep an eye on reviews.
 - [ ] **Save compatibility:** any change to the saved state must keep existing Bubbies working. Saves are versioned
       (`v: 2` in `core/rules.js`); add a step in `migrate()` whenever the format changes.

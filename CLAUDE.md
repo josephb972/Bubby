@@ -22,5 +22,7 @@ session about the extension, work through open items, and tick them off (`[x]`) 
 - Don't change Bubby's UI design (layouts, colours, fonts, artwork) unless the owner asks.
 - Store package: `node tools/package.mjs` → `dist/` (gitignored). Store images: `node tools/store-images.mjs` →
   `store/` (committed; re-run after visible changes). Listing and privacy text: `docs/STORE-LISTING.md`, `docs/PRIVACY.md`.
+- TikTok videos (real popup, recorded): `node tools/tiktok-videos.mjs` → `marketing/tiktok/out/` (re-run after visible
+  changes). Scenes in `marketing/tiktok/stage.js`, posting plan in `marketing/tiktok/README.md`.
 - Time-skip buttons are hidden test tools: `bubby.dev(true)` in the service worker console shows them.
 - `bubby-extension.zip` is a local build artifact (gitignored).

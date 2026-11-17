@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bubby TikTok stage</title>
+<style>
+@font-face { font-family: Fredoka; font-weight: 600; src: url(../fonts/fredoka-latin-600-normal.woff2) format("woff2"); }
+@font-face { font-family: Nunito; font-weight: 400; src: url(../fonts/nunito-latin-400-normal.woff2) format("woff2"); }
+@font-face { font-family: Nunito; font-weight: 700; src: url(../fonts/nunito-latin-700-normal.woff2) format("woff2"); }
+@font-face { font-family: Pixel; font-weight: 600; src: url(../fonts/pixelify-sans-latin-600-normal.woff2) format("woff2"); }
+:root { --ink: #3b2f4a; --cream: #fffcf3; --coral: #d9504a; --sun: #ffd34a; --mint: #bfe6db; }
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; }
+body {
+  position: relative; color: var(--ink); font-family: Nunito, sans-serif;
+  background: radial-gradient(ellipse at 30% 8%, #e9faf3, transparent 55%), radial-gradient(ellipse at 90% 100%, #a9dccf, transparent 60%), var(--mint);
+}
+/* faint pixel hearts in the background */
+#bg { position: absolute; inset: 0; opacity: .16;
+  background-image: radial-gradient(circle at 50% 50%, #5e978c 0 5px, transparent 6px); background-size: 72px 72px; }
+
+#cam { position: absolute; left: 0; top: 0; width: 468px; height: 600px; transform-origin: 0 0;
+  transition: transform .7s cubic-bezier(.2, .9, .25, 1); }
+#cam iframe { position: absolute; inset: 0; width: 468px; height: 600px; border: 0; border-radius: 26px;
+  background: transparent; transition: opacity .12s; }
+#cam::before { content: ""; position: absolute; inset: 8px; border-radius: 30px; box-shadow: 0 18px 40px rgba(40, 60, 70, .3); }
+
+/* Captions: TikTok-style bold outlined text */
+.cap { position: absolute; left: 50px; right: 50px; text-align: center; pointer-events: none;
+  font: 600 84px/1.08 Fredoka, sans-serif; color: #fff; letter-spacing: .5px;
+  -webkit-text-stroke: 16px var(--ink); paint-order: stroke fill;
+  opacity: 0; transform: scale(.6); }
+.cap.on { animation: pop .38s cubic-bezier(.3, 1.6, .5, 1) forwards; }
+.cap.off { animation: out .2s ease-in forwards; }
+.cap em { font-style: normal; color: var(--sun); }
+.cap b { font-weight: 600; color: #ff8a80; }
+#top { top: 190px; min-height: 280px; display: flex; align-items: center; justify-content: center; }
+#low { top: auto; bottom: 360px; left: 50px; right: 110px; font: 700 50px/1.2 Nunito, sans-serif; -webkit-text-stroke: 0;
+  color: var(--ink); }
+#low span { display: inline-block; background: var(--cream); border: 6px solid var(--ink); border-radius: 30px;
+  padding: 14px 30px 16px; box-shadow: 0 10px 0 var(--ink); }
+#low em { color: var(--coral); }
+#low b { color: var(--coral); }
+@keyframes pop { 0% { opacity: 0; transform: scale(.6) rotate(-3deg); } 100% { opacity: 1; transform: scale(1) rotate(0); } }
+@keyframes out { to { opacity: 0; transform: scale(.85); } }
+
+/* Full-screen cards */
+#card { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(59, 47, 74, .5);
+  opacity: 0; transition: opacity .25s; pointer-events: none; }
+#card.on { opacity: 1; }
+.panel { width: 940px; background: var(--cream); border: 8px solid var(--ink); border-radius: 48px; padding: 44px 46px 50px;
+  box-shadow: 0 18px 0 var(--ink); transform: translateY(60px) scale(.92); transition: transform .45s cubic-bezier(.3, 1.5, .5, 1); }
+#card.on .panel { transform: none; }
+.panel h2 { margin: 0 0 26px; text-align: center; font: 600 74px/1.05 Fredoka, sans-serif; }
+.panel h2 em { font-style: normal; color: var(--coral); }
+.vs { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 22px; }
+.vs .head { font: 600 52px/1 Fredoka, sans-serif; text-align: center; padding-bottom: 6px; }
+.vs .head small { display: block; font: 700 30px Nunito; color: #7d6f8a; margin-top: 8px; }
+.vs .c { font: 700 38px/1.18 Nunito, sans-serif; border-radius: 26px; padding: 22px 22px; opacity: 0; transform: translateY(24px);
+  transition: opacity .2s, transform .35s cubic-bezier(.3, 1.6, .5, 1); }
+.vs .c.in { opacity: 1; transform: none; }
+.vs .old { background: #ece5f2; color: #6b5d78; }
+.vs .new { background: #dff4d3; border: 5px solid #5fae6a; }
+.line { display: flex; justify-content: center; align-items: flex-end; gap: 16px; margin: 6px 0 4px; }
+.mon { text-align: center; opacity: 0; transform: translateY(30px) scale(.7); transition: opacity .2s, transform .4s cubic-bezier(.3, 1.7, .5, 1); }
+.mon.in { opacity: 1; transform: none; }
+.mon img { display: block; margin: 0 auto; image-rendering: pixelated; }
+.mon b { display: block; font: 600 34px/1.05 Fredoka, sans-serif; margin-top: 6px; }
+.mon small { display: block; font: 700 27px/1.2 Nunito; color: #6b5d78; margin-top: 6px; }
+.arrow { font: 600 44px Fredoka; color: #9b8fa8; padding-bottom: 46px; }
+.forms { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 26px; }
+.forms .mon { background: #fff; border: 5px solid var(--ink); border-radius: 30px; padding: 16px 8px 18px; }
+.sep { text-align: center; font: 700 36px Nunito; color: var(--coral); margin-top: 26px; }
+
+/* Rewind / time cards */
+#rew { position: absolute; inset: 0; display: grid; place-items: center; background: #1d1726; opacity: 0; pointer-events: none;
+  font: 600 110px/1 Fredoka, sans-serif; color: #fff; text-align: center; }
+#rew.on { opacity: 1; }
+#rew::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(255,255,255,.06) 0 3px, transparent 3px 7px); }
+#rew small { display: block; font: 700 46px Nunito; color: var(--sun); margin-top: 26px; }
+#rew .t { animation: jit .12s steps(2) infinite; }
+@keyframes jit { 50% { transform: translate(6px, -3px) skewX(-4deg); } }
+
+#flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+#flash.on { animation: fl .35s ease-out; }
+@keyframes fl { 0% { opacity: .85; } 100% { opacity: 0; } }
+
+#fx { position: absolute; inset: 0; pointer-events: none; }
+.tap { position: absolute; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%;
+  border: 9px solid #fff; box-shadow: 0 0 0 6px var(--ink), inset 0 0 0 6px var(--ink); background: rgba(255,255,255,.35);
+  animation: tap .6s ease-out forwards; }
+@keyframes tap { 0% { transform: scale(.4); opacity: 1; } 70% { opacity: 1; } 100% { transform: scale(1.25); opacity: 0; } }
+
+/* End sticker */
+#tag { position: absolute; left: 50%; bottom: 545px; transform: translate(-50%, 40px) scale(.8); opacity: 0;
+  display: flex; align-items: center; gap: 18px; background: var(--ink); color: #fff; border-radius: 999px; padding: 14px 34px 14px 16px;
+  font: 600 46px Fredoka, sans-serif; transition: .35s cubic-bezier(.3, 1.6, .5, 1); white-space: nowrap; }
+#tag.on { opacity: 1; transform: translate(-50%, 0) scale(1); }
+#tag img { width: 76px; height: 76px; image-rendering: pixelated; background: #fffcf3; border-radius: 50%; }
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<div id="cam"></div>
+<div id="fx"></div>
+<div class="cap" id="top"></div>
+<div class="cap" id="low"></div>
+<div id="tag"><img src="../icons/icon-128.png" alt="">Bubby · free on Chrome</div>
+<div id="card"><div class="panel" id="panel"></div></div>
+<div id="rew"></div>
+<div id="flash"></div>
+<script type="module" src="stage.js"></script>
+</body>
+</html>
