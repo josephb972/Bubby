@@ -71,6 +71,19 @@ Tick items as they are done (`[x]`). Owner: **Claude** = can be done in a coding
 - [ ] Then the phone plan: an installable web app first, then home-screen widgets (iOS WidgetKit, Android Glance)
       with a native wrapper.
 
+## 6. Android app (test build)
+
+See `mobile/README.md`. The extension's popup runs in a Capacitor app; notifications are planned ahead with the game
+rules when the app goes to the background.
+
+- [x] Android project (`mobile/`), Bubby launcher icons and splash, notification icon, fixed test signing key.
+- [x] Phone-size checks pass (`node tools/check-mobile.mjs`): toy pod fits, taps, saving, notification forecast.
+- [ ] **Install the test APK on your phone (You)** and play for a few days. Check: does the pod fit your screen,
+      do notifications arrive while the app is closed (also after a restart), does the sound work?
+- [ ] Notification buttons (Feed a meal, Clean up…) like the extension's.
+- [ ] Home-screen widget with Bubby's face (Android Glance).
+- [ ] Play Store: developer account (US$25 one-time), private upload key, store listing, privacy policy URL.
+
 ---
 
 ## Reference

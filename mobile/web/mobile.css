@@ -1,0 +1,28 @@
+/* Bubby on Android: fit the fixed-size popup to the phone screen. Loaded after popup.css. The design itself is the
+   extension's; this only scales and centres it (mobile.js sets --fit). */
+:root.mobile {
+  --fit: 1;
+  /* Capacitor sets --safe-area-inset-* to the status and navigation bar sizes (Android draws the app behind them). */
+  --safe-t: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --safe-r: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  --safe-b: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --safe-l: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: var(--safe-t) var(--safe-r) var(--safe-b) var(--safe-l);
+  background: radial-gradient(ellipse at 25% 0%, var(--mint-hi), transparent 65%), var(--mint);
+  background-color: var(--mint);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+:root.mobile:has(body.toy) { background: #85c3d0; }
+:root.mobile body {
+  zoom: var(--fit);
+  margin: 0 auto;
+  background: transparent;
+}
+/* The toy pod sits in the middle of the screen. */
+:root.mobile:not(.scrolls) { height: 100%; overflow: hidden; }
+:root.mobile:not(.scrolls) body { position: relative; top: 50%; transform: translateY(-50%); }
+/* No hover tooltips or keyboard hints on a phone. */
+:root.mobile kbd, :root.mobile p.foot:has(kbd) { display: none; }

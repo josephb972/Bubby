@@ -4,11 +4,10 @@
 import { advance, doAction, pace, needKey, stageName } from './core/rules.js';
 import { loadState, saveState, updateAction } from './core/store.js';
 import * as store from './core/store.js';
+import { NEED_COPY, DAILY_LIMIT, MIN_GAP, dayKey } from './core/notes.js';
 
 const ALARM = 'bubby-tick';
 const NOTE = 'bubby-need';
-const DAILY_LIMIT = 6;            // need notifications per day
-const MIN_GAP = 40 * 60 * 1000;   // between two need notifications
 let popupPort = null;
 
 // Run state changes one at a time so two wake-ups never overwrite each other.
@@ -41,16 +40,6 @@ async function tick() {
 }
 
 /* ---------- Notifications ---------- */
-const NEED_COPY = {
-  hungry: { title: 'Bubby is hungry', message: 'Its tummy is empty. Feed it a meal before it gets upset.', buttons: [['meal', 'Feed a meal'], ['open', 'Open Bubby']] },
-  sad:    { title: 'Bubby feels lonely', message: 'Play a game together, or cheer it up with a snack.', buttons: [['open', 'Play a game'], ['snack', 'Give a snack']] },
-  sleep:  { title: 'Bubby fell asleep', message: 'The lights are still on. Turn them off so it can rest.', buttons: [['lights', 'Turn lights off'], ['open', 'Open Bubby']] },
-  sick:   { title: 'Bubby feels sick', message: 'It needs medicine. Some sicknesses take a few doses.', buttons: [['med', 'Give medicine'], ['open', 'Open Bubby']] },
-  dirty:  { title: 'Time to clean up', message: 'Bubby’s garden is getting dirty. Clean it before Bubby gets sick.', buttons: [['clean', 'Clean up'], ['open', 'Open Bubby']] },
-};
-
-function dayKey(ms) { const d = new Date(ms); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; }
-
 async function show(id, { title, message, buttons = [] }, S, silent) {
   S.notif.actions = buttons.map(b => b[0]);
   S.notif.actionsFor = id;

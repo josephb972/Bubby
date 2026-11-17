@@ -1,8 +1,10 @@
 # Bubby
 
-A small virtual-pet game. Two parts:
+A small virtual-pet game. Three parts:
 
 - `index.html`: the original single-file web game (its own rules and save, in localStorage).
+- `mobile/`: the Android app (Capacitor). It wraps the extension's popup and adds a phone layer; see `mobile/README.md`.
+  Build the test APK with `cd mobile && npm install && npm run apk`; check with `node tools/check-mobile.mjs`.
 - `extension/`: the Chrome / Edge / Brave extension (Manifest V3). Real-time pet in the toolbar; popup shows the toy
   pod artwork with the live game on its screen (or a compact layout). See `extension/README.md`.
 
