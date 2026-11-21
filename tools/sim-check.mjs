@@ -3,9 +3,10 @@
 import * as R from '../extension/core/rules.js';
 
 const MIN = 60 * 1000;
-function life(paceId, player, { days = 20, seed } = {}) {
+function life(paceId, player, { days = 20, persona } = {}) {
   const start = new Date('2026-11-02T09:00:00').getTime();
   const S = R.fresh(1, { pace: paceId }, start);
+  if (persona) S.persona = { ...S.persona, ...persona };
   let t = start, n = 0, calls = 0, lastKey = null, checks = 0, games = 0;
   const end = start + days * 24 * 60 * MIN;
   while (t < end && !S.ended) {
@@ -55,3 +56,18 @@ for (const p of ['classic', 'chill']) for (const [name, fn] of Object.entries(pl
   rows.push({ pace: p, player: name, 'life days': avg('days'), ends: JSON.stringify(ends), forms: JSON.stringify(forms), mistakes: avg('mistakes'), discipline: avg('discipline'), 'sick times': avg('sick'), 'alerts/day': (avg('needAlerts') / Math.max(1, avg('days'))).toFixed(1) });
 }
 console.table(rows);
+
+// Personality extremes: the hardest and easiest possible Bubbies must still be fine with a few check-ins a day.
+const HARD = { axes: { energy: 2, appetite: 2, manners: 2, nerve: -2, health: -2 }, quirks: ['neat', 'sleepy'] };
+const EASY = { axes: { energy: -2, appetite: -2, manners: -2, nerve: 2, health: 2 }, quirks: ['mudpie', 'dreamer'] };
+const rows2 = [];
+for (const p of ['classic', 'chill']) for (const [label, persona] of [['hardest', HARD], ['easiest', EASY]]) {
+  for (const name of ['every 2 hours', '3 times a day + bedtime', 'morning + evening']) {
+    const runs = Array.from({ length: 8 }, () => life(p, players[name], { persona }));
+    const avg = k => (runs.reduce((a, r) => a + +r[k], 0) / runs.length).toFixed(1);
+    const ends = runs.reduce((m, r) => (m[r.ended] = (m[r.ended] || 0) + 1, m), {});
+    const forms = runs.reduce((m, r) => (m[r.form] = (m[r.form] || 0) + 1, m), {});
+    rows2.push({ pace: p, persona: label, player: name, 'life days': avg('days'), ends: JSON.stringify(ends), forms: JSON.stringify(forms), mistakes: avg('mistakes'), 'sick times': avg('sick'), 'alerts/day': (avg('needAlerts') / Math.max(1, avg('days'))).toFixed(1) });
+  }
+}
+console.table(rows2);

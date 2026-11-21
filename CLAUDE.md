@@ -14,6 +14,9 @@ session about the extension, work through open items, and tick them off (`[x]`) 
 ## Working on the extension
 
 - Game rules live in `extension/core/rules.js` (pure, no DOM; shared by popup and background worker).
+- Personality (seed kinds, temperament, quirks, and their effect on the rules) is `extension/core/persona.js`; the
+  passive behaviours are `extension/core/behaviors.js` (catalogue and weights) and `extension/popup/behave.js`
+  (animations). Design: `docs/PERSONALITY-PLAN.md`.
 - After changing rules or pacing, run `node tools/sim-check.mjs`.
 - Regenerate PNG icons with `node tools/make-icons.mjs` (needs Playwright).
 - Test by loading `extension/` with "Load unpacked". After changes, run `node tools/check-extension.mjs` (Playwright

@@ -30,6 +30,10 @@ Take care of it
 • Scold its tantrums so it grows up well behaved.
 • How you raise it decides who it becomes: a Radiant Blossom, a Daisy Blossom or a Thistle.
 
+Every Bubby is different
+• Each seed has its own kind and personality: Playful or Serious, Peckish or Picky, Bratty or Sweet, Brave or Timid, Hardy or Delicate, plus quirks like Jokester, Diva or Bookworm. You find out who it is as it grows.
+• Its personality changes how you look after it, and what it gets up to on its own: over 80 little things, from chasing butterflies and taking bubble baths to sulking and telling itself jokes. Some are rare.
+
 It lives while you're away
 • Bubby keeps going even when the browser is closed. When you come back, a short card tells you what happened.
 • When it really needs you, a notification has a button that fixes it on the spot, like "Feed a meal" or "Clean up".

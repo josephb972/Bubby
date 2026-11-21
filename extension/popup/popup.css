@@ -219,6 +219,7 @@ fieldset:disabled { opacity: .55; }
 .callout.go { background: #ffd34a; box-shadow: 0 2px 0 var(--ink); cursor: pointer; }
 .callout.go:active { transform: translateY(2px); box-shadow: none; }
 .callout.ok { background: #e4f5d8; }
+.linkish { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 2px; text-align: left; }
 
 /* ================= Toy pod (default look) ================= */
 .app.toy #compactWrap, .app:not(.toy) #photoWrap { display: none; }
@@ -282,6 +283,7 @@ fieldset:disabled { opacity: .55; }
 .app.toy .away ul { font-size: 2.9cqw; padding-left: 3cqw; }
 .app.toy .end-text { font-size: 2.9cqw; }
 .app.toy .stat-grid { gap: .35cqw 2cqw; font-size: 2.8cqw; }
+.app.toy #natGrid { gap: 0 2cqw; }
 .app.toy .stat-grid dt { color: #6b5d78; }
 .app.toy .stat-grid dd { gap: .5cqw; }
 .app.toy .stat-grid dd img { width: 3.2cqw; }

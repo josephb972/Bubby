@@ -45,9 +45,11 @@ async function capture(state, { look = 'toy', size = [468, 600], then } = {}) {
   return 'data:image/png;base64,' + png.toString('base64');
 }
 
-const bud = { stage: 'child', weight: 12, age: 2 * 86400, stageT: 3600 };
+// A fixed personality, so the screenshots don't change from run to run.
+const persona = { kind: 'sun', axes: { energy: 2, appetite: 0, manners: -1, nerve: 1, health: 0 }, quirks: ['jokester', 'songbird'], known: { q: 1, axes: ['energy'] } };
+const bud = { stage: 'child', weight: 12, age: 2 * 86400, stageT: 3600, persona };
 const img = {
-  blossom: await capture({ stage: 'adult', variant: 'radiant', weight: 24, age: 5 * 86400, stageT: 3600 }),
+  blossom: await capture({ stage: 'adult', variant: 'radiant', weight: 24, age: 5 * 86400, stageT: 3600, persona }),
   status: await capture({ ...bud, hunger: 1, happy: 3, call: { reason: 'hungry', t: 0, counted: false } }, { then: p => p.keyboard.press('s') }),
   game: await capture(bud, { then: async p => {
     await p.keyboard.press('p'); await p.waitForTimeout(200); await p.keyboard.press('2');
@@ -55,7 +57,7 @@ const img = {
     await p.keyboard.down('ArrowLeft'); await p.waitForTimeout(1400); await p.keyboard.up('ArrowLeft');
     await p.waitForTimeout(1200);
   } }),
-  compact: await capture({ stage: 'baby', weight: 6, age: 5 * 3600, stageT: 3600, hunger: 3, happy: 2 }, { look: 'compact', size: [360, 600] }),
+  compact: await capture({ stage: 'baby', weight: 6, age: 5 * 3600, stageT: 3600, hunger: 3, happy: 2, persona }, { look: 'compact', size: [360, 600] }),
 };
 const page0 = await ctx.newPage();
 await page0.goto(base + 'welcome/welcome.html');

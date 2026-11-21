@@ -11,6 +11,8 @@
 //   Real-time paces use a longer grace than a pure time-stretch would give, so checking in
 //   3–5 times a day is enough for a healthy Bubby (see tools/sim-check.mjs).
 
+import { rollPersona, mods, revealForStage, KINDS } from './persona.js';
+
 export const STAGE = {
   seed:   { next: 'baby' },
   baby:   { next: 'child',  hr: 1 / 22, pr: 1 / 28, poop: [30, 45], awake: 85,  sleep: 25, base: 5,  doses: [1, 2] },
@@ -59,7 +61,8 @@ export function defaultCfg() {
   return { pace: 'chill', bed: 22 * 60, wake: 8 * 60, notify: true, sound: true, look: 'toy', bedAsked: false, dev: false };
 }
 
-export function fresh(gen = 1, cfg = defaultCfg(), now = Date.now()) {
+// kind: the seed kind to plant (random if not given).
+export function fresh(gen = 1, cfg = defaultCfg(), now = Date.now(), kind) {
   return {
     v: 2, gen, cfg: { ...defaultCfg(), ...cfg },
     stage: 'seed', stageT: 0, age: 0, born: now, lastT: now,
@@ -71,6 +74,8 @@ export function fresh(gen = 1, cfg = defaultCfg(), now = Date.now()) {
     stats: { meals: 0, snacks: 0, games: 0, wins: 0, cleans: 0, meds: 0, scolds: 0, sick: 0, bestCatch: 0 },
     events: [], evSeq: 0, notifiedSeq: 0, seenSeq: 0,
     notif: { day: '', count: 0, lastAt: 0 },
+    persona: rollPersona(kind),
+    journal: [],   // ids of the passive behaviours seen so far (kept across generations)
   };
 }
 
@@ -111,7 +116,7 @@ export function getSick(S, cause, now) {
   if (S.sick) return;
   const st = STAGE[S.stage];
   S.sick = true; S.sickT = 0; S.sickCounted = false; S.sickMeter = 0;
-  S.doses = Math.round(rand(st.doses[0], st.doses[1]));
+  S.doses = Math.max(1, Math.round(rand(st.doses[0], st.doses[1])) + mods(S).doses);
   S.stats.sick++;
   say(S, 'sick', cause === 'sweets' ? 'Too many sweets! Bubby has a toothache.' : 'Bubby feels sick. It needs medicine.', now);
 }
@@ -135,13 +140,15 @@ export function evolve(S, to, now) {
     S.variant = ['radiant', 'daisy', 'thistle'][tier];
   }
   S.stage = to; S.stageT = 0;
-  S.nextPoop = rand(...STAGE[to].poop) * pace(S).kPoop;
+  S.nextPoop = rand(...STAGE[to].poop) * pace(S).kPoop * mods(S).poopGap;
   if (to === 'baby') { S.awakeT = 0; S.nextTantrum = pace(S).clock ? rand(10, 25) : 55; }
   const msg = to === 'baby' ? 'The seed sprouted! Meet Bubby the Bulb.'
     : to === 'child' ? 'Bubby grew into a Bud!'
     : to === 'adult' ? `Bubby blossomed into a ${FORMS[S.variant]}!`
     : 'Bubby is an Elder now. Take it easy.';
   say(S, 'evolve', msg, now, { from, to });
+  const learned = revealForStage(S, to);
+  if (learned) say(S, 'learn', learned, now);
 }
 
 function end(S, kind, now) {
@@ -162,6 +169,7 @@ export function step(S, dt, now, live) {
   if (S.stage === 'seed') { if (S.stageT >= P.dur.seed) evolve(S, 'baby', now); return; }
   const st = STAGE[S.stage];
   const inGame = !!(live && live.game);
+  const M = mods(S);
 
   // Day and night
   if (S.asleep) {
@@ -170,24 +178,24 @@ export function step(S, dt, now, live) {
     if (P.clock ? !isBedtime(S, now) : S.sleepT >= st.sleep) wake(S, now);
   } else {
     S.awakeT += dt;
-    if (!S.lights) S.happy -= dt / (70 * kG);
+    if (!S.lights) S.happy -= dt / (70 * kG) * M.dark;
     // Real time: a newborn stays up for 30 minutes even if it is born at bedtime.
-    const sleepy = P.clock ? (isBedtime(S, now) && S.awakeT >= 1800) : S.awakeT >= st.awake;
+    const sleepy = P.clock ? (isBedtime(S, now) && S.awakeT >= 1800) : S.awakeT >= st.awake * M.awake;
     if (sleepy && !inGame) fallAsleep(S, now);
   }
 
   // Meters
   let m = S.asleep ? 0.15 : 1;
   if (S.sick) m *= 1.6;
-  S.hunger = clamp(S.hunger - st.hr / kN * m * dt, 0, 4);
-  S.happy = clamp(S.happy - st.pr / kN * m * dt - 0.004 / kN * S.poops.length * dt, 0, 4);
+  S.hunger = clamp(S.hunger - st.hr / kN * m * M.hunger * dt, 0, 4);
+  S.happy = clamp(S.happy - st.pr / kN * m * M.happy * dt - 0.004 / kN * S.poops.length * M.poopMood * dt, 0, 4);
 
   // Poop
   if (!S.asleep) {
     S.nextPoop -= dt;
     if (S.nextPoop <= 0) {
       if (S.poops.length < 4) { S.poops.push({ t: 0 }); say(S, 'poop', 'Bubby pooped.', now); }
-      S.nextPoop = rand(...st.poop) * P.kPoop;
+      S.nextPoop = rand(...st.poop) * P.kPoop * M.poopGap;
     }
   }
   let old = 0, newlyOld = false;
@@ -196,8 +204,8 @@ export function step(S, dt, now, live) {
     if (p.t > 12 * kG) { old++; if (!p.warned) { p.warned = true; newlyOld = true; } }
   }
   if (newlyOld && P.clock) say(S, 'dirty', 'The garden is getting dirty. Clean it before Bubby gets sick.', now);
-  S.sickMeter += dt * old;
-  if (S.weight > st.base * 2) S.sickMeter += dt * 0.3;
+  S.sickMeter += dt * old * M.sick;
+  if (S.weight > st.base * 2) S.sickMeter += dt * 0.3 * M.sick;
   if (!S.sick && S.sickMeter >= 45 * kG) getSick(S, 'poop', now);
 
   // Neglect
@@ -218,7 +226,7 @@ export function step(S, dt, now, live) {
     S.nextTantrum -= dt;
     if (S.nextTantrum <= 0) {
       if (S.hunger >= 2 && S.happy >= 2 && !S.sick && S.discipline < 100) startCall(S, 'tantrum', now);
-      S.nextTantrum = P.clock ? rand(25, 50) + S.discipline * 0.4 : rand(45, 80) + S.discipline * 0.8;
+      S.nextTantrum = (P.clock ? rand(25, 50) + S.discipline * 0.4 : rand(45, 80) + S.discipline * 0.8) * M.tantrum;
     }
   }
 
@@ -279,15 +287,18 @@ export function doAction(S, a, now = Date.now()) {
   if (a === 'lights') return toggleLights(S, now);
   const no = canCare(S);
   if (no) return { ok: false, msg: no };
+  const M = mods(S);
   switch (a) {
     case 'meal': {
       if (S.hunger >= 3.999) return { ok: false, msg: 'Bubby is full', anim: 'no' };
-      S.hunger = clamp(S.hunger + 1, 0, 4); S.weight += 1; S.stats.meals++; S.nextPoop -= 4 * pace(S).kPoop;
+      // A picky eater sometimes pushes the plate away (never when it's really hungry). No cost: try again.
+      if (S.hunger >= 1 && Math.random() < M.refuse) return { ok: false, msg: 'Bubby pushed the plate away. Picky! Try again', anim: 'no' };
+      S.hunger = clamp(S.hunger + 1, 0, 4); S.happy = clamp(S.happy + M.mealHappy, 0, 4); S.weight += 1; S.stats.meals++; S.nextPoop -= 4 * pace(S).kPoop;
       return { ok: true, msg: 'Yum! A good meal', anim: 'eat-meal' };
     }
     case 'snack': {
       const kG = pace(S).kGrace;
-      S.happy = clamp(S.happy + 1, 0, 4); S.weight += 2; S.stats.snacks++;
+      S.happy = clamp(S.happy + M.snack, 0, 4); S.weight += 2; S.stats.snacks++;
       S.snacks = S.snacks.filter(t => S.age - t < 45 * kG); S.snacks.push(S.age);
       const r = { ok: true, msg: 'Sweet! Bubby loves snacks', anim: 'eat-snack' };
       if (S.snacks.length >= 3 && Math.random() < 0.6) { S.snacks = []; getSick(S, 'sweets', now); r.msg = 'Too many sweets! Bubby has a toothache'; }
@@ -295,24 +306,24 @@ export function doAction(S, a, now = Date.now()) {
     }
     case 'clean': {
       if (!S.poops.length) return { ok: false, msg: 'The garden is already clean', anim: 'sparkle' };
-      S.poops = []; S.sickMeter = 0; S.happy = clamp(S.happy + 0.25, 0, 4); S.stats.cleans++;
+      S.poops = []; S.sickMeter = 0; S.happy = clamp(S.happy + 0.25 + M.cleanBonus, 0, 4); S.stats.cleans++;
       return { ok: true, msg: 'All clean!', anim: 'clean' };
     }
     case 'med': {
       if (!S.sick) return { ok: false, msg: 'Bubby isn’t sick', anim: 'no' };
       S.doses--; S.stats.meds++;
       if (S.doses <= 0) {
-        S.sick = false; S.sickT = 0; S.sickCounted = false; S.neglectT = 0; S.sickMeter = 0; S.happy = clamp(S.happy - 0.5, 0, 4);
+        S.sick = false; S.sickT = 0; S.sickCounted = false; S.neglectT = 0; S.sickMeter = 0; S.happy = clamp(S.happy + M.cure, 0, 4);
         return { ok: true, msg: 'All better!', anim: 'med' };
       }
       return { ok: true, msg: `Gulp. ${S.doses} more dose${S.doses > 1 ? 's' : ''} needed`, anim: 'med' };
     }
     case 'scold': {
       if (S.call && S.call.reason === 'tantrum') {
-        S.discipline = clamp(S.discipline + 25, 0, 100); S.call = null; S.stats.scolds++;
+        S.discipline = clamp(S.discipline + M.disc, 0, 100); S.call = null; S.stats.scolds++;
         return { ok: true, msg: `Bubby behaves now. Discipline ${S.discipline}%`, anim: 'scold' };
       }
-      S.happy = clamp(S.happy - 1, 0, 4);
+      S.happy = clamp(S.happy - M.unfair, 0, 4);
       return { ok: true, msg: 'That wasn’t fair. Bubby is upset', anim: 'scold' };
     }
   }
@@ -338,7 +349,7 @@ export function toggleLights(S, now = Date.now()) {
 export function finishGame(S, happyGain) {
   S.stats.games++;
   S.weight = Math.max(Math.round(STAGE[S.stage].base * 0.8), S.weight - 1);
-  if (happyGain) { S.happy = clamp(S.happy + happyGain, 0, 4); S.stats.wins++; }
+  if (happyGain) { S.happy = clamp(S.happy + happyGain * mods(S).game, 0, 4); S.stats.wins++; }
 }
 
 /* ---------- What does Bubby need most right now? (drives the smart button, badge and tooltip) ---------- */
@@ -391,5 +402,13 @@ export function migrate(o, now = Date.now()) {
   S.cfg = { ...defaultCfg(), ...(o.cfg || {}) };
   S.stats = { ...fresh().stats, ...(o.stats || {}) };
   S.notif = { day: '', count: 0, lastAt: 0, ...(o.notif || {}) };
+  if (!Array.isArray(S.journal)) S.journal = [];
+  // Saves from before personalities: fresh() rolled one. A grown Bubby has already "shown" what it's like.
+  if (!o.persona) {
+    const i = ['seed', 'baby', 'child', 'adult', 'senior'].indexOf(S.stage);
+    if (i >= 3) revealForStage(S, 'adult');
+    else { if (i >= 1) revealForStage(S, 'baby'); if (i >= 2) revealForStage(S, 'child'); }
+    if (i >= 1 && !S.ended) say(S, 'learn', `Every Bubby has a personality now. Yours grew from a ${KINDS[S.persona.kind].name}.`, now);
+  }
   return S;
 }

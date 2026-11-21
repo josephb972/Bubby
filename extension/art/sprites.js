@@ -79,13 +79,27 @@ function palette(variant, senior) {
   return { ring: m(p.ring), petal: m(p.petal), face: m(p.face), faceRing: m(p.faceRing), suit: [m(p.suit[0]), m(p.suit[1])], blush: m(p.blush),
     wings: p.wings && [mix(p.wings[0], '#bfb3a3', .6), mix(p.wings[1], '#e2d8ca', .6)] };
 }
+// Seed shell colours per seed kind (core/persona.js): [rim, stripe, shell, shine]
+const SEED_PAL = {
+  plain: ['#55702f', '#8c6a3a', '#7f9f4e', '#b5cf86'],
+  sun:   ['#a8731c', '#e0a12a', '#f7cf5a', '#fff0a8'],
+  honey: ['#8a5a1c', '#c98a3a', '#e8b860', '#f8dca0'],
+  thorn: ['#4a3060', '#6e4b98', '#9a6cc7', '#d2b4ee'],
+  moon:  ['#34416a', '#5a6fa8', '#8fa3d6', '#e0e8fa'],
+  dew:   ['#2f7d78', '#5fb8b0', '#9ae0d6', '#e8fffa'],
+  star:  ['#4a3a80', '#ffd23f', '#8f78cf', '#ffffff'],
+};
+export function kindSeed(S) { return S && S.persona && !S.ended ? S.persona.kind : 'plain'; }
 function drawSeed(x, o) {
   ER(x, 24, 44, 14, 3.6, '#6b4226', '#8a5a36');
   P(x, [15, 44, 20, 43, 27, 45, 31, 43, 34, 44], '#a8724a');
-  const sx = 24 + (o.wobble || 0);
-  E(x, sx, 34, 8, 10, '#55702f');
-  E(x, sx, 34, 7, 9, (px, py) => { const v = py + 1.6 * Math.sin(px * .9); return ((v % 6) + 6) % 6 < 2 ? '#8c6a3a' : '#7f9f4e'; });
-  P(x, [sx - 4, 29, sx - 4, 30, sx - 3, 28], '#b5cf86');
+  const sx = 24 + (o.wobble || 0), pal = SEED_PAL[o.kind] || SEED_PAL.plain;
+  E(x, sx, 34, 8, 10, pal[0]);
+  E(x, sx, 34, 7, 9, (px, py) => { const v = py + 1.6 * Math.sin(px * .9); return ((v % 6) + 6) % 6 < 2 ? pal[1] : pal[2]; });
+  P(x, [sx - 4, 29, sx - 4, 30, sx - 3, 28], pal[3]);
+  if (o.kind === 'thorn') P(x, [sx - 8, 31, sx + 8, 33, sx - 8, 37, sx + 8, 39, sx, 24], pal[0]);
+  if (o.kind === 'star') P(x, [sx + 3, 31, sx + 2, 32, sx + 3, 32, sx + 4, 32, sx + 3, 33, sx - 2, 38], '#ffffff');
+  if (o.kind === 'moon') P(x, [sx + 2, 36, sx + 3, 37, sx + 3, 38, sx + 2, 39], pal[3]);
   if (o.crack) P(x, [sx - 1, 25, sx, 26, sx + 1, 27, sx, 28, sx + 1, 29, sx + 2, 28], INK);
 }
 function drawBaby(x, o) {
@@ -139,7 +153,7 @@ function drawAdult(x, o, senior) {
 // Sprites are cached: the scene asks for the same pose every frame.
 const cache = new Map();
 export function petSprite(stage, o = {}) {
-  const key = stage + '|' + [o.mood, o.mouth, o.variant, o.chubby, o.sick, o.blink, o.look, o.wobble, o.crack].join(',');
+  const key = stage + '|' + [o.mood, o.mouth, o.variant, o.chubby, o.sick, o.blink, o.look, o.wobble, o.crack, o.kind].join(',');
   let c = cache.get(key);
   if (c) return c;
   c = mk(48, 48); const x = c.getContext('2d');

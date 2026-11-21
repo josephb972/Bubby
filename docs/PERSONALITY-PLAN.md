@@ -1,6 +1,15 @@
 # Personality & behaviours: design plan
 
-Status: proposal, not built yet. Numbers are starting values to tune with `node tools/sim-check.mjs`.
+Status: **built** (owner chose: seed kinds yes, gradual reveal, everything at once). Numbers are starting values to
+tune with `node tools/sim-check.mjs`. What differs from the proposal below:
+
+- 82 behaviours: the 72 in the catalogue plus a sneeze (when sick or the garden is dirty), 2 Bulb, 4 Elder and
+  3 special-day ones.
+- The full personality is on its own screen, opened from **Status → Nature** (it didn't fit in Settings without
+  scrolling). The journal count ("Seen: 12 of 82 habits") is shown there.
+- Neat-freak and Mud-pie are never rolled together.
+- Reveal: Bulb reveals the first quirk, Bud the second, a temperament trait has a 40% chance of being revealed each
+  time Bubby does a behaviour that shows it, and Blossom reveals everything that's left.
 
 ## Goals
 

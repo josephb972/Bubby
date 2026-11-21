@@ -3,6 +3,9 @@ import * as Rules from '../core/rules.js';
 import { loadState, saveState, updateAction } from '../core/store.js';
 import { art, SW, GROUND } from '../art/sprites.js';
 import { drawScene, catchY } from './scene.js';
+import * as Persona from '../core/persona.js';
+import * as Behaviors from '../core/behaviors.js';
+import { startBehavior } from './behave.js';
 
 const { clamp, rand } = Rules;
 const $ = (s, r = document) => r.querySelector(s);
@@ -13,6 +16,8 @@ let A = null;          // current animation { type, t, dur, ... }
 let G = null;          // minigame state
 let OV = null;         // open overlay
 let shownSeq = 0;      // last event shown as a toast
+let BH = null;         // passive behaviour playing right now (popup/behave.js)
+let bhNext = 4 + Math.random() * 4, recentBh = [];
 const PET = { x: 40, tx: 40, dir: 1, wait: 1, moving: false };
 const IS_WIN = new URLSearchParams(location.search).has('win');
 if (IS_WIN) document.body.classList.add('win');
@@ -64,21 +69,24 @@ function beepCall() { beep(1046, .07); later(130, () => beep(1046, .07)); later(
 function beepUp() { beep(523, .1); later(120, () => beep(659, .1)); later(240, () => beep(784, .16)); }
 
 /* ---------------- Toast ---------------- */
-let toastT = 0;
+let toastT = 0, toastQ = [];
 const $toast = $('#toast');
-function toast(msg) {
+// queue: wait for the current toast instead of replacing it (used for things Bubby reveals about itself)
+function toast(msg, queue) {
   if (!msg) return;
+  if (queue && toastT > 0) { toastQ.push(msg); return; }
   $toast.textContent = msg; $toast.hidden = false;
   $toast.classList.remove('show'); void $toast.offsetWidth; $toast.classList.add('show');
   toastT = 2.6;
 }
 
 /* ---------------- Overlays ---------------- */
-const OVS = { feed: '#ovFeed', play: '#ovPlay', game: '#ovGame', away: '#ovAway', status: '#ovStatus' };
+const OVS = { feed: '#ovFeed', play: '#ovPlay', game: '#ovGame', away: '#ovAway', status: '#ovStatus', nature: '#ovNature' };
 function showOv(name) {
   for (const k in OVS) $(OVS[k]).hidden = k !== name;
   OV = name;
   if (name === 'status') renderStatus();
+  if (name === 'nature') renderNature();
   const first = name && $(OVS[name]).querySelector('button:not([disabled])');
   if (first && name !== 'game') first.focus({ preventScroll: true });
 }
@@ -95,6 +103,7 @@ const ANIM = {
 function runAction(a) {
   if (!S) return;
   unlockAudio();
+  stopBehavior();
   if (a === 'replant') return replant();
   if (a === 'resume' || a === 'pause') return togglePause();
   if (S.ended || G) return;
@@ -132,14 +141,20 @@ function togglePause() {
   persist(); renderUI();
 }
 
+// Family line: half the time, the new seed is the same kind as the Bubby that left it.
+function newSeed(gen, inherit) {
+  const parent = S.persona && S.persona.kind, journal = S.journal || [], best = S.stats.bestCatch || 0;
+  const same = inherit && parent && Math.random() < 0.5;
+  S = Rules.fresh(gen, S.cfg, Date.now(), same ? parent : undefined);
+  S.stats.bestCatch = best; S.journal = journal;
+  A = null; G = null; BH = null; shownSeq = S.evSeq;
+  return same;
+}
 function replant() {
   const gen = S.ended ? S.ended.gen + 1 : S.gen + 1;
-  const keep = { stats: { bestCatch: S.stats.bestCatch || 0 } };
-  S = Rules.fresh(gen, S.cfg, Date.now());
-  S.stats.bestCatch = keep.stats.bestCatch;
-  A = null; G = null; shownSeq = S.evSeq;
+  const same = newSeed(gen, true);
   $('#ovEnd').hidden = true; closeOverlays();
-  toast('A new seed is planted');
+  toast(`A new ${Persona.kindName(S)} is planted${same ? ', just like its parent' : ''}`);
   persist(); renderUI();
 }
 
@@ -149,6 +164,7 @@ function startGame(kind) {
   const no = Rules.canCare(S);
   if (no) return toast(no);
   if (A || G) return;
+  stopBehavior();
   if (kind === 'catch') G = { type: 'catch', phase: 'play', t: 0, left: 20, score: 0, items: [], spawn: .6, px: 50, dir: 1, moving: false, hold: 0, target: null, stun: 0, joy: 0, sec: -1 };
   else G = { type: 'guess', round: 1, score: 0, phase: 'guess', look: 0, t: 0, last: false };
   showOv('game'); $('#ovGame').classList.toggle('catch', G.type === 'catch'); renderGame();
@@ -217,7 +233,7 @@ function updateCatch(rdt) {
     it.y += it.vy * rdt;
     if (it.y >= cy - 3 && it.y <= cy + 8 && Math.abs(it.x - g.px) <= 9) {
       it.fx = .001; it.hit = true;
-      if (it.kind === 'pebble') { g.score = Math.max(0, g.score - 2); g.stun = .8; beep(160, .16); }
+      if (it.kind === 'pebble') { g.score = Math.max(0, g.score - 2); g.stun = .8 * Persona.mods(S).stun; beep(160, .16); }
       else { g.score += it.kind === 'gold' ? 3 : 1; g.joy = .35; beep(it.kind === 'gold' ? 1318 : 988, .05); }
     } else if (it.y >= GROUND - 1) { it.fx = .001; it.y = GROUND - 1; }
   }
@@ -242,12 +258,52 @@ function updateGame(rdt) {
 
 function updatePet(rdt) {
   PET.moving = false;
-  if (S.stage === 'seed' || S.ended || A || G || S.asleep || S.paused || (S.call && S.call.reason === 'tantrum')) return;
+  if (S.stage === 'seed' || S.ended || A || G || BH || S.asleep || S.paused || (S.call && S.call.reason === 'tantrum')) return;
   if (PET.wait > 0) { PET.wait -= rdt; return; }
   const sp = S.stage === 'senior' ? 5 : (S.sick ? 3 : (S.stage === 'baby' ? 7 : 9));
   const d = PET.tx - PET.x;
   if (Math.abs(d) < .5) { PET.wait = .8 + Math.random() * 2.6; PET.tx = 16 + Math.random() * 44; }
   else { PET.dir = Math.sign(d); PET.x += PET.dir * Math.min(Math.abs(d), sp * rdt); PET.moving = true; }
+}
+
+/* ---------------- Passive behaviours ---------------- */
+// Bubby does its own little things while you watch. Purely for show: no meter changes.
+function canIdle() {
+  return S.stage !== 'seed' && !S.ended && !S.paused && !S.asleep && S.lights && !A && !G && !OV
+    && !(S.call && S.call.reason === 'tantrum') && $('#viewSettings').hidden && !document.hidden;
+}
+function stopBehavior() {
+  if (!BH) return;
+  // Keep Bubby where the behaviour left it, then let it wander on.
+  PET.x = clamp(PET.x + (BH.dx || 0), 10, 90); PET.tx = PET.x; PET.wait = .5 + Math.random();
+  BH = null;
+}
+function updateBehavior(rdt) {
+  if (BH) {
+    if (!canIdle()) return stopBehavior();
+    BH.t += rdt;
+    if (BH.t >= BH.dur) { stopBehavior(); bhNext = rand(12, 30); }
+    return;
+  }
+  if (!canIdle()) return;
+  if ((bhNext -= rdt) > 0) return;
+  PET.tx = PET.x; PET.moving = false; // stop where it is
+  bhNext = rand(12, 30);
+  const b = Behaviors.pickBehavior(S, recentBh, Date.now());
+  if (!b || !(BH = startBehavior(b))) return;
+  recentBh = [b.id, ...recentBh].slice(0, 6);
+  noticeBehavior(b);
+}
+function noticeBehavior(b) {
+  let changed = false;
+  if (!S.journal.includes(b.id)) {
+    S.journal.push(b.id); changed = true;
+    if (b.r === 'R' || b.r === 'L') toast(`${b.r === 'L' ? 'Super rare' : 'Rare'}! Bubby ${b.did}. (${S.journal.length}/${Behaviors.TOTAL} seen)`, true);
+  }
+  // Watching Bubby is how you learn its temperament.
+  const axis = Behaviors.telltale(b, S);
+  if (axis && Math.random() < 0.4) { const msg = Persona.revealAxis(S, axis); if (msg) { toast(msg, true); changed = true; } }
+  if (changed) persist();
 }
 
 /* ---------------- Events from the simulation ---------------- */
@@ -261,6 +317,7 @@ function handleEvents() {
       case 'call': beepCall(); if (e.reason !== 'tantrum') toast(e.text); break;
       case 'poop': beep(200, .08); break;
       case 'sick': beep(330, .12); later(140, () => beep(260, .18)); toast(e.text); break;
+      case 'learn': toast(e.text, true); break;
       default: toast(e.text);
     }
   }
@@ -277,9 +334,9 @@ function fmtDur(ms) {
   const d = Math.floor(h / 24), hh = h % 24;
   return `${d} day${d > 1 ? 's' : ''}${hh ? ` ${hh} h` : ''}`;
 }
-function summarize(evs) {
+function summarize(evs, ms) {
   const lines = [], n = t => evs.filter(e => e.type === t).length;
-  for (const e of evs) if (e.type === 'evolve' || e.type === 'end') lines.push(e.text);
+  for (const e of evs) if (e.type === 'evolve' || e.type === 'end' || e.type === 'learn') lines.push(e.text);
   const reasons = new Set(evs.filter(e => e.type === 'call').map(e => e.reason));
   if (reasons.has('hungry')) lines.push('Bubby got hungry and called for you.');
   if (reasons.has('sad')) lines.push('Bubby felt lonely.');
@@ -289,12 +346,14 @@ function summarize(evs) {
   if (n('wake')) lines.push(n('wake') > 1 ? `Bubby slept ${n('wake')} nights.` : 'Bubby had a good night’s sleep.');
   else if (n('sleep')) lines.push('Bubby went to sleep.');
   const m = n('mistake'); if (m) lines.push(`${m} care mistake${m > 1 ? 's' : ''} while you were gone.`);
-  if (!lines.length) lines.push('Bubby pottered around the garden. All good!');
-  return lines.slice(0, 6);
+  const all = lines.length;
+  for (const d of Behaviors.diary(S, ms || 0)) if (lines.length < 6) lines.push(d);
+  if (!all) lines.push(lines.length ? 'Nothing else to report. All good!' : 'Bubby pottered around the garden. All good!');
+  return lines.slice(0, 7);
 }
 function showAway(evs, ms) {
   const list = $('#awayList'); list.textContent = '';
-  for (const t of summarize(evs)) { const li = document.createElement('li'); li.textContent = t; list.appendChild(li); }
+  for (const t of summarize(evs, ms)) { const li = document.createElement('li'); li.textContent = t; list.appendChild(li); }
   $('#awayFor').textContent = fmtDur(ms);
   $toast.hidden = true; toastT = 0;
   showOv('away');
@@ -353,6 +412,7 @@ function renderStatus() {
   hearts($('#stHappy'), S.stage === 'seed' ? 4 : S.happy, 'Happy');
   $('#stDisc').style.width = S.discipline + '%'; $('#stDiscN').textContent = S.discipline + '%';
   $('#stMist').textContent = S.mistakes;
+  $('#stNature').textContent = (Persona.title(S) || (S.stage === 'seed' ? Persona.kindName(S) : 'Getting to know…')) + ' \u25B8';
   let msg, ok = false;
   if (S.stage === 'seed') { msg = 'The seed is about to sprout.'; ok = true; }
   else if (S.call) msg = Rules.CALL_TEXT[S.call.reason];
@@ -442,6 +502,22 @@ function renderUI() {
 
 /* ---------------- Settings ---------------- */
 function toMin(v) { const [h, m] = v.split(':').map(Number); return h * 60 + m; }
+// Bubby's personality, as far as you've got to know it (opened from the Nature row on the status screen).
+function renderNature() {
+  const p = S.persona, k = p.known, grown = ['adult', 'senior'].includes(S.stage);
+  const row = (dt, dd, help) => `<dt>${dt}</dt><dd${help ? ` title="${help}"` : ''}>${dd}</dd>`;
+  const K = Persona.KINDS[p.kind];
+  $('#natTitle').textContent = K.name; $('#natTitle').title = K.blurb;
+  let h = '';
+  for (const a of Persona.AXIS_IDS) {
+    const v = p.axes[a], known = k.axes.includes(a) || (v === 0 && grown);
+    h += row(Persona.AXIS_LABEL[a], !known ? '???' : v === 0 ? 'Balanced' : `${Persona.poleName(a, v)} ${'●'.repeat(Math.abs(v))}`,
+      `${Persona.AXES[a].join(' or ')}? ` + (known ? (v ? Persona.AXIS_HELP[a][v > 0 ? 1 : 0] : 'Somewhere in between') : 'Watch Bubby to find out. You’ll know it all when it blossoms.'));
+  }
+  h += row('Quirks', p.quirks.map((q, i) => i < k.q ? Persona.QUIRKS[q].name : '???').join(', '), p.quirks.slice(0, k.q).map(q => Persona.QUIRKS[q].help).join('. '));
+  h += row('Seen', `${S.journal.length} of ${Behaviors.TOTAL} habits`, 'Different things Bubby does on its own that you have seen');
+  $('#natGrid').innerHTML = h;
+}
 function renderSettings() {
   const box = $('#paces');
   box.textContent = '';
@@ -482,6 +558,7 @@ function wire() {
     const t = e.target;
     const act = t.closest('[data-act]'); if (act) return runAction(act.dataset.act);
     if (t.closest('[data-close]')) return closeOverlays();
+    const ov = t.closest('[data-ov]'); if (ov) { beep(880, .03); return showOv(ov.dataset.ov); }
     const d = t.closest('[data-do]'); if (d && d.id !== 'smart') return runAction(d.dataset.do);
     const g = t.closest('[data-g]'); if (g) return guess(+g.dataset.g);
     const pg = t.closest('[data-game]'); if (pg) return startGame(pg.dataset.game);
@@ -516,8 +593,8 @@ function wire() {
       $('#resetBox').innerHTML = '<button class="chip danger" id="btnResetYes">Yes, lose this Bubby</button><button class="chip" id="btnResetNo">Keep Bubby</button>';
       $('#btnResetNo').focus();
     } else if (id === 'btnResetYes') {
-      S = Rules.fresh(1, S.cfg, Date.now()); A = null; G = null; shownSeq = S.evSeq;
-      persist(); closeSettings(); toast('A new seed is planted');
+      newSeed(1, false);
+      persist(); closeSettings(); toast(`A new ${Persona.kindName(S)} is planted`);
     } else if (id === 'btnResetNo') resetBox();
   });
 
@@ -570,10 +647,10 @@ function frame(nowP) {
   const rdt = Math.min(.25, Math.max(0, (nowP - lastFrame) / 1000)); lastFrame = nowP;
   Rules.advance(S, Date.now(), document.hidden ? null : { game: !!G, busy: !!A });
   if (A && !S.paused) { A.t += rdt; if (A.t >= A.dur) { const f = A.after; A = null; if (f) f(); } }
-  if (!S.paused) { updateGame(rdt); updatePet(rdt); }
+  if (!S.paused) { updateGame(rdt); updatePet(rdt); updateBehavior(rdt); }
   handleEvents();
-  drawScene(ctx, S, A, G, PET, nowP / 1000);
-  if (toastT > 0) { toastT -= rdt; if (toastT <= 0) $toast.hidden = true; }
+  drawScene(ctx, S, A, G, PET, nowP / 1000, BH);
+  if (toastT > 0) { toastT -= rdt; if (toastT <= 0) { $toast.hidden = true; if (toastQ.length) toast(toastQ.shift()); } }
   const blinkOn = !!S.call && !S.ended && ((nowP / 1000 * 2.5) | 0) % 2 === 0;
   if (blinkOn !== prevBlink) { prevBlink = blinkOn; const t = $('.tile[data-act="attn"]'); if (t) t.classList.toggle('alert', blinkOn); }
   uiT += rdt; saveT += rdt;
@@ -599,7 +676,7 @@ async function boot() {
 
   const away = S.events.filter(e => e.id > seenBefore);
   if (S.ended) showEnd();
-  else if (!lastSeen && S.stage === 'seed') toast('A seed! It sprouts in a minute');
+  else if (!lastSeen && S.stage === 'seed') toast(`A ${Persona.kindName(S)}! It sprouts in a minute`);
   else if (away.length && (!lastSeen || now - lastSeen > 2 * 60 * 1000)) {
     showAway(away, now - (lastSeen || S.born || now));
     const grew = away.filter(e => e.type === 'evolve').pop();

@@ -1,5 +1,5 @@
 // Draws the toolbar icon: Bubby's current face, so you can see its mood at a glance.
-import { mk, petSprite, FACE, restingMood } from './sprites.js';
+import { mk, petSprite, FACE, restingMood, kindSeed } from './sprites.js';
 
 // Crop Bubby pixel-for-pixel (no scaling keeps the face crisp):
 // 16px (normal screens) is a close-up of the face, 32px (high-DPI) shows the whole body.
@@ -14,7 +14,7 @@ export function iconCanvas(stage, o, size) {
 }
 
 export function iconOptions(S) {
-  if (!S || S.ended || S.stage === 'seed') return { stage: 'seed', o: { crack: S && S.stage === 'seed' && S.stageT > 30 } };
+  if (!S || S.ended || S.stage === 'seed') return { stage: 'seed', o: { crack: S && S.stage === 'seed' && S.stageT > 30, kind: kindSeed(S) } };
   return { stage: S.stage, o: { mood: restingMood(S), variant: S.variant, chubby: S.chubby, sick: S.sick && !S.asleep } };
 }
 

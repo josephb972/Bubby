@@ -74,6 +74,23 @@ try {
   // 4. Background worker still catches up and acts with the popup closed
   const after = await sw.evaluate(() => self.bubby.skip(6));
   check(after && after.stage !== 'seed', `background catch-up after 6 hours (stage: ${after && after.stage})`);
+  // 5. Personality: the save has a seed kind and personality, and the Personality screen opens from Status
+  await sw.evaluate(async () => { const s = (await chrome.storage.local.get('bubby')).bubby; s.cfg.look = 'toy'; await chrome.storage.local.set({ bubby: s }); });
+  const s5 = await saved();
+  check(!!(s5.persona && s5.persona.kind && s5.persona.axes && Array.isArray(s5.journal)), `save has a personality (${s5.persona && s5.persona.kind} seed)`);
+  const p5 = await ctx.newPage();
+  listen(p5, 'popup-personality');
+  await p5.setViewportSize({ width: 468, height: 600 });
+  await p5.goto(base + 'popup/popup.html');
+  await p5.waitForSelector('#app.toy'); await p5.waitForTimeout(300);
+  if (await p5.isVisible('#btnAwayOk')) await p5.click('#btnAwayOk');
+  await p5.click('.tile[data-act="status"]');
+  await p5.click('#stNature');
+  check(await p5.isVisible('#ovNature'), 'Personality screen opens from the status screen');
+  const fits = await p5.evaluate(() => { const o = document.getElementById('ovNature'); return o.scrollHeight <= o.clientHeight + 1 || `(${o.scrollHeight} > ${o.clientHeight}, status: ${document.getElementById('ovStatus').scrollHeight}/${document.getElementById('ovStatus').clientHeight})`; });
+  check(fits === true, `Personality screen fits without scrolling${fits === true ? '' : ' ' + fits}`);
+  await p5.close();
+
   check(errors.length === 0, `no console errors${errors.length ? '\n      ' + errors.join('\n      ') : ''}`);
 } catch (e) {
   console.error(e); failed++;

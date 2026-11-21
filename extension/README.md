@@ -106,6 +106,25 @@ leaving Bubby sick too long. Discipline comes from scolding **tantrums**: when B
 it's acting out, so press **Scold**. Scolding a well-behaved Bubby only upsets it. Meals before snacks (too many sweets
 cause a toothache), and clean poop quickly or Bubby gets sick.
 
+### Every Bubby is different
+
+Each seed is one of six kinds (Sun, Honey, Thorn, Moon, Dew, or the rare Star Seed); you can tell by the seed's colour.
+The kind shapes the Bubby's personality:
+
+- **Temperament:** five traits, each with two sides: Serious/Playful, Picky/Peckish, Sweet/Bratty, Timid/Brave and
+  Delicate/Hardy. They change the care a little, for example a Peckish Bubby gets hungry sooner but loves every meal,
+  and a Timid one is scared of the dark. Every trait is a trade-off, so no Bubby is harder overall.
+- **Quirks:** two of Jokester, Diva, Dreamer, Neat-freak, Mud-pie, Cuddlebug, Explorer, Songbird, Show-off,
+  Sleepyhead, Night owl or Bookworm.
+
+You get to know it over time: a quirk is revealed when it becomes a Bulb, another when it becomes a Bud, and the
+traits as you watch it, with everything known by the time it blossoms. See what you know in **Status → Nature**.
+
+While the popup is open, Bubby does its own little things every so often: 82 of them, like chasing a butterfly,
+reading, taking a bath, sulking or telling itself a joke. Its personality decides which ones it does most, some only
+happen when it's hungry, sad or sleepy, and a few are rare. They never change its hearts. "While you were away" also
+mentions a few. When a Bubby's life ends, its seed is the same kind half of the time.
+
 ---
 
 ## 3. A 10-minute test drive
@@ -160,11 +179,15 @@ extension/
   manifest.json        Manifest V3: permissions are only storage, alarms and notifications
   background.js        service worker: once-a-minute check, toolbar icon and badge, notifications
   core/rules.js        the game rules (shared by popup and background), paces, catch-up simulation
+  core/persona.js      seed kinds, temperament and quirks, and how they change the rules
+  core/behaviors.js    the 82 passive behaviours and how often each one shows up
   core/store.js        saving, plus toolbar badge, tooltip and icon
   art/sprites.js       all pixel art, drawn in code (works in the popup and in the background)
   art/icon.js          Bubby's live toolbar face
+  art/props.js         props, particles and the tiny speech-bubble font for the behaviours
   art/photo/toy.webp   the toy pod artwork used as the popup background
   popup/               the popup: toy pod and compact looks, game loop, minigames, settings
+  popup/behave.js      the animation for each passive behaviour
   welcome/             first-run page
   icons/               static icons (rebuild with `node tools/make-icons.mjs`)
   fonts/               bundled fonts (SIL Open Font License, see fonts/OFL-LICENSES.txt)
@@ -180,9 +203,11 @@ you watched or not. While the popup is open it runs the game live and the backgr
 **Developer checks.** These need Node.js; the ones marked (Playwright) also need Playwright with Chromium.
 - `node tools/sim-check.mjs` plays 80 simulated lives (players who check in every 30 minutes, every
   2 hours, 3 times a day, morning and evening, or never) and prints how often each ends up Radiant, Daisy or
-  Thistle, how sick Bubby got, and how many notifications a day each player would get.
+  Thistle, how sick Bubby got, and how many notifications a day each player would get. A second table plays the
+  hardest and the easiest possible personalities.
 - `node tools/check-extension.mjs` (Playwright) loads the extension and checks the welcome page's bedtime fields,
-  the popup, the hidden time-skip buttons, the notification fallback window and the background worker.
+  the popup, the hidden time-skip buttons, the notification fallback window, the background worker and the
+  Personality screen.
 - `node tools/package.mjs` makes `dist/bubby-<version>.zip` to upload to the Chrome Web Store and Edge Add-ons.
 - `node tools/store-images.mjs` (Playwright) makes the store screenshots and promo tiles in `store/`.
 - `node tools/make-icons.mjs` (Playwright) regenerates the PNG icons from the pixel art.

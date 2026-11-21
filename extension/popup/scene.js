@@ -1,5 +1,5 @@
 // Draws Bubby's garden on the 100×75 pixel screen (ported from the original game).
-import { SW, SH, GROUND, E, R, P, petSprite, HEADTOP, art, restingMood } from '../art/sprites.js';
+import { SW, SH, GROUND, E, R, P, petSprite, HEADTOP, FACE, art, restingMood, kindSeed } from '../art/sprites.js';
 import { pace } from '../core/rules.js';
 
 function sparkles(sx, cx, cy, t, r = 16) {
@@ -25,7 +25,8 @@ function moodNow(S, A, G) {
 
 export function catchY(S) { return GROUND - 46 + HEADTOP[S.stage] + 3; }
 
-export function drawScene(sx, S, A, G, PET, time) {
+// BH: the passive behaviour playing right now (popup/behave.js), or null.
+export function drawScene(sx, S, A, G, PET, time, BH = null) {
   const { BG, POOP, ICONS, BANG, SKULL, PUFF, BUBBLE, ZED, SEEDI, GOLDSEED, PEBBLE, STARS, SLOTS } = art();
   const blit = (img, x, y) => sx.drawImage(img, Math.round(x), Math.round(y));
   sx.clearRect(0, 0, SW, SH);
@@ -49,9 +50,14 @@ export function drawScene(sx, S, A, G, PET, time) {
   // Bubby
   let stage = S.stage;
   if (A && A.type === 'evolve' && A.t < 1.3 && ((A.t * 8) | 0) % 2 === 0 && A.from) stage = A.from;
-  const px = stage === 'seed' ? 50 : (G ? (G.type === 'catch' ? G.px : 50) : PET.x);
-  let o = {}, bob = 0, shake = 0;
+  let px = stage === 'seed' ? 50 : (G ? (G.type === 'catch' ? G.px : 50) : PET.x);
+  let o = {}, bob = 0, shake = 0, bp = null, c = null;
+  if (BH && stage !== 'seed' && !G && !A) {
+    c = { x: sx, t: BH.t, k: Math.min(1, BH.t / BH.dur), T: time, stage, r: BH.r, px0: px };
+    bp = (BH.s.pose && BH.s.pose(c)) || {};
+  }
   if (stage === 'seed') {
+    o.kind = kindSeed(S);
     const prog = S.stage === 'seed' ? S.stageT / pace(S).dur.seed : 1;
     if (prog > .45) o.wobble = (((time * (prog > .8 ? 10 : 4)) | 0) % 2) ? 1 : -1;
     o.crack = prog > .65;
@@ -65,11 +71,35 @@ export function drawScene(sx, S, A, G, PET, time) {
     else if (PET.moving || (G && G.moving)) bob = -(((time * 6) | 0) % 2);
     else bob = -(((time * 1.6) | 0) % 2);
     if (A && A.type === 'no') shake = (((A.t * 12) | 0) % 2) ? 1 : -1;
+    if (bp) {
+      for (const k of ['mood', 'mouth', 'look', 'blink']) if (bp[k] !== undefined) o[k] = bp[k];
+      if (bp.dy !== undefined) bob = bp.dy; else if (bp.still) bob = 0;
+      const nx = Math.max(10, Math.min(90, px + (bp.dx || 0)));
+      BH.dx = nx - px; px = nx;
+    }
   }
   const spr = petSprite(stage, o);
   if (stage !== 'seed') E(sx, px, GROUND + 1.5, 9, 1.6, 'rgba(64,120,52,.45)');
-  blit(spr, px - 24 + shake, GROUND - 46 + bob);
   const top = GROUND - 46 + HEADTOP[stage] + bob;
+  if (c) {
+    const fy = GROUND - 46 + FACE[stage][1] + bob;
+    // w: half of Bubby's width, so things put "beside" it clear its wings or leaves
+    const w = { baby: 11, child: 11, adult: 15, senior: 15 }[stage] + (S.variant === 'radiant' && stage === 'adult' ? 3 : 0);
+    Object.assign(c, { w, px: Math.round(px), gy: GROUND, top, ey: fy - 2, my: fy + 2, hx: Math.round(px) + 10, hy: GROUND - 9 });
+    if (BH.s.back) BH.s.back(c);
+  }
+  if (bp && (bp.flip || bp.rot || bp.sqy)) {
+    // Turned, rolled or squashed: pivot on the feet (or the middle of the body when rolling).
+    const piv = bp.rot ? 32 : 46;
+    sx.save(); sx.imageSmoothingEnabled = false;
+    sx.translate(Math.round(px), GROUND - 46 + bob + piv);
+    if (bp.rot) sx.rotate(bp.rot * Math.PI / 2);
+    if (bp.flip) sx.scale(-1, 1);
+    if (bp.sqy) sx.scale(1, bp.sqy);
+    sx.drawImage(spr, -24, -piv);
+    sx.restore();
+  } else blit(spr, px - 24 + shake, GROUND - 46 + bob);
+  if (c && BH.s.front) BH.s.front(c);
 
   // Action effects
   if (A) {
