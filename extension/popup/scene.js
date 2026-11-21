@@ -90,7 +90,7 @@ export function drawScene(sx, S, A, G, PET, time, BH = null) {
   }
   if (bp && (bp.flip || bp.rot || bp.sqy)) {
     // Turned, rolled or squashed: pivot on the feet (or the middle of the body when rolling).
-    const piv = bp.rot ? 32 : 46;
+    const piv = bp.rot ? 25 : 46;
     sx.save(); sx.imageSmoothingEnabled = false;
     sx.translate(Math.round(px), GROUND - 46 + bob + piv);
     if (bp.rot) sx.rotate(bp.rot * Math.PI / 2);
