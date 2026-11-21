@@ -31,6 +31,7 @@
         <button class="hot" data-act="clean" style="left:208.7px;top:494.9px" aria-label="Clean" title="Clean (C)"></button>
         <button class="hot" data-act="lights" style="left:271.7px;top:467.4px" aria-label="Sleep: lights on or off" title="Sleep: lights on/off (L)"></button>
         <button class="hot power" data-act="pause" style="left:302.8px;top:415.2px" aria-label="Pause" aria-pressed="false" title="Pause (time stops for Bubby)"></button>
+        <button class="pshop" id="btnShopPhoto" aria-label="Shop and Bubbydex" title="Shop, goals and Bubbydex (B)"><span aria-hidden="true">★</span> <b data-pts>0</b> <i class="gain" data-gain></i></button>
         <p class="pfoot" id="photoFoot"></p>
         <button class="corner-gear pgear" id="btnSettingsPhoto" aria-label="Settings" title="Settings">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -46,6 +47,7 @@
         <p id="sub">Gen 1 · Seed · Day 0</p>
       </div>
       <div class="top-btns">
+        <button class="pill" id="btnShop" aria-label="Shop and Bubbydex" title="Shop, goals and Bubbydex (B)"><span aria-hidden="true">★</span> <b data-pts>0</b> <i class="gain" data-gain></i></button>
         <button class="round" id="btnPause" aria-label="Pause" aria-pressed="false" title="Pause (time stops for Bubby)">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" /></svg>
         </button>
@@ -62,12 +64,23 @@
         <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
         <div class="ov card" id="ovFeed" hidden>
-          <p class="ov-title">Feed Bubby</p>
+          <p class="ov-title"><span>Feed Bubby</span><small id="pantryHint">better food: Shop</small></p>
           <div class="opts">
             <button class="opt" data-do="meal"><canvas width="16" height="16" data-icon="meal"></canvas><b>Meal</b><small>+1 hunger · +1g</small><kbd>1</kbd></button>
             <button class="opt" data-do="snack"><canvas width="16" height="16" data-icon="snack"></canvas><b>Snack</b><small>+1 happy · +2g</small><kbd>2</kbd></button>
           </div>
-          <button class="back" data-close>Back</button>
+          <div class="ov-actions"><button class="back" data-shop>Shop</button><button class="back" id="btnPantry" data-pantry hidden>Pantry</button><button class="back" data-close>Back</button></div>
+        </div>
+
+        <div class="ov card" id="ovPick" hidden>
+          <p class="ov-title"><span><span id="pickTitle">Medicine</span> <small id="pickCount"></small></span><button class="back" data-close>Back</button></p>
+          <p class="callout pick-note" id="pickNote"></p>
+          <div class="pick-card" id="pickCard"></div>
+          <div class="pick-nav">
+            <button class="back" data-pick="-1" aria-label="Previous item">◀</button>
+            <button class="back primary" id="pickUse" data-use>Give</button>
+            <button class="back" data-pick="1" aria-label="Next item">▶</button>
+          </div>
         </div>
 
         <div class="ov card" id="ovPlay" hidden>
@@ -147,6 +160,41 @@
 
     <p class="foot" id="foot"></p>
     </div>
+  </section>
+
+  <!-- ============ Shop view: shop, daily quests, goals and the Bubbydex ============ -->
+  <section id="viewShop" class="settings shop" aria-label="Shop" hidden>
+    <header class="top">
+      <div class="brand"><h1>Shop</h1><p id="shopPts">★ 0 points</p></div>
+      <div class="top-btns">
+        <button class="round" id="btnShopBack" aria-label="Back to Bubby" title="Back">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+      </div>
+    </header>
+    <div class="tabs" id="shopTabs" role="group" aria-label="Shop sections">
+      <button data-tab="shop" aria-pressed="true">Shop</button><button data-tab="today" aria-pressed="false">Today</button><button data-tab="goals" aria-pressed="false">Goals</button><button data-tab="dex" aria-pressed="false">Bubbydex</button><button data-tab="album" aria-pressed="false">Album</button>
+    </div>
+    <p class="note shop-msg" id="shopMsg" role="status" aria-live="polite"></p>
+    <div class="shop-body" id="shopBody"></div>
+  </section>
+
+  <!-- ============ Name view: the egg hatched, give Bubby a name (this makes its ID card) ============ -->
+  <section id="viewName" class="settings naming" aria-label="Name your Bubby" hidden>
+    <header class="top">
+      <div class="brand"><h1>It hatched!</h1><p>Give your Bubby a name</p></div>
+    </header>
+    <div class="idcard" id="nameCard"></div>
+    <form class="name-form" id="nameForm" autocomplete="off">
+      <label for="inName">Name</label>
+      <div class="name-row">
+        <input id="inName" type="text" maxlength="14" spellcheck="false" autocapitalize="words" enterkeyhint="done" placeholder="Pip">
+        <button type="button" class="chip" id="btnNameIdea" title="Pick a name for me">Surprise me</button>
+      </div>
+      <p class="note" id="nameMsg" role="status" aria-live="polite">This is its ID card. Its photo updates as it grows, and the card goes in your photo album when it leaves.</p>
+      <button type="submit" class="smart name-go" data-tone="ok"><span class="smart-txt"><b>Say hello</b><small>Then feed it and play with it: it’s hungry and bored</small></span></button>
+    </form>
+    <p class="note">Time stops for Bubby while you choose.</p>
   </section>
 
   <!-- ============ Settings view ============ -->

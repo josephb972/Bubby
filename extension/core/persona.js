@@ -1,18 +1,20 @@
 // Bubby's personality. Pure logic, no DOM (shared by the popup, the background worker and tools).
 //
-// Every seed gets a kind when it is planted. The kind biases a personality made of
+// Every seed is planted with a race (content.js). The race leans the personality one way or another:
 //   - five temperament sliders, from -2 to +2, with a name at both ends (these change the care numbers), and
 //   - two quirks (these mostly change which passive behaviours show up).
 // Every slider is a trade-off, so no Bubby is strictly harder than another. The effects are capped so every
 // roll keeps the "check in 3-5 times a day" promise (see tools/sim-check.mjs).
+// The personality is rolled from the seed's race when it is planted. If the Bud turns out to be the rare Starling,
+// it keeps that personality (the Starling is a surprise), and rare behaviours just show up more often.
 
-export const KINDS = {
-  sun:   { name: 'Sun Seed',   w: 26, bias: { energy: 1, nerve: 1 },     quirks: ['showoff', 'songbird', 'jokester'], blurb: 'Loud, sporty and sunny.' },
-  honey: { name: 'Honey Seed', w: 26, bias: { appetite: 1, manners: -1 }, quirks: ['cuddle', 'jokester', 'sleepy'],    blurb: 'Loves food, cuddles and naps.' },
-  thorn: { name: 'Thorn Seed', w: 26, bias: { manners: 1, health: 1 },    quirks: ['diva', 'explorer', 'mudpie'],      blurb: 'Tough, with plenty of attitude.' },
-  moon:  { name: 'Moon Seed',  w: 12, bias: { energy: -1, nerve: -1 },    quirks: ['dreamer', 'nightowl', 'bookworm'], blurb: 'Quiet, dreamy and a bit shy.' },
-  dew:   { name: 'Dew Seed',   w: 12, bias: { health: -1, appetite: -1 }, quirks: ['neat', 'dreamer', 'cuddle'],       blurb: 'Gentle, tidy and sensitive.' },
-  star:  { name: 'Star Seed',  w: 5,  bias: {},                           quirks: [],                                   blurb: 'Rare! Anything can happen.' },
+export const LEAN = {
+  leafling:   { bias: { energy: 1, manners: -1 },    quirks: ['explorer', 'songbird', 'cuddle'],   blurb: 'Cheerful and friendly, and loves the outdoors.' },
+  mossback:   { bias: { energy: -1, health: 1 },     quirks: ['bookworm', 'sleepy', 'mudpie'],    blurb: 'Calm, tough and a little sleepy.' },
+  puddle:     { bias: { health: -1, appetite: -1 },  quirks: ['neat', 'dreamer', 'songbird'],     blurb: 'Gentle, tidy and loves water.' },
+  shroomling: { bias: { nerve: -1, appetite: 1 },    quirks: ['dreamer', 'nightowl', 'bookworm'], blurb: 'Shy and dreamy, and always peckish.' },
+  emberling:  { bias: { manners: 1, nerve: 1 },      quirks: ['showoff', 'diva', 'jokester'],     blurb: 'Bold and fiery, with plenty of attitude.' },
+  starling:   { bias: {}, quirks: [], blurb: 'Rare! Anything can happen.' },
 };
 
 // [name at -2, name at +2]
@@ -50,25 +52,19 @@ export const QUIRKS = {
 export const QUIRK_IDS = Object.keys(QUIRKS);
 
 const pick = (arr, r = Math.random) => arr[Math.floor(r() * arr.length)];
-function weighted(entries, r = Math.random) {
-  const total = entries.reduce((s, [, w]) => s + w, 0);
-  let x = r() * total;
-  for (const [k, w] of entries) { if ((x -= w) < 0) return k; }
-  return entries[entries.length - 1][0];
-}
-export function rollKind(r = Math.random) { return weighted(Object.entries(KINDS).map(([k, v]) => [k, v.w]), r); }
-
-export function rollPersona(kind = rollKind(), r = Math.random) {
-  if (!KINDS[kind]) kind = rollKind(r);
-  const K = KINDS[kind];
-  const spread = kind === 'star' ? [-2, -2, -1, 0, 1, 2, 2] : [-2, -1, -1, 0, 0, 0, 1, 1, 2];
+// race: the race the seed is planted with (S.seedRace).
+export function rollPersona(race, r = Math.random) {
+  const L = LEAN[race] || LEAN.starling;
+  const spread = !LEAN[race] || race === 'starling' ? [-2, -2, -1, 0, 1, 2, 2] : [-2, -1, -1, 0, 0, 0, 1, 1, 2];
   const axes = {};
-  for (const a of AXIS_IDS) axes[a] = Math.max(-2, Math.min(2, (K.bias[a] || 0) + pick(spread, r)));
-  const q1 = K.quirks.length && r() < 0.6 ? pick(K.quirks, r) : pick(QUIRK_IDS, r);
-  let q2;
-  do { q2 = K.quirks.length && r() < 0.4 ? pick(K.quirks, r) : pick(QUIRK_IDS, r); } while (q2 === q1 || (q1 === 'neat' && q2 === 'mudpie') || (q1 === 'mudpie' && q2 === 'neat'));
-  // known: what the player has discovered so far (the kind is always known).
-  return { kind, axes, quirks: [q1, q2], known: { q: 0, axes: [] } };
+  for (const a of AXIS_IDS) axes[a] = Math.max(-2, Math.min(2, (L.bias[a] || 0) + pick(spread, r)));
+  const q1 = L.quirks.length && r() < 0.6 ? pick(L.quirks, r) : pick(QUIRK_IDS, r);
+  // The second quirk: a different one, and never Neat-freak with Mud-pie (picked from a list, so it can't loop forever)
+  const fits = q => q !== q1 && !(q1 === 'neat' && q === 'mudpie') && !(q1 === 'mudpie' && q === 'neat');
+  const leanPool = L.quirks.filter(fits), anyPool = QUIRK_IDS.filter(fits);
+  const q2 = leanPool.length && r() < 0.4 ? pick(leanPool, r) : pick(anyPool, r);
+  // known: what the player has discovered so far.
+  return { axes, quirks: [q1, q2], known: { q: 0, axes: [] } };
 }
 
 /* ---------- Effects on the care rules ---------- */
@@ -122,7 +118,6 @@ export function title(S, known = true) {
   if (adj) return adj;
   return known ? '' : 'Easygoing';
 }
-export function kindName(S) { return S && S.persona ? KINDS[S.persona.kind].name : 'Seed'; }
 
 /* ---------- Discovering the personality ---------- */
 // Returns a short sentence for a toast, or null if nothing new was learned.

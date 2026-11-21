@@ -1,10 +1,9 @@
 // Bubby's passive behaviours: little things it does on its own while you watch. Pure data and logic, no DOM.
 // Behaviours never change hunger, happiness or anything else; personality only changes how often each one shows.
 // The animations live in popup/behave.js (same ids).
-import { AXIS_IDS } from './persona.js';
 import { STAGE, pace, minutesToBed, dayNumber } from './rules.js';
 
-// Boost tokens: temperament poles, quirk ids, seed kinds.
+// Boost tokens: temperament poles, quirk ids, races (content.js).
 export const POLES = {
   P: ['energy', 1], S: ['energy', -1], F: ['appetite', 1], K: ['appetite', -1], B: ['manners', 1], W: ['manners', -1],
   V: ['nerve', 1], T: ['nerve', -1], H: ['health', 1], D: ['health', -1],
@@ -16,52 +15,52 @@ export const CATS = { play: 'Play', food: 'Food', garden: 'Garden', clean: 'Clea
 // [id, category, rarity, boosts, what Bubby did (for "while you were away" and the journal), options]
 // options: gate (only when a condition holds), st (stages it can happen in)
 const LIST = [
-  ['ball', 'play', 'C', 'P sun', 'kicked a ball around'],
+  ['ball', 'play', 'C', 'P emberling', 'kicked a ball around'],
   ['headball', 'play', 'U', 'P showoff', 'bounced a ball on its head'],
   ['butterfly', 'play', 'C', 'P explorer', 'chased a butterfly'],
   ['rope', 'play', 'U', 'P', 'skipped with a jump rope'],
   ['dizzy', 'play', 'C', 'P jokester', 'spun around until it got dizzy'],
   ['bubbles', 'play', 'C', 'P dreamer', 'blew bubbles and popped them'],
-  ['kite', 'play', 'R', 'P sun', 'flew a kite'],
+  ['kite', 'play', 'R', 'P leafling', 'flew a kite'],
   ['peekaboo', 'play', 'U', 'P cuddle', 'played peekaboo behind a leaf'],
   ['cartwheel', 'play', 'U', 'P showoff', 'did a cartwheel'],
   ['yoyo', 'play', 'U', 'P jokester', 'got tangled up in a yo-yo'],
 
-  ['apple', 'food', 'C', 'F honey', 'munched an apple'],
+  ['apple', 'food', 'C', 'F leafling', 'munched an apple'],
   ['cookie', 'food', 'U', 'F B', 'sneaked a cookie when nobody was looking'],
   ['lolly', 'food', 'C', 'F', 'licked a lollipop'],
   ['cakedream', 'food', 'C', 'F dreamer', 'daydreamed about cake'],
   ['rumble', 'food', 'C', 'F', 'heard its tummy rumble', { gate: 'hungry' }],
-  ['juice', 'food', 'C', 'F honey', 'sipped a juice box'],
+  ['juice', 'food', 'C', 'F puddle', 'sipped a juice box'],
   ['berry', 'food', 'R', 'F P', 'caught a falling berry in its mouth'],
   ['sniff', 'food', 'U', 'F explorer', 'sniffed the air for something tasty'],
   ['veggie', 'food', 'C', 'K', 'poked at a veggie and pushed it away'],
 
-  ['flower', 'garden', 'C', 'W dew', 'picked a flower and smelled it'],
-  ['water', 'garden', 'U', 'H neat', 'watered itself with a watering can'],
-  ['sunbathe', 'garden', 'C', 'sun S', 'sunbathed with its leaves spread out'],
+  ['flower', 'garden', 'C', 'W leafling', 'picked a flower and smelled it'],
+  ['water', 'garden', 'U', 'H neat puddle', 'watered itself with a watering can'],
+  ['sunbathe', 'garden', 'C', 'leafling S', 'sunbathed with its leaves spread out'],
   ['ladybug', 'garden', 'C', 'explorer dreamer', 'watched a ladybug crawl by'],
-  ['dig', 'garden', 'C', 'mudpie V', 'dug a little hole'],
+  ['dig', 'garden', 'C', 'mudpie V mossback', 'dug a little hole'],
   ['plant', 'garden', 'U', 'W S', 'planted a tiny seed of its own'],
   ['dandelion', 'garden', 'U', 'dreamer', 'blew on a dandelion'],
   ['roll', 'garden', 'C', 'P mudpie', 'rolled around in the grass'],
   ['bird', 'garden', 'R', 'W cuddle', 'had a little bird land on its head'],
   ['clouds', 'garden', 'C', 'dreamer S', 'watched the clouds drift by'],
 
-  ['bath', 'clean', 'U', 'neat dew', 'took a bubble bath'],
-  ['shower', 'clean', 'U', 'neat H', 'showered under its own rain cloud'],
+  ['bath', 'clean', 'U', 'neat puddle', 'took a bubble bath'],
+  ['shower', 'clean', 'U', 'neat H puddle', 'showered under its own rain cloud'],
   ['teeth', 'clean', 'C', 'neat S', 'brushed its teeth'],
   ['sweep', 'clean', 'C', 'neat S', 'swept the garden'],
   ['comb', 'clean', 'C', 'diva neat', 'combed its leaves'],
   ['shake', 'clean', 'U', 'P mudpie', 'shook itself off like a puppy'],
 
-  ['read', 'calm', 'C', 'S bookworm moon', 'read a book'],
-  ['meditate', 'calm', 'U', 'S moon', 'meditated and floated a little'],
+  ['read', 'calm', 'C', 'S bookworm shroomling', 'read a book'],
+  ['meditate', 'calm', 'U', 'S mossback', 'meditated and floated a little'],
   ['stretch', 'calm', 'C', 'S H', 'did some stretches'],
   ['diary', 'calm', 'U', 'S bookworm', 'wrote in its diary'],
   ['pushups', 'calm', 'C', 'H V', 'did push-ups'],
   ['ponder', 'calm', 'C', 'S bookworm', 'pondered something very deep'],
-  ['telescope', 'calm', 'R', 'nightowl moon', 'looked at the sky through a telescope', { gate: 'evening' }],
+  ['telescope', 'calm', 'R', 'nightowl shroomling', 'looked at the sky through a telescope', { gate: 'evening' }],
 
   ['joke', 'joke', 'C', 'jokester', 'told itself a joke and laughed'],
   ['fakesneeze', 'joke', 'U', 'jokester B', 'faked a sneeze, then grinned'],
@@ -75,20 +74,20 @@ const LIST = [
   ['mirror', 'diva', 'C', 'diva', 'admired itself in a mirror'],
   ['hmph', 'diva', 'C', 'diva B', 'said “hmph!” and turned its back on you'],
   ['foottap', 'diva', 'C', 'diva B', 'tapped its foot impatiently'],
-  ['eyeroll', 'diva', 'U', 'diva thorn', 'rolled its eyes'],
+  ['eyeroll', 'diva', 'U', 'diva emberling', 'rolled its eyes'],
 
-  ['stomp', 'brat', 'C', 'B thorn', 'stomped around'],
+  ['stomp', 'brat', 'C', 'B emberling', 'stomped around'],
   ['kickdirt', 'brat', 'C', 'B', 'kicked the dirt'],
   ['raspberry', 'brat', 'U', 'B jokester', 'blew a raspberry'],
   ['sulk', 'brat', 'C', 'B', 'sulked for no reason'],
   ['throwtoy', 'brat', 'U', 'B P', 'threw its toy, then wanted it back'],
 
-  ['startle', 'nerve', 'C', 'T moon', 'got startled by a falling leaf'],
+  ['startle', 'nerve', 'C', 'T shroomling', 'got startled by a falling leaf'],
   ['hidebug', 'nerve', 'C', 'T', 'hid from a tiny bug'],
   ['shiver', 'nerve', 'U', 'T D', 'shivered at a cloud’s shadow'],
   ['tiptoe', 'nerve', 'C', 'T', 'tiptoed across the garden'],
   ['plush', 'nerve', 'U', 'T cuddle', 'hugged its plushie'],
-  ['sword', 'nerve', 'C', 'V sun', 'marched around with a stick sword'],
+  ['sword', 'nerve', 'C', 'V emberling', 'marched around with a stick sword'],
   ['magnify', 'nerve', 'U', 'V explorer', 'inspected things with a magnifying glass'],
 
   ['cry', 'feel', 'C', 'D W', 'cried a little', { gate: 'sad' }],
@@ -142,9 +141,9 @@ export function weight(b, S, now = Date.now()) {
     for (const t of b.boosts) {
       if (POLES[t]) { const [axis, sign] = POLES[t]; w *= 1 + 0.35 * sign * (p.axes[axis] || 0); }
       else if (p.quirks.includes(t)) w *= 2.5;
-      else if (p.kind === t) w *= 1.5;
+      else if ((S.race || S.seedRace) === t) w *= 1.5;
     }
-    if (p.kind === 'star' && (b.r === 'R' || b.r === 'L')) w *= 2;
+    if (S.race === 'starling' && (b.r === 'R' || b.r === 'L')) w *= 2;
   }
   if (S.variant && FORM_CATS[S.variant] && FORM_CATS[S.variant].includes(b.cat)) w *= 1.3;
   if (S.stage === 'senior' && b.cat === 'play') w *= 0.4;
@@ -189,4 +188,3 @@ export function diary(S, ms, now = Date.now()) {
   return out;
 }
 
-export { AXIS_IDS };

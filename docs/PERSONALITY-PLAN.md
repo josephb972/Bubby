@@ -1,6 +1,14 @@
 # Personality & behaviours: design plan
 
-Status: **built** (owner chose: seed kinds yes, gradual reveal, everything at once). Numbers are starting values to
+Status: **built in extension 1.2.0** (owner chose: gradual reveal, everything at once, and, once the 1.1 races were in, the
+races instead of separate seed kinds).
+
+**Races instead of seed kinds.** Section 1 below was written before the extension had races. In 1.2.0 the races from 1.1
+(content.js) carry the leanings instead (`LEAN` in `core/persona.js`): Leafling Playful +1 and Sweet, Mossback Serious and
+Hardy, Puddle Delicate and Picky, Shroomling Timid and Peckish, Emberling Bratty and Brave. The personality is rolled from the
+seed's race when it is planted; a Bud that becomes the rare Starling keeps it and sees rare behaviours twice as often. There are
+no seed-kind colours (the egg already wears the race's colours) and no family line (races stay random). The first quirk shows
+when the egg hatches. Numbers are starting values to
 tune with `node tools/sim-check.mjs`. What differs from the proposal below:
 
 - 82 behaviours: the 72 in the catalogue plus a sneeze (when sick or the garden is dirty), 2 Bulb, 4 Elder and

@@ -1,12 +1,61 @@
 // Draws Bubby's garden on the 100×75 pixel screen (ported from the original game).
-import { SW, SH, GROUND, E, R, P, petSprite, HEADTOP, FACE, art, restingMood, kindSeed } from '../art/sprites.js';
-import { pace } from '../core/rules.js';
+import { SW, SH, GROUND, E, R, P, petSprite, headTop, faceCenter, art, restingMood } from '../art/sprites.js';
+import { pace, RACES, RARE_RACE } from '../core/rules.js';
 
 function sparkles(sx, cx, cy, t, r = 16) {
   for (let i = 0; i < 6; i++) {
     const a = t * 3 + i * Math.PI / 3, px = Math.round(cx + Math.cos(a) * r), py = Math.round(cy + Math.sin(a) * r * .7);
     sx.fillStyle = i % 2 ? '#ffffff' : '#ffe14a';
     sx.fillRect(px, py, 1, 1); sx.fillRect(px - 1, py, 3, 1); sx.fillRect(px, py - 1, 1, 3);
+  }
+}
+
+/* ---- The rare-race moment: dim garden, spinning rays and glow (behind Bubby), then a shockwave and falling stars (in front) ---- */
+function evolveBack(sx, px, time, A) {
+  const cy = GROUND - 24, t = A.t, fade = Math.min(1, t / .5) * Math.min(1, (A.dur - t) / .9);
+  R(sx, 0, 0, SW, SH, `rgba(30,12,80,${(fade * .55).toFixed(2)})`);
+  sx.globalAlpha = fade;
+  for (let i = 0; i < 12; i++) {
+    const ang = time * .9 + i * Math.PI / 6;
+    for (let r = 12; r < 56; r += 4) {
+      if (((r >> 2) + i) % 2) continue;
+      P(sx, [Math.round(px + Math.cos(ang) * r), Math.round(cy + Math.sin(ang) * r * .75)], i % 2 ? '#fff3b0' : '#d7c6ff');
+    }
+  }
+  sx.globalAlpha = .1 * fade;
+  for (let r = 26; r >= 10; r -= 4) E(sx, px, cy, r, r * .85, '#ffe9a8');
+  sx.globalAlpha = 1;
+}
+function evolveFront(sx, px, time, A, S) {
+  const cy = GROUND - 24, t = A.t;
+  if (A.rare) {
+    if (t > 1.3 && t < 2.6) {
+      const rr = (t - 1.3) * 38;
+      for (let a = 0; a < Math.PI * 2; a += .1) P(sx, [Math.round(px + Math.cos(a) * rr), Math.round(cy + Math.sin(a) * rr * .75)], '#ffe066');
+    }
+    for (let i = 0; i < 16; i++) {
+      const bx = (i * 37 + 11) % SW, by = Math.round(((time * 14 + i * 23) % (SH + 10)) - 5);
+      P(sx, [bx, by, bx - 1, by, bx + 1, by, bx, by - 1, bx, by + 1], i % 3 ? '#fff3b0' : '#ffffff');
+    }
+    sparkles(sx, px, cy, time, 20 + Math.sin(time * 6) * 2);
+    if (t < .25) R(sx, 0, 0, SW, SH, 'rgba(255,255,255,.85)');
+    return;
+  }
+  sparkles(sx, px, cy, time, 18 + Math.sin(time * 6) * 2);
+  if (t < .2) R(sx, 0, 0, SW, SH, 'rgba(255,255,255,.8)');
+  // A short ring in the race's colour when a Bulb grows into a Bud
+  const race = RACES[A.race || S.race];
+  if (A.to === 'child' && race && t > .4 && t < 1.6) {
+    const rr = (t - .4) * 30;
+    for (let a = 0; a < Math.PI * 2; a += .14) P(sx, [Math.round(px + Math.cos(a) * rr), Math.round(cy + Math.sin(a) * rr * .75)], race.tint);
+  }
+}
+// Starlings keep a gold twinkle for life
+function twinkle(sx, px, cy, time) {
+  for (let i = 0; i < 5; i++) {
+    if (((time * 1.6 + i * .7) | 0) % 3 !== 0) continue;
+    const a = i * 2.4 + 1, bx = Math.round(px + Math.cos(a) * 17), by = Math.round(cy + Math.sin(a) * 15);
+    P(sx, [bx, by, bx - 1, by, bx + 1, by, bx, by - 1, bx, by + 1], '#ffe066');
   }
 }
 
@@ -23,7 +72,20 @@ function moodNow(S, A, G) {
   return { mood, mouth };
 }
 
-export function catchY(S) { return GROUND - 46 + HEADTOP[S.stage] + 3; }
+export function catchY(S) { return GROUND - 46 + headTop(S.stage, S.race) + 3; }
+
+// Half of Bubby's width in its sprite, so things put "beside" it clear its wings, leaves or cap (cached per look)
+const halfCache = new Map();
+function halfWidth(spr, key) {
+  if (halfCache.has(key)) return halfCache.get(key);
+  const d = spr.getContext('2d').getImageData(0, 0, 48, 48).data;
+  let lo = 24, hi = 24;
+  for (let y = 0; y < 48; y++) for (let X = 0; X < 48; X++) if (d[(y * 48 + X) * 4 + 3] > 0) { lo = Math.min(lo, X); hi = Math.max(hi, X); }
+  const w = Math.max(9, Math.min(20, Math.round((hi - lo) / 2) - 1));
+  if (halfCache.size > 60) halfCache.clear();
+  halfCache.set(key, w);
+  return w;
+}
 
 // BH: the passive behaviour playing right now (popup/behave.js), or null.
 export function drawScene(sx, S, A, G, PET, time, BH = null) {
@@ -57,13 +119,13 @@ export function drawScene(sx, S, A, G, PET, time, BH = null) {
     bp = (BH.s.pose && BH.s.pose(c)) || {};
   }
   if (stage === 'seed') {
-    o.kind = kindSeed(S);
+    o.race = S.seedRace; // the egg wears the colours of the race it was planted with
     const prog = S.stage === 'seed' ? S.stageT / pace(S).dur.seed : 1;
     if (prog > .45) o.wobble = (((time * (prog > .8 ? 10 : 4)) | 0) % 2) ? 1 : -1;
     o.crack = prog > .65;
   } else {
     const mn = moodNow(S, A, G);
-    o = { mood: mn.mood, mouth: mn.mouth, variant: S.variant, chubby: S.chubby, sick: S.sick && !S.asleep, blink: !S.asleep && (time % 3.4) < .13 };
+    o = { mood: mn.mood, mouth: mn.mouth, variant: S.variant, chubby: S.chubby, sick: S.sick && !S.asleep ? (S.disease || true) : false, blink: !S.asleep && (time % 3.4) < .13, race: stage === 'baby' ? S.seedRace : S.race, fl: (S.race === 'emberling' || S.race === 'starling') ? ((time * 3) | 0) % 2 : 0 };
     o.look = G ? (G.type === 'catch' ? (G.moving ? G.dir : 0) : (G.phase === 'reveal' ? G.look * 2 : 0)) : (PET.moving ? PET.dir : 0);
     if (S.asleep) bob = ((time * 1.1) | 0) % 2;
     else if (A && A.type === 'happy') bob = -(((time * 8) | 0) % 2) * 2;
@@ -78,18 +140,18 @@ export function drawScene(sx, S, A, G, PET, time, BH = null) {
       BH.dx = nx - px; px = nx;
     }
   }
+  if (A && A.type === 'evolve' && A.rare) evolveBack(sx, px, time, A);
   const spr = petSprite(stage, o);
   if (stage !== 'seed') E(sx, px, GROUND + 1.5, 9, 1.6, 'rgba(64,120,52,.45)');
-  const top = GROUND - 46 + HEADTOP[stage] + bob;
+  const top = GROUND - 46 + headTop(stage, S.race) + bob;
   if (c) {
-    const fy = GROUND - 46 + FACE[stage][1] + bob;
-    // w: half of Bubby's width, so things put "beside" it clear its wings or leaves
-    const w = { baby: 11, child: 11, adult: 15, senior: 15 }[stage] + (S.variant === 'radiant' && stage === 'adult' ? 3 : 0);
-    Object.assign(c, { w, px: Math.round(px), gy: GROUND, top, ey: fy - 2, my: fy + 2, hx: Math.round(px) + 10, hy: GROUND - 9 });
+    const race = stage === 'baby' ? S.seedRace : S.race, fy = GROUND - 46 + faceCenter(stage, race)[1] + bob;
+    const w = halfWidth(spr, [stage, race, S.variant, S.chubby].join('|'));
+    Object.assign(c, { w, px: Math.round(px), gy: GROUND, top, ey: Math.round(fy - 2), my: Math.round(fy + 2), hx: Math.round(px) + 10, hy: GROUND - 9 });
     if (BH.s.back) BH.s.back(c);
   }
   if (bp && (bp.flip || bp.rot || bp.sqy)) {
-    // Turned, rolled or squashed: pivot on the feet (or the middle of the body when rolling).
+    // Turned, rolled or squashed: pivot on the feet (or the middle of the sprite when rolling).
     const piv = bp.rot ? 25 : 46;
     sx.save(); sx.imageSmoothingEnabled = false;
     sx.translate(Math.round(px), GROUND - 46 + bob + piv);
@@ -100,6 +162,7 @@ export function drawScene(sx, S, A, G, PET, time, BH = null) {
     sx.restore();
   } else blit(spr, px - 24 + shake, GROUND - 46 + bob);
   if (c && BH.s.front) BH.s.front(c);
+  if (S.race === RARE_RACE && stage !== 'seed' && !(A && A.type === 'evolve' && A.rare)) twinkle(sx, px, GROUND - 24, time);
 
   // Action effects
   if (A) {
@@ -114,7 +177,7 @@ export function drawScene(sx, S, A, G, PET, time, BH = null) {
     }
     if (A.type === 'med') blit(ICONS.med, px + 9, top - 6 - Math.round(Math.sin(k * Math.PI) * 4));
     if (A.type === 'scold' && ((A.t * 6) | 0) % 2 === 0) blit(BANG, px + 10, top - 4);
-    if (A.type === 'evolve') { sparkles(sx, px, GROUND - 22, time, 18 + Math.sin(time * 6) * 2); if (A.t < .2) R(sx, 0, 0, SW, SH, 'rgba(255,255,255,.8)'); }
+    if (A.type === 'evolve') evolveFront(sx, px, time, A, S);
     if (A.type === 'sparkle' || A.type === 'happy') sparkles(sx, px, GROUND - 20, time, 15);
   }
 

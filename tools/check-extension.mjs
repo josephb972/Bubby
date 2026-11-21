@@ -2,6 +2,7 @@
 // Usage: node tools/check-extension.mjs   (needs Playwright with Chromium)
 import { createRequire } from 'node:module';
 import { join, dirname } from 'node:path';
+import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 const { chromium } = createRequire(import.meta.url)('playwright');
@@ -24,7 +25,8 @@ let [sw] = ctx.serviceWorkers();
 if (!sw) sw = await ctx.waitForEvent('serviceworker');
 const base = `chrome-extension://${new URL(sw.url()).host}/`;
 try {
-  check((await sw.evaluate(() => chrome.runtime.getManifest().version)) === '1.0.0', 'manifest version 1.0.0');
+  const want = JSON.parse(await readFile(join(ext, 'manifest.json'), 'utf8')).version;
+  check((await sw.evaluate(() => chrome.runtime.getManifest().version)) === want, `the loaded extension is version ${want}, as in manifest.json`);
 
   // 1. Welcome page asks for bedtime and saves it as soon as a time changes
   const welcome = ctx.pages().find(p => p.url().includes('welcome'))
@@ -38,7 +40,9 @@ try {
   const cfg = (await saved()).cfg;
   check(cfg.bed === 23 * 60 && cfg.wake === 7 * 60 + 30 && cfg.bedAsked, `welcome page saves bedtime (bed ${cfg.bed}, wake ${cfg.wake})`);
 
-  // 2. Popup: time-skip buttons hidden; bubby.dev(true) shows them; Test notification always there
+  // 2. Popup: time-skip buttons hidden; bubby.dev(true) shows them; Test notification always there.
+  // Start from a hatched, named Bubby (a real egg hatches about a minute in and asks for a name, at a moment the test can't control).
+  await sw.evaluate(async () => { const s = (await chrome.storage.local.get('bubby')).bubby; Object.assign(s, { stage: 'baby', stageT: 0, name: 'Testy', hatchedAt: Date.now(), hunger: 4, happy: 4, lastT: Date.now() }); await chrome.storage.local.set({ bubby: s }); });
   const pop = await ctx.newPage();
   listen(pop, 'popup');
   await pop.setViewportSize({ width: 468, height: 600 });
@@ -77,7 +81,7 @@ try {
   // 5. Personality: the save has a seed kind and personality, and the Personality screen opens from Status
   await sw.evaluate(async () => { const s = (await chrome.storage.local.get('bubby')).bubby; s.cfg.look = 'toy'; await chrome.storage.local.set({ bubby: s }); });
   const s5 = await saved();
-  check(!!(s5.persona && s5.persona.kind && s5.persona.axes && Array.isArray(s5.journal)), `save has a personality (${s5.persona && s5.persona.kind} seed)`);
+  check(!!(s5.persona && s5.persona.axes && Array.isArray(s5.journal)), `save has a personality (${s5.seedRace} seed, ${s5.persona && s5.persona.quirks.join(' + ')})`);
   const p5 = await ctx.newPage();
   listen(p5, 'popup-personality');
   await p5.setViewportSize({ width: 468, height: 600 });

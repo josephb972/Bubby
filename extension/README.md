@@ -1,5 +1,7 @@
 # Bubby: browser extension
 
+Current version: **<!-- version -->1.2.0<!-- /version -->** (see `docs/CHANGELOG.md` for what changed).
+
 Bubby is a tiny pixel pet that lives in your browser toolbar. Its face on the toolbar shows how it feels, a badge
 tells you when it needs something, and one click opens a pocket-sized version of the game.
 
@@ -108,8 +110,8 @@ cause a toothache), and clean poop quickly or Bubby gets sick.
 
 ### Every Bubby is different
 
-Each seed is one of six kinds (Sun, Honey, Thorn, Moon, Dew, or the rare Star Seed); you can tell by the seed's colour.
-The kind shapes the Bubby's personality:
+Every Bubby has a personality, rolled when the seed is planted and leaning its race's way (Leaflings playful and sweet,
+Mossbacks serious and hardy, Puddles delicate and picky, Shroomlings timid and peckish, Emberlings bratty and brave):
 
 - **Temperament:** five traits, each with two sides: Serious/Playful, Picky/Peckish, Sweet/Bratty, Timid/Brave and
   Delicate/Hardy. They change the care a little, for example a Peckish Bubby gets hungry sooner but loves every meal,
@@ -117,15 +119,55 @@ The kind shapes the Bubby's personality:
 - **Quirks:** two of Jokester, Diva, Dreamer, Neat-freak, Mud-pie, Cuddlebug, Explorer, Songbird, Show-off,
   Sleepyhead, Night owl or Bookworm.
 
-You get to know it over time: a quirk is revealed when it becomes a Bulb, another when it becomes a Bud, and the
+You get to know it over time: a quirk is revealed when it hatches, another when it becomes a Bud, and the
 traits as you watch it, with everything known by the time it blossoms. See what you know in **Status → Nature**.
 
 While the popup is open, Bubby does its own little things every so often: 82 of them, like chasing a butterfly,
 reading, taking a bath, sulking or telling itself a joke. Its personality decides which ones it does most, some only
 happen when it's hungry, sad or sleepy, and a few are rare. They never change its hearts. "While you were away" also
-mentions a few. When a Bubby's life ends, its seed is the same kind half of the time.
+mentions a few. The Personality screen counts how many of the 82 you've seen, across all your Bubbies.
 
 ---
+
+## 2b. New in 1.1: races, illnesses, points and the shop
+
+**Hatching, names and the photo album (1.1.2).** The egg hatches while you watch (if it's ready while you're away, it waits
+and sends one notification). A newborn is hungry and bored, so feed it and play with it first. When it hatches you give it a
+name, which makes its **ID card**: a photo in its current form, name, race, generation and birthday. The ★ Shop's **Album**
+tab shows the card, and every Bubby that leaves (a full life, moving away or Start over) keeps its card there with its last
+form.
+
+**Races.** Every seed is planted with a random race, and its egg and Bulb wear that race's colours. When the Bulb grows into a
+Bud it shows the race's own body (any Bulb can also turn into the rare Starling instead). Each race has its own body, not just its
+own colours: the sprouting **Leafling** (a flower when grown), the mossy tortoise **Mossback**, the water droplet **Puddle**, the
+mushroom **Shroomling**, the flame spirit **Emberling**, and the very rare star **Starling**, which arrives with a special reveal. How you raise it still decides
+the adult form (Radiant, Daisy or Thistle). The **Bubbydex** (★ button, then the Bubbydex tab) shows the 18 forms you have
+found. If a rare race has not turned up, the chance grows a little with every Bubby that is not one.
+
+**Illness and medicine.** Sickness now has the names of old diseases that once swept medieval towns, drawn as cartoon sniffles,
+and each needs its own medicine, named after the old remedy. *Bubby is a game: the history is simplified and none of it is medical advice.*
+
+| Illness | Usually comes from | Medicine | Doses |
+|---|---|---|---|
+| Ague (mild) | a dirty garden | Cinchona Bark, or **Garden Tea** (free, 2 cups) | 1 |
+| Scurvy | too many sweets, extra weight, sometimes a dirty garden | Lime Juice | 2 |
+| Dancing Plague | sleeping with the lights on while you watch | Valerian Root | 2 |
+| The Plague (severe) | neglect | Four Thieves Vinegar | 3 |
+
+The **Medicine** button opens the cabinet: browse with ◀ ▶ and press *Give*. It starts on the medicine that fits.
+A wrong medicine is refused and not used up. Garden Tea is always there and only soothes the other illnesses for a while,
+so there is always time to earn the right medicine. The **Theriac** cures anything at once and the **Plague Doctor’s Posy**
+keeps Bubby well for a while. Notification buttons give the best medicine you have.
+
+**Points and the shop.** The ★ button (top right, or press **B**) shows your points and opens the shop. Points come from
+opening Bubby each day (and keeping a streak), caring for it, winning games, daily quests, goals, growing up and the
+Bubbydex. Care and game points stop at a daily limit so they cannot be farmed. Spend them on better food (Garden Salad,
+Sunberry Pie, Hearty Stew, Golden Feast), medicine and the Plague Doctor’s Posy. Points are earned by playing and are never sold.
+
+Nothing new punishes you for being away: illness still only comes from the same causes as before, and lights left on
+overnight never make Bubby ill while you are not looking.
+
+How to test all of this, and how to publish an update: `docs/TEST-AND-PUBLISH.md`.
 
 ## 3. A 10-minute test drive
 
@@ -179,7 +221,7 @@ extension/
   manifest.json        Manifest V3: permissions are only storage, alarms and notifications
   background.js        service worker: once-a-minute check, toolbar icon and badge, notifications
   core/rules.js        the game rules (shared by popup and background), paces, catch-up simulation
-  core/persona.js      seed kinds, temperament and quirks, and how they change the rules
+  core/persona.js      temperament and quirks (leaning by race), and how they change the rules
   core/behaviors.js    the 82 passive behaviours and how often each one shows up
   core/store.js        saving, plus toolbar badge, tooltip and icon
   art/sprites.js       all pixel art, drawn in code (works in the popup and in the background)

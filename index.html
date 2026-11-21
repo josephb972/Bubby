@@ -220,6 +220,58 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .forms canvas { width: 56px; height: 56px; image-rendering: pixelated; }
 .forms figcaption { font: 600 12.5px/1.15 var(--font-display); }
 .forms figcaption small { display: block; font: 400 11px/1.3 var(--font-body); color: var(--muted); margin-top: 2px; }
+/* medicine cabinet, pantry, points and the shop */
+.cab { display: grid; grid-template-columns: 1fr; gap: 1.2cqw; }
+.cab:empty { display: none; }
+.cab-note { margin: 0; font-size: 2.6cqw; color: #6b5d78; }
+.opt.sm { flex-direction: row; justify-content: flex-start; gap: 1.8cqw; padding: .8cqw 1.4cqw; font-size: 2.8cqw; text-align: left; box-shadow: 0 .5cqw 0 #3b2f4a; }
+.opt.sm canvas { width: 7cqw; flex: none; }
+.opt.sm span { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; min-width: 0; flex: 1; }
+.opt.sm small { text-align: left; font-size: 2.2cqw; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#ovFeed .feed-opts { flex: 0 0 auto; }
+#ovFeed .feed-opts .opt { padding: .8cqw 1.2cqw; }
+.ov-card .row-end { position: sticky; bottom: 0; margin: auto -2.6cqw 0; padding: 1cqw 2.6cqw .4cqw; background: rgba(255, 251, 238, .97); }
+.stat-grid.two { grid-template-columns: auto 1fr auto 1fr; gap: .3cqw 1.6cqw; font-size: 2.6cqw; }
+.stat-grid.two dd.wide { grid-column: span 3; }
+.opt.rec { background: #fff6c8; outline: .6cqw solid #ffd34a; }
+.chip.shop { background: var(--accent); border-color: var(--accent); color: #fff; }
+.chip.shop b { font-variant-numeric: tabular-nums; }
+.gain { font: 700 13px/1 var(--font-display); color: var(--accent); min-width: 2.6em; text-align: left; opacity: 0; }
+.gain.show { animation: gain 1.7s ease-out; }
+@keyframes gain { 0% { opacity: 0; transform: translateY(6px); } 15% { opacity: 1; transform: none; } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(-6px); } }
+.modal { position: fixed; inset: 0; background: rgba(10, 24, 30, .55); display: grid; place-items: center; padding: 16px; z-index: 50; }
+.modal-card { background: var(--sky); color: var(--ink); border: 2px solid var(--line); border-radius: 18px; width: min(560px, 100%); height: min(88vh, 740px); display: flex; flex-direction: column; box-shadow: 0 18px 50px rgba(0, 0, 0, .35); overflow: hidden; }
+.modal-card header { display: flex; align-items: center; gap: 10px; padding: 14px 16px 8px; }
+.modal-card h2 { margin: 0; font: 600 20px/1.2 var(--font-display); flex: 1; }
+.pts-pill { font: 700 14px/1 var(--font-display); background: var(--panel); border: 2px solid var(--line); padding: 6px 10px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+.tabs { margin: 0 16px 6px; align-self: flex-start; }
+.shop-msg { margin: 0 16px; min-height: 1.4em; font-size: 13px; color: var(--muted); }
+.modal-body { overflow: auto; padding: 4px 16px 16px; display: grid; gap: 14px; }
+.shop-sec { display: grid; gap: 8px; align-content: start; }
+.shop-sec h3 { margin: 0; font: 600 15px/1.2 var(--font-display); }
+.shop-sec h3 small { font: 600 13px/1 var(--font-body); color: var(--muted); margin-left: 6px; }
+.shop-row { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; background: var(--panel); border-radius: 12px; padding: 8px 10px; }
+.shop-row canvas { width: 40px; height: 40px; image-rendering: pixelated; }
+.shop-row b { font: 600 14px/1.2 var(--font-display); }
+.shop-row small { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.3; }
+.buy { border: 2px solid var(--ink); background: var(--ink); color: var(--sky); border-radius: 999px; padding: 7px 12px; font: 700 13px/1 var(--font-display); cursor: pointer; min-width: 68px; font-variant-numeric: tabular-nums; }
+.buy:disabled { opacity: .4; cursor: not-allowed; }
+.shop-tip { margin: 0; font-size: 13px; color: var(--muted); }
+.quest { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; background: var(--panel); border-radius: 12px; padding: 9px 12px; font-size: 14px; }
+.quest small { color: var(--muted); white-space: nowrap; font-size: 12.5px; }
+.quest.done { opacity: .7; }
+.earn { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 13.5px; color: var(--muted); }
+.earn b { color: var(--ink); }
+.dex-count { font: 600 14px/1 var(--font-body); color: var(--muted); margin-left: 6px; }
+.dex { display: grid; gap: 8px; margin-top: 10px; }
+.dex-row { display: grid; grid-template-columns: 86px repeat(3, 1fr); gap: 6px; align-items: center; background: var(--panel); border-radius: 12px; padding: 8px 10px; }
+.dex-row > b { font: 600 13px/1.2 var(--font-display); }
+.dex-row > b small { display: block; font: 400 11px/1.3 var(--font-body); color: var(--muted); margin-top: 2px; }
+.dex-row.rare > b { color: #7a56d6; }
+.dex-row figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+.dex-row canvas { width: 48px; height: 48px; image-rendering: pixelated; }
+.dex-row figcaption { font: 600 11px/1.1 var(--font-display); }
+.dex-row figure.locked canvas { filter: brightness(0); opacity: .2; }
 .keys { font-size: 13px; color: var(--muted); }
 kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); border-bottom-width: 3px; border-radius: 5px; padding: 2px 5px; color: var(--ink); background: var(--panel); }
 .confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; }
@@ -276,15 +328,19 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
 
           <div class="ov ov-card" id="ovStatus" hidden>
             <p class="ov-title"><span id="stName">Bubby</span><button class="pbtn" data-close>Back</button></p>
-            <dl class="stat-grid">
+            <p class="callout" id="stCall" hidden></p>
+            <dl class="stat-grid two">
               <dt>Age</dt><dd><span id="stAge">0 days</span>&nbsp;· <span id="stGen">Gen 1</span></dd>
+              <dt>Race</dt><dd id="stRace">–</dd>
               <dt>Weight</dt><dd id="stWeight">5g</dd>
+              <dt>Health</dt><dd id="stHealth">Healthy</dd>
               <dt>Hunger</dt><dd id="stHunger"></dd>
               <dt>Happy</dt><dd id="stHappy"></dd>
-              <dt>Discipline</dt><dd><span class="bar"><i id="stDisc"></i></span><span id="stDiscN">0%</span></dd>
+              <dt>Discipline</dt><dd class="wide"><span class="bar"><i id="stDisc"></i></span><span id="stDiscN">0%</span></dd>
               <dt>Mistakes</dt><dd id="stMist">0</dd>
+              <dt>Streak</dt><dd id="stStreak">1 day</dd>
+              <dt>Next</dt><dd class="wide" id="stNext">–</dd>
             </dl>
-            <p class="callout" id="stCall" hidden></p>
             </div>
 
           <div class="ov ov-card" id="ovFeed" hidden>
@@ -293,7 +349,16 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
               <button class="opt" data-food="meal" id="optMeal"><canvas width="16" height="16" data-icon="meal"></canvas>Meal<small>+1 hunger · +1g</small></button>
               <button class="opt" data-food="snack" id="optSnack"><canvas width="16" height="16" data-icon="snack"></canvas>Snack<small>+1 happy · +2g</small></button>
             </div>
-            <div class="row-end"><button class="pbtn" data-close>Back</button></div>
+            <div class="cab" id="pantry"></div>
+            <p class="cab-note" id="pantryHint">Better food, no toothache: buy it in the Shop.</p>
+            <div class="row-end"><button class="pbtn" data-shop>Shop</button><button class="pbtn" data-close>Back</button></div>
+          </div>
+
+          <div class="ov ov-card" id="ovMed" hidden>
+            <p class="ov-title"><span>Medicine</span><small>pick one</small></p>
+            <p class="callout" id="medSick"></p>
+            <div class="cab" id="cab"></div>
+            <div class="row-end"><button class="pbtn" data-shop>Shop</button><button class="pbtn" data-close>Back</button></div>
           </div>
 
           <div class="ov ov-card" id="ovPlay" hidden>
@@ -349,11 +414,14 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
     </div>
 
     <div class="under">
+      <button class="chip shop" id="btnShop" aria-haspopup="dialog" title="Spend points on food and medicine (B)">★ <b id="ptsNow">0</b> pts · Shop</button>
+      <span class="gain" id="ptsGain" aria-live="polite"></span>
       <span>Speed</span>
       <span class="seg" role="group" aria-label="Game speed">
         <button data-speed="1" aria-pressed="true">1×</button><button data-speed="2" aria-pressed="false">2×</button><button data-speed="4" aria-pressed="false">4×</button>
       </span>
       <button class="chip" id="btnSound" aria-pressed="true">Sound on</button>
+      <button class="chip" id="btnStats" aria-pressed="true" title="Anonymous usage stats, sent to PostHog">Stats on</button>
     </div>
   </section>
 
@@ -378,16 +446,24 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
       <ul class="rules">
         <li><b>Answer calls.</b> When the <b>!</b> icon flashes, Bubby needs something. Ignore it for about 30 seconds and it counts as a care mistake.</li>
         <li><b>Meals before snacks.</b> Snacks cheer Bubby up but add weight, and too many in a row cause a toothache.</li>
-        <li><b>Clean up fast.</b> Poop left on screen makes Bubby sick. Sick Bubbies need medicine, sometimes two or three doses.</li>
+        <li><b>Clean up fast.</b> Poop left on screen makes Bubby sick. Sickness has names: <b>Spore Cough</b> (dirty garden), <b>Itchy Moss</b> (too many sweets or extra weight), <b>Moonflu</b> (sleeping with the lights on) and <b>The Blight</b> (neglect). Each needs its own medicine, sometimes two or three doses. Garden Tea is free but only cures Spore Cough, slowly.</li>
+        <li><b>Earn points, spend them in the Shop.</b> Points come from opening Bubby each day, caring for it, winning games, daily quests and goals. Spend them on better food, medicine and an Immunity Tonic. Press <kbd>B</kbd> for the Shop.</li>
         <li><b>Lights off at bedtime.</b> When Bubby falls asleep, press SLEEP. Bright lights keep it up and make it grumpy.</li>
         <li><b>Scold tantrums.</b> If Bubby calls while its hearts are full, it is acting out. Use Discipline. Scolding a well-behaved Bubby only upsets it.</li>
         <li><b>Neglect has a cost.</b> Leave Bubby starving or sick too long and it packs up and moves away, leaving a new seed behind.</li>
+        <li><b>Come back daily.</b> Bubby gets a gift each new day and keeps a streak going. Time away makes it a little hungry and sad, but never sick or gone.</li>
       </ul>
     </section>
 
     <section>
       <h2>Adult forms</h2>
       <div class="forms" id="forms"></div>
+    </section>
+
+    <section>
+      <h2>Bubbydex <span class="dex-count" id="dexCount"></span></h2>
+      <p>When a Bulb grows into a Bud it becomes a random race. One race is very rare. Raise every race to each adult form to fill the dex.</p>
+      <div class="dex" id="dex"></div>
     </section>
 
     <section class="keys">
@@ -399,6 +475,21 @@ kbd { font: 600 11px/1 var(--font-pixel); border: 1.5px solid var(--line); borde
     </section>
   </aside>
 </main>
+
+<div class="modal" id="shopModal" role="dialog" aria-modal="true" aria-labelledby="shopTitle" hidden>
+  <div class="modal-card">
+    <header>
+      <h2 id="shopTitle">Garden Shop</h2>
+      <span class="pts-pill">★ <b id="shopPts">0</b> pts</span>
+      <button class="chip" id="shopClose" aria-label="Close shop">Close</button>
+    </header>
+    <div class="seg tabs" role="group" aria-label="Shop sections">
+      <button data-tab="shop" aria-pressed="true">Shop</button><button data-tab="today" aria-pressed="false">Today</button><button data-tab="goals" aria-pressed="false">Goals</button>
+    </div>
+    <p class="shop-msg" id="shopMsg" role="status" aria-live="polite"></p>
+    <div class="modal-body" id="shopBody"></div>
+  </div>
+</div>
 
 <script>
 (() => {
@@ -422,6 +513,92 @@ const STAGE = {
 };
 const NAMES = { seed: 'Seed', baby: 'Bulb', child: 'Bud', adult: 'Blossom', senior: 'Elder' };
 const FORMS = { radiant: 'Radiant Blossom', daisy: 'Daisy Blossom', thistle: 'Thistle' };
+
+/* ---- Races: rolled at random when the Bulb grows into a Bud ----
+   Five common races share the odds equally. One rare race (RARE_CHANCE) gets a special animation.
+   Colors: body = [ring, fill, light], bud = [ring, fill, line, highlight], leaf/collar = [ring, fill]. */
+const RARE_RACE = 'starling', RARE_CHANCE = 0.05;
+const RACES = {
+  leafling:   { name: 'Leafling',   body: ['#2f7d3a', '#5cbf5a', '#8ad98a'], foot: '#3f9a45', leaf: ['#2a6e35', '#47a852'], collar: ['#2a6e35', '#4fae55'], bud: ['#b9544a', '#f08f7a', '#d8705f', '#ffb7a3'], suit: false, tint: '#8ad98a' },
+  mossback:   { name: 'Mossback',   body: ['#4b5a2c', '#86a04e', '#b8cf86'], foot: '#6b8040', leaf: ['#3d4a22', '#6f8a40'], collar: ['#3d4a22', '#7a9446'], bud: ['#6e5a2a', '#b59a52', '#8f7a3a', '#dcc888'], suit: true, tint: '#b8cf86' },
+  puddle:     { name: 'Puddle',     body: ['#2a6aa0', '#4ba8e2', '#a0dcf8'], foot: '#3a8ac4', leaf: ['#22609a', '#3d9ad4'], collar: ['#22609a', '#46a2dc'], bud: ['#2a8aa8', '#6fd3e6', '#4fb8d0', '#bdf0f8'], suit: true, tint: '#6fd3e6' },
+  shroomling: { name: 'Shroomling', body: ['#8a5a3a', '#c9966a', '#ecca9e'], foot: '#b07c52', leaf: ['#6e4528', '#a87a52'], collar: ['#6e4528', '#b88a5e'], bud: ['#a63636', '#e65a5a', '#c84444', '#ff9a9a'], suit: true, tint: '#e65a5a' },
+  emberling:  { name: 'Emberling',  body: ['#b0431c', '#f0803a', '#ffbb80'], foot: '#d9622a', leaf: ['#9a3818', '#e0702e'], collar: ['#9a3818', '#e8782e'], bud: ['#d42a1a', '#ff9d2e', '#f06a1a', '#ffd27a'], suit: true, tint: '#ff9d2e' },
+  starling:   { name: 'Starling',   body: ['#4a2f96', '#8d6de0', '#d4c4ff'], foot: '#6e50c4', leaf: ['#3e2784', '#7a58d0'], collar: ['#3e2784', '#8264d8'], bud: ['#c98f0a', '#ffe066', '#f0b820', '#fff3b0'], suit: true, tint: '#ffe066', rare: true },
+};
+const COMMON_RACES = Object.keys(RACES).filter(k => !RACES[k].rare);
+function rollRace() {
+  if (Math.random() < RARE_CHANCE) return RARE_RACE;
+  return COMMON_RACES[Math.floor(Math.random() * COMMON_RACES.length)];
+}
+
+/* ================= Diseases and medicine (v1.3) =================
+   Every illness has its own medicine. Garden Tea is free and always available: it cures Spore Cough slowly
+   (two cups) and only soothes the others. Illness only happens during active play, never while you are away.
+   The visiting update can make a Bubby catch something with catchDisease(id, 'visit'). */
+const DISEASES = {
+  sporecough: { name: 'Spore Cough', sev: 'Mild',   doses: 1, decay: 1.3, limit: 170, med: 'syrup', tint: 'rgba(170,200,60,.30)',  sign: 'sneezes puffs of spores', contagious: true },
+  itchymoss:  { name: 'Itchy Moss',  sev: 'Medium', doses: 2, decay: 1.5, limit: 160, med: 'salve', tint: 'rgba(240,110,150,.32)', sign: 'scratches itchy moss',    contagious: true },
+  moonflu:    { name: 'Moonflu',     sev: 'Medium', doses: 2, decay: 1.6, limit: 160, med: 'drops', tint: 'rgba(100,140,240,.34)', sign: 'shivers with a moonlit chill', contagious: true },
+  blight:     { name: 'The Blight',  sev: 'Severe', doses: 3, decay: 2.0, limit: 130, med: 'tonic', tint: 'rgba(90,50,130,.42)',   sign: 'wilts under a dark blight', contagious: true },
+};
+const MAX_STACK = 9;
+// kind: food (Feed menu), med (Medicine cabinet), care (cabinet, prevents illness). Prices are in points.
+const ITEMS = {
+  salad:  { kind: 'food', name: 'Garden Salad',   price: 6,  hunger: 1, happy: .5, weight: 0, icon: '#7ccf5a', desc: '+1 hunger, +½ happy, no weight gain' },
+  pie:    { kind: 'food', name: 'Sunberry Pie',   price: 10, hunger: 1, happy: 1,  weight: 1, icon: '#c04a86', desc: '+1 hunger, +1 happy, never a toothache' },
+  stew:   { kind: 'food', name: 'Hearty Stew',    price: 14, hunger: 2, happy: 0,  weight: 1, icon: '#d98a3a', desc: '+2 hunger' },
+  feast:  { kind: 'food', name: 'Golden Feast',   price: 30, hunger: 4, happy: 4,  weight: 2, icon: '#f2c230', desc: 'Fills hunger and happiness' },
+  syrup:  { kind: 'med',  name: 'Spore Syrup',    price: 8,  cures: ['sporecough'], dose: 1, icon: '#9bc53d', desc: 'Cures Spore Cough in 1 dose' },
+  salve:  { kind: 'med',  name: 'Moss Salve',     price: 10, cures: ['itchymoss'],  dose: 1, icon: '#e86b8c', desc: 'Cures Itchy Moss, 1 dose each' },
+  drops:  { kind: 'med',  name: 'Moon Drops',     price: 10, cures: ['moonflu'],    dose: 1, icon: '#6e96f0', desc: 'Cures Moonflu, 1 dose each' },
+  tonic:  { kind: 'med',  name: 'Blight Tonic',   price: 25, cures: ['blight'],     dose: 1, icon: '#7a4aa8', desc: 'Cures The Blight, 1 dose each' },
+  elixir: { kind: 'med',  name: 'Cure-All Elixir', price: 45, cures: 'all',         dose: 99, icon: '#f2c230', desc: 'Cures any illness at once' },
+  shield: { kind: 'care', name: 'Immunity Tonic', price: 20, icon: '#58c4b8', desc: 'Protects from illness for 4 minutes' },
+};
+const TEA = { name: 'Garden Tea', cures: ['sporecough'], dose: .5, soothes: true };
+const IMMUNITY_SECS = 240;
+const MED_IDS = () => Object.keys(ITEMS).filter(k => ITEMS[k].kind !== 'food');
+
+/* ================= Points, quests and goals (v1.3) =================
+   Points are earned by playing, never bought with money, and only buy things in the Shop.
+   Care and game points have a daily cap so they cannot be farmed. */
+const PTS = {
+  start: 25, daily: 10, streakStep: 2, streakSteps: 5,
+  meal: 1, snack: 1, premium: 2, clean: 1, sleep: 3, scold: 2, cure: 5,
+  guess: 2, guessPerfect: 3, catchDiv: 2, catchBest: 5,
+  bud: 10, blossom: 25, elder: 20, garden: 30, rare: 50, dexRace: 5, dexForm: 15,
+  quest: 8, questAll: 10,
+};
+const CAPS = { care: 30, game: 60 };
+const STREAK_MS = [[3, 10], [7, 30], [14, 60], [30, 150]];
+const QUEST_POOL = [
+  { id: 'feed',  ev: 'feed',    need: 3, text: 'Feed Bubby 3 times' },
+  { id: 'clean', ev: 'clean',   need: 2, text: 'Clean up 2 times' },
+  { id: 'games', ev: 'game',    need: 2, text: 'Play 2 games' },
+  { id: 'win',   ev: 'win',     need: 1, text: 'Win a game' },
+  { id: 'sleep', ev: 'sleep',   need: 1, text: 'Tuck Bubby in for the night' },
+  { id: 'scold', ev: 'scold',   need: 1, text: 'Scold a tantrum' },
+  { id: 'catch', ev: 'catch10', need: 1, text: 'Score 10 or more in Seed catch' },
+];
+const tot = k => (S.tot && S.tot[k]) || 0;
+const GOALS = [
+  { id: 'bite',     name: 'First Bite',      desc: 'Feed Bubby',                 pts: 5,   of: 1,   val: () => tot('feed') },
+  { id: 'foodie',   name: 'Foodie',          desc: 'Feed Bubby 25 times',        pts: 15,  of: 25,  val: () => tot('feed') },
+  { id: 'tidy',     name: 'Tidy Gardener',   desc: 'Clean up 10 times',          pts: 10,  of: 10,  val: () => tot('clean') },
+  { id: 'gamer',    name: 'Game Face',       desc: 'Win 5 games',                pts: 15,  of: 5,   val: () => tot('win') },
+  { id: 'seedstar', name: 'Seed Star',       desc: 'Score 20 in Seed catch',     pts: 20,  of: 20,  val: () => tot('bestCatch') },
+  { id: 'sleeper',  name: 'Sleepyhead',      desc: 'Tuck Bubby in 5 times',      pts: 15,  of: 5,   val: () => tot('sleep') },
+  { id: 'doctor',   name: 'Little Doctor',   desc: 'Cure an illness',            pts: 10,  of: 1,   val: () => tot('cure') },
+  { id: 'gdoctor',  name: 'Garden Doctor',   desc: 'Cure 5 illnesses',           pts: 30,  of: 5,   val: () => tot('cure') },
+  { id: 'shopper',  name: 'Shopper',         desc: 'Buy something in the Shop',  pts: 5,   of: 1,   val: () => tot('buy') },
+  { id: 'saver',    name: 'Saver',           desc: 'Earn 500 points in total',   pts: 50,  of: 500, val: () => tot('earned') },
+  { id: 'elder',    name: 'Full Circle',     desc: 'Raise a Bubby to an Elder',  pts: 30,  of: 1,   val: () => tot('elder') },
+  { id: 'star',     name: 'Starstruck',      desc: 'Meet a Starling',            pts: 40,  of: 1,   val: () => ((S.dex || []).includes('starling') ? 1 : 0) },
+  { id: 'dex6',     name: 'Collector',       desc: 'Fill 6 Bubbydex forms',      pts: 25,  of: 6,   val: () => dexFound() },
+  { id: 'dex12',    name: 'Curator',         desc: 'Fill 12 Bubbydex forms',     pts: 60,  of: 12,  val: () => dexFound() },
+  { id: 'dex18',    name: 'Bubbydex Master', desc: 'Fill all 18 Bubbydex forms', pts: 150, of: 18,  val: () => dexFound() },
+];
 const CALL_TEXT = {
   hungry: 'Bubby is calling: its tummy is empty. Feed it a meal.',
   sad: 'Bubby is calling: it feels lonely. Play a game or give a snack.',
@@ -430,10 +607,20 @@ const CALL_TEXT = {
 };
 const DAY = 60;
 
+/* ================= Analytics config (PostHog) =================
+   Paste your project API key (starts with phc_). Leave the placeholder in place and nothing is sent.
+   Use https://eu.i.posthog.com if your project is hosted in the EU. */
+const PH_KEY = 'phc_nPytszagt22G6TRYQmvgp9vrfkASjEFt5ohTuTsExRo5';
+const PH_HOST = 'https://eu.i.posthog.com';
+
 function stageName(s = S) {
   if (s.stage === 'adult') return FORMS[s.variant] || 'Blossom';
   if (s.stage === 'senior') return 'Elder ' + (FORMS[s.variant] || 'Blossom').replace(' Blossom', '');
   return NAMES[s.stage];
+}
+function fullName(s = S) {
+  const r = RACES[s.race];
+  return r && s.stage !== 'seed' && s.stage !== 'baby' ? `${r.name} ${stageName(s)}` : stageName(s);
 }
 function healthyMax(stage) { return STAGE[stage].base ? Math.round(STAGE[stage].base * 1.6) : 99; }
 
@@ -445,6 +632,10 @@ function fresh(gen = 1, speed = 1) {
     asleep: false, lights: true, awakeT: 0, sleepT: 0,
     call: null, mistakes: 0, snacks: [], variant: null, chubby: false,
     ended: null, paused: false, nextPoop: 30, nextTantrum: 55,
+    savedAt: 0, installedAt: 0, lastCheckIn: '', streak: 0, analytics: true,
+    race: null, dex: [],
+    disease: null, immuneT: 0, immuneNote: false, teaCd: 0, litSleep: 0,
+    points: PTS.start, inv: {}, tot: {}, ach: {}, quests: null, ptsDay: null, streakMs: 0,
     stats: { meals: 0, snacks: 0, games: 0, wins: 0, cleans: 0, meds: 0, scolds: 0, sick: 0 },
   };
 }
@@ -461,52 +652,88 @@ function startCall(reason) {
   S.call = { reason, t: 0, counted: false };
   beepCall();
 }
-function getSick(cause) {
-  if (S.sick) return;
-  const st = STAGE[S.stage];
-  S.sick = true; S.sickT = 0; S.sickCounted = false; S.sickMeter = 0;
-  S.doses = Math.round(rand(st.doses[0], st.doses[1]));
-  S.stats.sick++;
-  toast(cause === 'sweets' ? 'Too many sweets! Bubby has a toothache' : 'Bubby feels sick…');
-  beep(330, .12); setTimeout(() => beep(260, .18), 140);
+// What makes Bubby ill: a dirty garden gives Spore Cough (sometimes Itchy Moss), too many sweets or extra weight
+// give Itchy Moss, sleeping with the lights on gives Moonflu, and neglect gives The Blight.
+function pickDisease(cause) {
+  if (cause === 'poop') return Math.random() < .7 ? 'sporecough' : 'itchymoss';
+  if (cause === 'sweets' || cause === 'weight') return 'itchymoss';
+  if (cause === 'light') return 'moonflu';
+  if (cause === 'neglect') return 'blight';
+  return 'sporecough';
 }
+function getSick(cause, forced) {
+  if (S.sick) return;
+  if (S.immuneT > 0) {
+    S.sickMeter = 0; S.neglectT = 0; S.litSleep = 0;
+    if (!S.immuneNote) { S.immuneNote = true; toast('Immunity Tonic kept Bubby well!'); }
+    return;
+  }
+  const id = DISEASES[forced] ? forced : pickDisease(cause), d = DISEASES[id];
+  S.sick = true; S.disease = id; S.sickT = 0; S.sickCounted = false; S.sickMeter = 0;
+  S.doses = d.doses;
+  S.stats.sick++;
+  toast(`${d.name}! Bubby ${d.sign}`);
+  beep(330, .12); setTimeout(() => beep(260, .18), 140);
+  track('disease_caught', { disease: id, cause: forced ? 'forced' : cause });
+}
+// Entry point for the visiting update: a visit can pass an illness on.
+function catchDisease(id, source) { getSick(source || 'visit', id); }
 function fallAsleep() {
-  S.asleep = true; S.sleepT = 0;
+  S.asleep = true; S.sleepT = 0; S.litSleep = 0;
   if (S.call && S.call.reason === 'tantrum') S.call = null;
   if (S.lights) toast('Bubby fell asleep. Lights off, please');
 }
 function wake() {
   S.asleep = false; S.awakeT = 0; S.lights = true;
-  toast('Good morning, Bubby!');
+  if ((S.litSleep || 0) < 10) { earn(PTS.sleep, 'sleep', 'care'); bump('sleep'); toast('Good morning, Bubby! It slept well'); }
+  else toast('Good morning, Bubby!');
 }
 
 function evolve(to) {
   const from = S.stage;
   if (to === 'baby') S.weight = STAGE.baby.base;
   else S.weight += STAGE[to].base - STAGE[from].base;
+  let newForm = false, rare = false, newRace = false;
   if (to === 'adult') {
     let tier = S.mistakes <= 2 && S.discipline >= 75 ? 0 : (S.mistakes <= 6 && S.discipline >= 25 ? 1 : 2);
     if (S.weight - (STAGE.adult.base - STAGE.child.base) > healthyMax('child')) { S.chubby = true; tier = Math.min(2, tier + 1); }
     S.variant = ['radiant', 'daisy', 'thistle'][tier];
+    newForm = dexAdd(`${S.race}:${S.variant}`);
   }
+  if (to === 'child') { S.race = rollRace(); rare = !!RACES[S.race].rare; newRace = dexAdd(S.race); }
   S.stage = to; S.stageT = 0;
   S.nextPoop = rand(...STAGE[to].poop);
   if (to === 'baby') { S.awakeT = 0; S.nextTantrum = 55; }
-  A = { type: 'evolve', t: 0, dur: 1.8, from, to };
+  A = { type: 'evolve', t: 0, dur: rare ? 4.4 : 1.8, from, to, rare };
+  const rn = (RACES[S.race] || RACES.leafling).name, art = /^[AEIOU]/i.test(rn) ? 'an' : 'a';
   const msg = to === 'baby' ? 'The seed sprouted! Meet Bubby the Bulb'
-    : to === 'child' ? 'Bubby grew into a Bud!'
-    : to === 'adult' ? `Bubby blossomed into a ${FORMS[S.variant]}!`
+    : to === 'child' ? (rare ? `A rare ${rn}! Only 1 in ${Math.round(1 / RARE_CHANCE)} Bubbies` : `Bubby grew into ${art} ${rn} Bud!`)
+    : to === 'adult' ? `Bubby blossomed into ${art} ${rn} ${FORMS[S.variant]}!${newForm ? ' New in the Bubbydex!' : ''}`
     : 'Bubby is an Elder now. Take it easy';
   toast(msg);
   beep(523, .1); setTimeout(() => beep(659, .1), 120); setTimeout(() => beep(784, .16), 240);
+  if (rare) [988, 1175, 1319, 1568, 1760, 2093].forEach((f, i) => setTimeout(() => beep(f, .18, .06), 700 + i * 150));
+  if (to === 'child') track('race_revealed', { race: S.race, rare });
+  if (newForm) track('dex_progress', { found: dexFound(), form: `${S.race}:${S.variant}` });
+  track('evolved', { to, variant: S.variant, race: S.race });
+  renderDex();
+  const growth = { child: PTS.bud, adult: PTS.blossom, senior: PTS.elder }[to] || 0;
+  earn(growth, 'growth', 'bonus');
+  if (rare) earn(PTS.rare, 'rare', 'bonus');
+  if (newRace) earn(PTS.dexRace, 'dex', 'bonus');
+  if (newForm) earn(PTS.dexForm, 'dex', 'bonus');
+  if (to === 'senior') bump('elder');
+  checkGoals();
   save();
 }
 
 function end(kind) {
-  S.ended = { kind, age: S.age, stage: S.stage, name: stageName(), mistakes: S.mistakes, gen: S.gen };
+  S.ended = { kind, age: S.age, stage: S.stage, name: fullName(), mistakes: S.mistakes, gen: S.gen };
   S.call = null; A = null; G = null;
+  if (kind === 'garden') earn(PTS.garden, 'garden', 'bonus');
   closeOverlays();
   showEnd();
+  track('bubby_ended', { kind, days: Math.floor(S.age / DAY), mistakes: S.mistakes });
   save();
 }
 
@@ -516,11 +743,17 @@ function tick(dt) {
   S.age += dt; S.stageT += dt;
   if (S.stage === 'seed') { if (S.stageT >= STAGE.seed.dur) evolve('baby'); return; }
   const st = STAGE[S.stage];
+  if (S.immuneT > 0) { S.immuneT = Math.max(0, S.immuneT - dt); if (S.immuneT === 0) S.immuneNote = false; }
+  if (S.teaCd > 0) S.teaCd = Math.max(0, S.teaCd - dt);
 
   // Day and night
   if (S.asleep) {
     S.sleepT += dt;
-    if (S.lights) S.happy -= dt / 40;
+    if (S.lights) {
+      S.happy -= dt / 40;
+      S.litSleep = (S.litSleep || 0) + dt;
+      if (S.litSleep >= 18 && !S.sick) { S.litSleep = 10; getSick('light'); }   // slept too long with the lights on
+    }
     if (S.sleepT >= st.sleep) wake();
   } else {
     S.awakeT += dt;
@@ -530,7 +763,7 @@ function tick(dt) {
 
   // Meters
   let m = S.asleep ? 0.15 : 1;
-  if (S.sick) m *= 1.6;
+  if (S.sick) m *= (DISEASES[S.disease] || DISEASES.sporecough).decay;
   S.hunger = clamp(S.hunger - st.hr * m * dt, 0, 4);
   S.happy = clamp(S.happy - st.pr * m * dt - 0.004 * S.poops.length * dt, 0, 4);
 
@@ -556,7 +789,7 @@ function tick(dt) {
     S.sickT += dt;
     if (S.sickT >= 60 && !S.sickCounted) { S.sickCounted = true; mistake('sick'); }
   }
-  if (S.sickT >= 160 || S.starveT >= 150) { end('away'); return; }
+  if ((S.sick && S.sickT >= (DISEASES[S.disease] || DISEASES.sporecough).limit) || S.starveT >= 150) { end('away'); return; }
 
   // Tantrums (misbehaving calls)
   if (!S.asleep && S.lights && !S.call && S.stage !== 'senior' && !G) {
@@ -604,6 +837,7 @@ function act(a) {
   if (A) return;
   closeOverlays();
   beep(880, .03);
+  track('action_tap', { action: a });
   if (a === 'lights') return toggleLights();
   if (!canCare()) return;
   ({ feed: openFeed, play: openPlay, clean: doClean, med: doMed, discipline: doScold })[a]?.();
@@ -619,39 +853,101 @@ function toggleLights() {
   }
   save();
 }
-function openFeed() { showOv('feed'); }
+function openFeed() { renderPantry(); showOv('feed'); }
+// Shop food: better than a plain meal, no toothache risk. Each use takes one from the pantry.
+function eatPremium(id) {
+  const it = ITEMS[id];
+  if (!it || it.kind !== 'food') return;
+  if (!(S.inv[id] > 0)) { A = { type: 'no', t: 0, dur: .9 }; toast('None left. Buy more in the Shop'); return; }
+  if (S.hunger >= 3.999 && (it.happy <= 0 || S.happy >= 3.999)) { A = { type: 'no', t: 0, dur: .9 }; toast('Bubby is full'); return; }
+  S.inv[id]--;
+  S.hunger = clamp(S.hunger + it.hunger, 0, 4); S.happy = clamp(S.happy + it.happy, 0, 4);
+  S.weight += it.weight; S.stats.meals++; S.nextPoop -= 4;
+  A = { type: 'eat', t: 0, dur: 1.6, food: id };
+  toast(`Yum! ${it.name}`);
+  earn(PTS.premium, 'eat', 'care'); bump('feed');
+  track('food_eaten', { food: id });
+  save();
+}
 function feed(kind) {
   closeOverlays();
   if (!canCare() || A) return;
+  if (ITEMS[kind]) return eatPremium(kind);
   if (kind === 'meal') {
     if (S.hunger >= 3.999) { A = { type: 'no', t: 0, dur: .9 }; toast('Bubby is full'); return; }
     S.hunger = clamp(S.hunger + 1, 0, 4); S.weight += 1; S.stats.meals++; S.nextPoop -= 4;
     A = { type: 'eat', t: 0, dur: 1.6, food: 'meal' }; toast('Yum! A good meal');
+    earn(PTS.meal, 'eat', 'care'); bump('feed');
   } else {
     S.happy = clamp(S.happy + 1, 0, 4); S.weight += 2; S.stats.snacks++;
     S.snacks = S.snacks.filter(t => S.age - t < 45); S.snacks.push(S.age);
     A = { type: 'eat', t: 0, dur: 1.6, food: 'snack' }; toast('Sweet! Bubby loves snacks');
+    earn(PTS.snack, 'eat', 'care'); bump('feed');
     if (S.snacks.length >= 3 && Math.random() < 0.6) { A.after = () => getSick('sweets'); S.snacks = []; }
   }
   save();
 }
 function doClean() {
   if (!S.poops.length) { toast('The garden is already clean'); A = { type: 'sparkle', t: 0, dur: .7 }; return; }
-  A = { type: 'clean', t: 0, dur: 1.2, after: () => { S.poops = []; S.sickMeter = 0; S.happy = clamp(S.happy + .25, 0, 4); S.stats.cleans++; toast('All clean!'); save(); } };
+  A = { type: 'clean', t: 0, dur: 1.2, after: () => {
+    const n = S.poops.length;
+    S.poops = []; S.sickMeter = 0; S.happy = clamp(S.happy + .25, 0, 4); S.stats.cleans++; toast('All clean!');
+    earn(n * PTS.clean, 'clean', 'care'); bump('clean'); save();
+  } };
   beep(520, .08); setTimeout(() => beep(440, .1), 90);
 }
-function doMed() {
+// The Medicine button opens the cabinet. Garden Tea is always there; other medicines come from the Shop.
+function doMed() { renderMed(); showOv('med'); }
+function giveMed(id) {
+  closeOverlays();
+  if (!canCare() || A) return;
+  const it = id === 'tea' ? TEA : ITEMS[id];
+  if (!it) return;
+  if (id !== 'tea' && !(S.inv[id] > 0)) { A = { type: 'no', t: 0, dur: .9 }; toast('None left. Buy more in the Shop'); return; }
+  if (id === 'shield') {
+    if (S.sick) { A = { type: 'no', t: 0, dur: .9 }; toast('The tonic only prevents illness'); return; }
+    if (S.immuneT > 0) { A = { type: 'no', t: 0, dur: .9 }; toast('Bubby is already protected'); return; }
+    S.inv[id]--; S.immuneT = IMMUNITY_SECS; S.immuneNote = false;
+    A = { type: 'happy', t: 0, dur: .9 }; toast('Protected from illness for 4 minutes');
+    track('med_used', { med: id }); save(); return;
+  }
   if (!S.sick) { A = { type: 'no', t: 0, dur: .9 }; toast('Bubby isn\'t sick'); return; }
-  S.doses--; S.stats.meds++;
+  const d = DISEASES[S.disease] || DISEASES.sporecough;
+  const works = it.cures === 'all' || it.cures.includes(S.disease);
+  if (!works) {
+    if (it.soothes && S.teaCd <= 0) {
+      S.teaCd = 40; S.sickT = Math.max(0, S.sickT - 30);
+      A = { type: 'med', t: 0, dur: 1.1 }; toast(`The tea soothes Bubby for now. ${d.name} needs ${ITEMS[d.med].name}`);
+      save(); return;
+    }
+    A = { type: 'no', t: 0, dur: .9 };
+    toast(it.soothes ? 'Bubby needs a moment before more tea' : `That won't help ${d.name}. Try ${ITEMS[d.med].name}`);
+    return;
+  }
+  if (id !== 'tea') S.inv[id]--;
+  S.doses = it.cures === 'all' ? 0 : Math.max(0, S.doses - it.dose);
+  S.stats.meds++;
   A = { type: 'med', t: 0, dur: 1.1 };
-  if (S.doses <= 0) {
-    A.after = () => { S.sick = false; S.sickT = 0; S.sickCounted = false; S.neglectT = 0; S.sickMeter = 0; S.happy = clamp(S.happy - .5, 0, 4); toast('All better!'); A = { type: 'happy', t: 0, dur: .8 }; save(); };
-  } else toast(`Gulp. ${S.doses} more dose${S.doses > 1 ? 's' : ''} needed`);
+  track('med_used', { med: id, disease: S.disease });
+  if (S.doses <= 0.001) A.after = () => cure(id);
+  else { const n = Math.ceil(S.doses - 1e-6); toast(`Gulp. ${n} more dose${n > 1 ? 's' : ''} needed`); }
+  save();
+}
+function cure(id) {
+  const was = S.disease;
+  S.sick = false; S.disease = null; S.sickT = 0; S.sickCounted = false; S.neglectT = 0; S.sickMeter = 0; S.doses = 0;
+  S.happy = clamp(S.happy - .5, 0, 4);
+  const got = earn(PTS.cure, 'cure', 'bonus');
+  toast(`All better!${got ? ` +${got} pts` : ''}`);
+  bump('cure');
+  track('disease_cured', { disease: was, med: id });
+  A = { type: 'happy', t: 0, dur: .8 };
   save();
 }
 function doScold() {
   if (S.call && S.call.reason === 'tantrum') {
     S.discipline = clamp(S.discipline + 25, 0, 100); S.call = null; S.stats.scolds++;
+    earn(PTS.scold, 'scold', 'care'); bump('scold');
     A = { type: 'scold', t: 0, dur: 1.1 };
     toast(`Bubby behaves now. Discipline ${S.discipline}%`);
   } else {
@@ -687,10 +983,14 @@ function startGame(kind) {
   } else {
     G = { type: 'guess', round: 1, score: 0, phase: 'guess', look: 0, t: 0, last: false };
   }
+  track('game_start', { game: kind });
   showOv('game'); $('#ovGame').classList.toggle('catch', G.type === 'catch'); renderGame();
 }
-function finishGame(happyGain, msg) {
+function finishGame(happyGain, msg, pts = 0, won = false) {
   S.stats.games++;
+  bump('game'); if (won) bump('win');
+  const got = earn(pts, 'game', 'game');
+  if (got) msg += ` · +${got} pts`;
   S.weight = Math.max(Math.round(STAGE[S.stage].base * 0.8), S.weight - 1);
   if (happyGain) { S.happy = clamp(S.happy + happyGain, 0, 4); S.stats.wins++; A = { type: 'happy', t: 0, dur: 1 }; }
   G = null; closeOverlays();
@@ -734,9 +1034,12 @@ function updateCatch(rdt) {
   if (g.phase === 'done') {
     if (g.t > 1.8) {
       const gain = g.score >= 20 ? 2 : g.score >= 10 ? 1 : 0;
-      const best = g.score > (S.stats.bestCatch || 0);
+      const prev = S.stats.bestCatch || 0, best = g.score > prev;
       if (best) S.stats.bestCatch = g.score;
-      finishGame(gain, (best ? 'New best! ' : '') + (gain ? `+${gain} happy, -1g` : 'Good exercise anyway. -1g'));
+      S.tot.bestCatch = Math.max(tot('bestCatch'), g.score);
+      if (g.score >= 10) bump('catch10');
+      finishGame(gain, (best ? 'New best! ' : '') + (gain ? `+${gain} happy, -1g` : 'Good exercise anyway. -1g'),
+        Math.floor(g.score / PTS.catchDiv) + (best && prev > 0 ? PTS.catchBest : 0), g.score >= 10);
     }
     return;
   }
@@ -779,7 +1082,8 @@ function updateGame(rdt) {
     renderGame();
   } else if (G.phase === 'done' && G.t > 1.6) {
     const win = G.score >= 3;
-    finishGame(win ? 1 : 0, win ? 'Bubby had fun! +1 happy, -1g' : 'Good exercise anyway. -1g');
+    finishGame(win ? 1 : 0, win ? 'Bubby had fun! +1 happy, -1g' : 'Good exercise anyway. -1g',
+      G.score * PTS.guess + (G.score >= 5 ? PTS.guessPerfect : 0), win);
   }
 }
 
@@ -849,8 +1153,10 @@ const PAL = {
   daisy:   { ring: '#b3a9c4', petal: '#ffffff', face: '#ffd54f', faceRing: '#d9a520', suit: ['#3f8f4f', '#66bb6a'], blush: '#f59a7a', wings: null },
   thistle: { ring: '#5a3b80', petal: '#9a6cc7', face: '#c39be0', faceRing: '#6e4b98', suit: ['#5d6b4f', '#7f8f6a'], blush: '#a678c9', wings: null },
 };
-function palette(variant, senior) {
-  const p = PAL[variant] || PAL.radiant;
+function palette(variant, senior, race) {
+  let p = PAL[variant] || PAL.radiant;
+  const r = RACES[race];
+  if (r && r.suit) p = { ...p, suit: [r.body[0], r.body[1]], petal: mix(p.petal, r.bud[1], .25), ring: mix(p.ring, r.bud[0], .25) };
   if (!senior) return p;
   const m = c => mix(c, '#cdb8a6', .45);
   return { ring: m(p.ring), petal: m(p.petal), face: m(p.face), faceRing: m(p.faceRing), suit: [m(p.suit[0]), m(p.suit[1])], blush: m(p.blush),
@@ -875,21 +1181,45 @@ function drawBaby(x, o) {
   P(x, [18, 21, 20, 21, 28, 20, 30, 20], '#8be095');
   face(x, 24, 36, { ...o, blush: '#f59aa6' });
 }
+/* Small per-race decorations, drawn over the body. o.t (seconds) makes flames and stars flicker. */
+function raceMark(x, o, st) {
+  const k = o.race, fl = ((o.t || 0) * 3 | 0) % 2, ad = st !== 'child';
+  if (k === 'mossback') {
+    P(x, ad ? [17, 9, 18, 9, 18, 10, 30, 9, 31, 9, 30, 10, 14, 37, 15, 37, 33, 37, 34, 37] : [20, 40, 21, 40, 21, 41, 27, 39, 28, 39, 28, 40, 17, 35, 18, 35], '#4f6a2a');
+    P(x, ad ? [17, 8, 31, 8] : [20, 39, 28, 38], '#b8cf86');
+  } else if (k === 'puddle') {
+    P(x, ad ? [12, 14, 36, 14, 11, 27, 37, 28] : [12, 30, 36, 31, 13, 41, 35, 40], '#bff0ff');
+    P(x, ad ? [12, 15, 36, 15] : [12, 31, 36, 32], '#6fd3e6');
+    P(x, ad ? [21, 36, 22, 36, 21, 37] : [19, 33, 20, 32], '#ffffff');
+  } else if (k === 'shroomling') {
+    P(x, ad ? [24, 9, 25, 9, 31, 13, 32, 13, 16, 13, 17, 13, 35, 21, 13, 21] : [22, 15, 23, 15, 27, 18, 28, 18, 21, 21, 25, 23, 26, 23], '#ffffff');
+  } else if (k === 'emberling') {
+    const y0 = ad ? 1 : 4;
+    P(x, [24, y0 + 2, 23, y0 + 3, 24, y0 + 3, 25, y0 + 3, 23, y0 + 4, 24, y0 + 4, 25, y0 + 4], '#ff7a1a');
+    P(x, fl ? [24, y0 + 1, 24, y0 + 3] : [23, y0 + 2, 25, y0 + 2], '#ffd27a');
+  } else if (k === 'starling') {
+    const y0 = ad ? 1 : 5;
+    P(x, [24, y0, 23, y0 + 1, 24, y0 + 1, 25, y0 + 1, 24, y0 + 2], '#ffe066');
+    P(x, fl ? [14, ad ? 24 : 27, 34, ad ? 20 : 30] : [34, ad ? 24 : 27, 14, ad ? 20 : 30], '#fff3b0');
+  }
+}
 function drawChild(x, o) {
-  ER(x, 20, 45, 2.6, 2, '#2f7d3a', '#3f9a45'); ER(x, 28, 45, 2.6, 2, '#2f7d3a', '#3f9a45');
-  ER(x, 14.5, 37, 2.6, 3.6, '#2f7d3a', '#5cbf5a', .3); ER(x, 33.5, 37, 2.6, 3.6, '#2f7d3a', '#5cbf5a', -.3);
-  ER(x, 24, 36, 9.5, 9, '#2f7d3a', '#5cbf5a');
-  E(x, 20, 31, 2.5, 1.6, '#8ad98a');
-  ER(x, 16, 25.5, 6.5, 2.6, '#2a6e35', '#47a852', -.4); ER(x, 32, 25.5, 6.5, 2.6, '#2a6e35', '#47a852', .4);
-  ER(x, 24, 19, 6, 7.5, '#b9544a', '#f08f7a');
-  R(x, 21, 15, 1, 9, '#d8705f'); R(x, 26, 15, 1, 9, '#d8705f');
-  E(x, 22.5, 15.5, 1.2, 2, '#ffb7a3');
-  P(x, [23, 10, 24, 10, 23, 11, 24, 11], '#f08f7a');
-  ER(x, 24, 26, 5, 2, '#2a6e35', '#4fae55');
+  const r = RACES[o.race] || RACES.leafling, b = r.body, u = r.bud;
+  ER(x, 20, 45, 2.6, 2, b[0], r.foot); ER(x, 28, 45, 2.6, 2, b[0], r.foot);
+  ER(x, 14.5, 37, 2.6, 3.6, b[0], b[1], .3); ER(x, 33.5, 37, 2.6, 3.6, b[0], b[1], -.3);
+  ER(x, 24, 36, 9.5, 9, b[0], b[1]);
+  E(x, 20, 31, 2.5, 1.6, b[2]);
+  ER(x, 16, 25.5, 6.5, 2.6, r.leaf[0], r.leaf[1], -.4); ER(x, 32, 25.5, 6.5, 2.6, r.leaf[0], r.leaf[1], .4);
+  ER(x, 24, 19, 6, 7.5, u[0], u[1]);
+  R(x, 21, 15, 1, 9, u[2]); R(x, 26, 15, 1, 9, u[2]);
+  E(x, 22.5, 15.5, 1.2, 2, u[3]);
+  P(x, [23, 10, 24, 10, 23, 11, 24, 11], u[1]);
+  ER(x, 24, 26, 5, 2, r.collar[0], r.collar[1]);
+  raceMark(x, o, 'child');
   face(x, 24, 37, { ...o, blush: '#f59aa6' });
 }
 function drawAdult(x, o, senior) {
-  const pal = palette(o.variant, senior), ch = o.chubby ? 2 : 0, cx = 24, hy = 21, th = o.variant === 'thistle';
+  const pal = palette(o.variant, senior, o.race), ch = o.chubby ? 2 : 0, cx = 24, hy = 21, th = o.variant === 'thistle';
   if (pal.wings) { ER(x, 12 - ch, 35, 6.5, 3.4, pal.wings[0], pal.wings[1], -.55); ER(x, 36 + ch, 35, 6.5, 3.4, pal.wings[0], pal.wings[1], .55); }
   ER(x, 20.5, 45, 2.5, 1.8, pal.suit[0], pal.suit[0]); ER(x, 27.5, 45, 2.5, 1.8, pal.suit[0], pal.suit[0]);
   ER(x, 16 - ch, 38.5, 2.6, 3.6, pal.suit[0], pal.suit[1], .35); ER(x, 32 + ch, 38.5, 2.6, 3.6, pal.suit[0], pal.suit[1], -.35);
@@ -908,6 +1238,7 @@ function drawAdult(x, o, senior) {
     ER(x, px, py, pr, pr, pal.ring, pal.petal);
   }
   if (senior) P(x, [15, 14, 32, 13, 12, 22, 36, 24, 18, 31, 30, 31], mix(pal.petal, '#8a5a40', .35));
+  raceMark(x, o, senior ? 'senior' : 'adult');
   ER(x, cx, hy, 8.5, 8.5, pal.faceRing, pal.face);
   E(x, 20, 16.5, 2, 1.3, mix(pal.face, '#ffffff', .45));
   face(x, cx, hy + 1, { ...o, blush: pal.blush, glasses: senior, skin: pal.face, mood: (th && (o.mood || 'normal') === 'normal') ? 'normal' : o.mood, mouth: o.mouth || (th && (!o.mood || o.mood === 'normal') ? 'flat' : undefined) });
@@ -919,7 +1250,7 @@ function petSprite(stage, o = {}) {
   else if (stage === 'child') drawChild(x, o);
   else drawAdult(x, o, stage === 'senior');
   outline(c);
-  if (o.sick) { x.globalCompositeOperation = 'source-atop'; x.fillStyle = 'rgba(140,190,60,.28)'; x.fillRect(0, 0, 48, 48); x.globalCompositeOperation = 'source-over'; }
+  if (o.sick) { x.globalCompositeOperation = 'source-atop'; x.fillStyle = (DISEASES[o.sick] || {}).tint || 'rgba(140,190,60,.28)'; x.fillRect(0, 0, 48, 48); x.globalCompositeOperation = 'source-over'; }
   return c;
 }
 const HEADTOP = { seed: 23, baby: 17, child: 9, adult: 5, senior: 5 };
@@ -987,6 +1318,25 @@ const POOP = sprite(12, 11, x => {
   E(x, 6, 8.5, 5, 2.2, '#e9679f'); E(x, 6, 6, 3.8, 1.9, '#ff8fc0'); E(x, 6, 3.6, 2.4, 1.5, '#ffacd2'); P(x, [6, 1, 7, 1], '#ffacd2');
   P(x, [4, 6, 8, 6], INK); P(x, [5, 8, 6, 8], INK);
 });
+/* Shop items: plates for food, bottles for medicine and tonics, a cup for Garden Tea */
+function foodIcon(col) {
+  return sprite(16, 16, x => {
+    E(x, 8, 11.5, 7, 3.4, '#ffffff'); E(x, 8, 12.3, 6, 2.4, '#dfe6ec');
+    E(x, 8, 8.4, 5, 3.6, col); E(x, 6.4, 6.8, 2, 1.2, mix(col, '#ffffff', .45)); P(x, [10, 9, 11, 8, 8, 10], mix(col, '#000000', .25));
+  });
+}
+function bottleIcon(col) {
+  return sprite(16, 16, x => {
+    R(x, 6, 1, 4, 2, '#b78a5a'); R(x, 6, 3, 4, 1, '#dfe7ee');
+    R(x, 4, 4, 8, 10, '#f4f8fb'); R(x, 10, 4, 2, 10, '#cfdbe6');
+    R(x, 5, 8, 6, 5, col); R(x, 5, 8, 6, 1, mix(col, '#ffffff', .45)); P(x, [5, 5, 6, 5], '#ffffff');
+  });
+}
+for (const [id, it] of Object.entries(ITEMS)) ICONS[id] = it.kind === 'food' ? foodIcon(it.icon) : bottleIcon(it.icon);
+ICONS.tea = sprite(16, 16, x => {
+  E(x, 8, 10, 6, 4, '#ffffff'); R(x, 2, 6, 12, 2, '#ffffff'); E(x, 8, 7, 5, 1.4, '#c9a66b');
+  R(x, 13, 8, 2, 3, '#ffffff'); P(x, [6, 3, 8, 2, 10, 3], '#dfe9ee');
+});
 const SKULL = sprite(9, 8, x => {
   R(x, 2, 1, 5, 1, '#f4f4f4'); R(x, 1, 2, 7, 3, '#f4f4f4'); R(x, 2, 5, 5, 1, '#f4f4f4'); P(x, [2, 6, 4, 6, 6, 6], '#f4f4f4');
   R(x, 2, 3, 2, 1, INK); R(x, 5, 3, 2, 1, INK); P(x, [4, 5], INK);
@@ -1034,6 +1384,51 @@ function sparkles(cx, cy, t, r = 16) {
     sx.fillStyle = col; sx.fillRect(px, py, 1, 1); sx.fillRect(px - 1, py, 3, 1); sx.fillRect(px, py - 1, 1, 3);
   }
 }
+/* ---- Rare race moment: dim garden, spinning rays, glow (behind Bubby), then a shockwave and falling stars (in front) ---- */
+function evolveBack(px, time) {
+  const cy = GROUND - 24, t = A.t, fade = Math.min(1, t / .5) * Math.min(1, (A.dur - t) / .9);
+  R(sx, 0, 0, SW, SH, `rgba(30,12,80,${(fade * .55).toFixed(2)})`);
+  sx.globalAlpha = fade;
+  for (let i = 0; i < 12; i++) {
+    const ang = time * .9 + i * Math.PI / 6;
+    for (let r = 12; r < 56; r += 4) {
+      if (((r >> 2) + i) % 2) continue;
+      P(sx, [Math.round(px + Math.cos(ang) * r), Math.round(cy + Math.sin(ang) * r * .75)], i % 2 ? '#fff3b0' : '#d7c6ff');
+    }
+  }
+  sx.globalAlpha = .1 * fade;
+  for (let r = 26; r >= 10; r -= 4) E(sx, px, cy, r, r * .85, '#ffe9a8');
+  sx.globalAlpha = 1;
+}
+function evolveFront(px, time) {
+  const cy = GROUND - 24, t = A.t;
+  if (A.rare) {
+    if (t > 1.3 && t < 2.6) {
+      const rr = (t - 1.3) * 38;
+      for (let a = 0; a < Math.PI * 2; a += .1) P(sx, [Math.round(px + Math.cos(a) * rr), Math.round(cy + Math.sin(a) * rr * .75)], '#ffe066');
+    }
+    for (let i = 0; i < 16; i++) {
+      const bx = (i * 37 + 11) % SW, by = Math.round(((time * 14 + i * 23) % (SH + 10)) - 5);
+      P(sx, [bx, by, bx - 1, by, bx + 1, by, bx, by - 1, bx, by + 1], i % 3 ? '#fff3b0' : '#ffffff');
+    }
+    sparkles(px, cy, time, 20 + Math.sin(time * 6) * 2);
+    if (t < .25) R(sx, 0, 0, SW, SH, 'rgba(255,255,255,.85)');
+    return;
+  }
+  sparkles(px, cy, time, 18 + Math.sin(time * 6) * 2);
+  if (t < .2) R(sx, 0, 0, SW, SH, 'rgba(255,255,255,.8)');
+  if (A.to === 'child' && t > .4 && t < 1.6 && RACES[S.race]) {
+    const rr = (t - .4) * 30;
+    for (let a = 0; a < Math.PI * 2; a += .14) P(sx, [Math.round(px + Math.cos(a) * rr), Math.round(cy + Math.sin(a) * rr * .75)], RACES[S.race].tint);
+  }
+}
+function twinkle(px, cy, time) {
+  for (let i = 0; i < 5; i++) {
+    if (((time * 1.6 + i * .7) | 0) % 3 !== 0) continue;
+    const a = i * 2.4 + 1, bx = Math.round(px + Math.cos(a) * 17), by = Math.round(cy + Math.sin(a) * 15);
+    P(sx, [bx, by, bx - 1, by, bx + 1, by, bx, by - 1, bx, by + 1], '#ffe066');
+  }
+}
 function moodNow() {
   let mood = 'normal', mouth;
   if (S.asleep) mood = 'sleep';
@@ -1073,7 +1468,7 @@ function draw(time) {
     o.crack = prog > .65;
   } else {
     const mn = moodNow();
-    o = { mood: mn.mood, mouth: mn.mouth, variant: S.variant, chubby: S.chubby, sick: S.sick && !S.asleep, blink: (time % 3.4) < .13 };
+    o = { mood: mn.mood, mouth: mn.mouth, variant: S.variant, chubby: S.chubby, sick: S.sick && !S.asleep ? (S.disease || true) : false, blink: (time % 3.4) < .13 };
     o.look = G ? (G.type === 'catch' ? (G.moving ? G.dir : 0) : (G.phase === 'reveal' ? G.look * 2 : 0)) : (PET.moving ? PET.dir : 0);
     if (S.asleep) bob = ((time * 1.1) | 0) % 2;
     else if (A && A.type === 'happy') bob = -(((time * 8) | 0) % 2) * 2;
@@ -1082,9 +1477,12 @@ function draw(time) {
     else bob = -(((time * 1.6) | 0) % 2);
     if (A && A.type === 'no') shake = (((A.t * 12) | 0) % 2) ? 1 : -1;
   }
+  if (stage !== 'seed') { o.race = S.race; o.t = time; }
+  if (A && A.type === 'evolve' && A.rare) evolveBack(px, time);
   const spr = petSprite(stage, o);
   if (stage !== 'seed') { sx.fillStyle = 'rgba(64,120,52,.45)'; E(sx, px, GROUND + 1.5, 9, 1.6, 'rgba(64,120,52,.45)'); }
   blit(spr, px - 24 + shake, GROUND - 46 + bob);
+  if (S.race === RARE_RACE && stage !== 'seed' && !(A && A.type === 'evolve' && A.rare)) twinkle(px, GROUND - 24, time);
   const top = GROUND - 46 + HEADTOP[stage] + bob;
 
   // Action effects
@@ -1100,7 +1498,7 @@ function draw(time) {
     }
     if (A.type === 'med') { blit(ICONS.med, px + 9, top - 6 - Math.round(Math.sin(k * Math.PI) * 4)); }
     if (A.type === 'scold') { if (((A.t * 6) | 0) % 2 === 0) blit(BANG, px + 10, top - 4); }
-    if (A.type === 'evolve') { sparkles(px, GROUND - 22, time, 18 + Math.sin(time * 6) * 2); if (A.t < .2) { R(sx, 0, 0, SW, SH, 'rgba(255,255,255,.8)'); } }
+    if (A.type === 'evolve') evolveFront(px, time);
     if (A.type === 'sparkle' || A.type === 'happy') sparkles(px, GROUND - 20, time, 15);
   }
 
@@ -1140,7 +1538,7 @@ const TILES = [
   ['feed', 'Feed', '#f7c6d0', 'Meal fills hunger. Snack cheers Bubby up.'],
   ['status', 'Status', '#fbe6a2', 'Check hearts, weight and discipline.'],
   ['discipline', 'Discipline', '#cfe8b8', 'Scold a tantrum.'],
-  ['med', 'Medicine', '#ddd2f2', 'Cure sickness. May take a few doses.'],
+  ['med', 'Medicine', '#ddd2f2', 'Open the cabinet. Each illness needs its own medicine.'],
   ['clean', 'Clean', '#ecd5f3', 'Flush poop before it makes Bubby sick.'],
   ['lights', 'Lights', '#fbd8b6', 'Turn off when Bubby sleeps.'],
   ['play', 'Play', '#c9e2f4', 'Guess its turn, or catch falling seeds.'],
@@ -1154,6 +1552,33 @@ function buildTiles() {
     (i < 4 ? $('#tilesTop') : $('#tilesBot')).appendChild(b);
   });
   $$('canvas[data-icon]').forEach(c => c.getContext('2d').drawImage(ICONS[c.dataset.icon], 0, 0));
+}
+/* ---- Bubbydex: every race x care tier. Race rows reveal at the Bud stage, each form when it blossoms. ---- */
+const TIERS = [['radiant', 'Radiant'], ['daisy', 'Daisy'], ['thistle', 'Thistle']];
+function dexAdd(key) {
+  if (!S.dex) S.dex = [];
+  if (S.dex.includes(key)) return false;
+  S.dex.push(key);
+  return true;
+}
+function dexFound() { return (S.dex || []).filter(k => k.includes(':')).length; }
+function renderDex() {
+  const box = $('#dex'); if (!box) return;
+  box.textContent = '';
+  $('#dexCount').textContent = `${dexFound()} / ${Object.keys(RACES).length * TIERS.length}`;
+  for (const [id, r] of Object.entries(RACES)) {
+    const seen = (S.dex || []).includes(id), row = document.createElement('div');
+    row.className = 'dex-row' + (r.rare ? ' rare' : '');
+    row.innerHTML = `<b>${seen ? r.name + (r.rare ? ' ★' : '') : '???'}<small>${r.rare ? 'Very rare' : seen ? 'Race found' : 'Not found yet'}</small></b>`;
+    for (const [v, vn] of TIERS) {
+      const got = (S.dex || []).includes(`${id}:${v}`), f = document.createElement('figure');
+      f.className = got ? '' : 'locked';
+      f.appendChild(petSprite('adult', { variant: v, race: id, t: 0 }));
+      f.insertAdjacentHTML('beforeend', `<figcaption>${got ? vn : '?'}</figcaption>`);
+      row.appendChild(f);
+    }
+    box.appendChild(row);
+  }
 }
 function buildGuide() {
   const lg = $('#legend');
@@ -1180,7 +1605,7 @@ function buildGuide() {
 }
 
 let OV = null;
-const OVS = { status: '#ovStatus', feed: '#ovFeed', play: '#ovPlay', game: '#ovGame' };
+const OVS = { status: '#ovStatus', feed: '#ovFeed', med: '#ovMed', play: '#ovPlay', game: '#ovGame' };
 function showOv(name) {
   for (const k in OVS) $(OVS[k]).hidden = k !== name;
   OV = name;
@@ -1197,7 +1622,8 @@ function hearts(v) {
 }
 function renderStatus() {
   if (OV !== 'status') return;
-  $('#stName').textContent = stageName();
+  $('#stName').textContent = fullName();
+  $('#stRace').textContent = S.race && RACES[S.race] ? RACES[S.race].name + (RACES[S.race].rare ? ' ★' : '') : '–';
   $('#stGen').textContent = `Gen ${S.gen}`;
   $('#stAge').textContent = `${Math.floor(S.age / DAY)} day${Math.floor(S.age / DAY) === 1 ? '' : 's'}`;
   const hm = healthyMax(S.stage);
@@ -1206,11 +1632,18 @@ function renderStatus() {
   $('#stHappy').innerHTML = hearts(S.happy); $('#stHappy').setAttribute('aria-label', `${Math.ceil(S.happy - 1e-3)} of 4`);
   $('#stDisc').style.width = S.discipline + '%'; $('#stDiscN').textContent = S.discipline + '%';
   $('#stMist').textContent = S.mistakes;
+  $('#stHealth').textContent = S.sick ? (DISEASES[S.disease] || DISEASES.sporecough).name
+    : S.immuneT > 0 ? `Protected ${fmtTime(S.immuneT / (S.speed || 1))}` : 'Healthy';
+  $('#stNext').textContent = S.ended ? '–' : countdowns().map(([l, s]) => `${l} in ${fmtTime(s)}`).join(' · ');
+  $('#stStreak').textContent = `${S.streak || 1} day${(S.streak || 1) === 1 ? '' : 's'}`;
   const c = $('#stCall');
   let msg = '', ok = false;
   if (S.stage === 'seed') { msg = 'The seed is about to sprout.'; ok = true; }
   else if (S.call) msg = CALL_TEXT[S.call.reason];
-  else if (S.sick) msg = `Bubby is sick. ${S.doses} dose${S.doses > 1 ? 's' : ''} of medicine needed.`;
+  else if (S.sick) {
+    const d = DISEASES[S.disease] || DISEASES.sporecough, n = Math.ceil(S.doses - 1e-6);
+    msg = `${d.name} (${d.sev}). Needs ${ITEMS[d.med].name}: ${n} dose${n === 1 ? '' : 's'}.`;
+  }
   else if (S.poops.length) msg = 'There is poop to clean up.';
   else if (S.asleep) { msg = 'Bubby is sleeping soundly.'; ok = true; }
   else { msg = 'Bubby is doing fine.'; ok = true; }
@@ -1253,10 +1686,324 @@ function beep(f, d = .08, vol = .05) {
 function beepCall() { beep(1046, .07); setTimeout(() => beep(1046, .07), 130); setTimeout(() => beep(1318, .1), 260); }
 
 /* ---- Save ---- */
-function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+function save() { S.savedAt = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 function load() {
   try { const t = localStorage.getItem(KEY); if (t) { const o = JSON.parse(t); if (o && o.v === 1) return Object.assign(fresh(), o); } } catch (e) {}
   return null;
+}
+
+/* ---- Clock: countdowns in real seconds (game time runs at the chosen speed) ---- */
+function fmtTime(realSecs) {
+  const s = Math.max(0, Math.ceil(realSecs));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+function countdowns() {
+  const sp = S.speed || 1, st = STAGE[S.stage];
+  if (S.stage === 'seed') return [['Sprouts', (STAGE.seed.dur - S.stageT) / sp]];
+  if (S.asleep) return [['Wakes', (st.sleep - S.sleepT) / sp]];
+  return [
+    ['Bedtime', (st.awake - S.awakeT) / sp],
+    [st.next ? NAMES[st.next] : 'Garden', (st.dur - S.stageT) / sp],
+  ];
+}
+function nearestCountdown() {
+  const [label, secs] = countdowns().reduce((a, b) => (b[1] < a[1] ? b : a));
+  return `${label} in ${fmtTime(secs)}`;
+}
+
+/* ---- Away time and daily check-in ---- */
+const MS_HOUR = 3600e3, MS_DAY = 24 * MS_HOUR;
+// While the page is closed, hunger and happiness ease down by at most maxLoss hearts over `window`.
+// They never fall below `floor`. No poop, sickness, or moving away happens while you are gone.
+const ABSENCE = { minGap: 10 * 60e3, window: 8 * MS_HOUR, maxLoss: 2, floor: 1 };
+function dayKey(ms) {
+  const d = new Date(ms);
+  return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
+}
+function welcomeBack(now) {
+  let away = false, gift = false;
+  const gap = S.savedAt ? now - S.savedAt : 0;
+  if (gap >= ABSENCE.minGap && !S.ended && !S.paused && S.stage !== 'seed') {
+    const loss = Math.min(1, gap / ABSENCE.window) * ABSENCE.maxLoss;
+    S.hunger = Math.max(Math.min(S.hunger, ABSENCE.floor), S.hunger - loss);
+    S.happy = Math.max(Math.min(S.happy, ABSENCE.floor), S.happy - loss);
+    away = true;
+    track('away_return', { hours_away: Math.round(gap / MS_HOUR * 10) / 10 });
+  }
+  const today = dayKey(now);
+  let newDay = false, daily = 0, mile = 0, milePts = 0;
+  if (S.lastCheckIn !== today) {
+    newDay = true;
+    const continued = S.lastCheckIn === dayKey(now - MS_DAY);
+    S.streak = continued ? (S.streak || 0) + 1 : 1;
+    if (!continued) S.streakMs = 0;
+    S.lastCheckIn = today;
+    // Opening the game on a new day always pays points, even before the seed sprouts
+    daily = earn(PTS.daily + PTS.streakStep * Math.min(PTS.streakSteps, S.streak - 1), 'daily', 'bonus');
+    for (const [d, p] of STREAK_MS) {
+      if (S.streak >= d && (S.streakMs || 0) < d) { S.streakMs = d; mile = d; milePts = earn(p, 'streak', 'bonus'); }
+    }
+    if (!S.ended && S.stage !== 'seed') {
+      S.hunger = Math.min(4, S.hunger + 1);
+      S.happy = Math.min(4, S.happy + 1);
+      gift = true;
+    }
+    track('daily_gift', { streak: S.streak, gift, points: daily + milePts });
+  }
+  ensureQuests();
+  const st = `Streak: ${S.streak} day${S.streak === 1 ? '' : 's'}`;
+  if (gift) toast(`Bubby missed you! Daily gift: +1 heart and +${daily} pts. ${st}${mile ? `. ${mile}-day bonus +${milePts}!` : ''}`);
+  else if (newDay) toast(`Daily bonus: +${daily} pts. ${st}${mile ? `. ${mile}-day bonus +${milePts}!` : ''}`);
+  else if (away) toast('Welcome back! Bubby missed you a little');
+  if (away || newDay) save();
+}
+function keepSettings() {
+  return {
+    speed: S.speed, soundOn: S.soundOn, analytics: S.analytics, installedAt: S.installedAt, lastCheckIn: S.lastCheckIn, streak: S.streak, dex: S.dex,
+    points: S.points, inv: S.inv, tot: S.tot, ach: S.ach, quests: S.quests, ptsDay: S.ptsDay, streakMs: S.streakMs,
+  };
+}
+
+/* ---- Points, quests, goals ---- */
+function ptsDay() {
+  const k = dayKey(Date.now());
+  if (!S.ptsDay || S.ptsDay.k !== k) S.ptsDay = { k, care: 0, game: 0, noted: {} };
+  return S.ptsDay;
+}
+// Add points. 'care' and 'game' points stop at a daily cap so they cannot be farmed; everything else is uncapped.
+function earn(n, why, cat = 'bonus') {
+  n = Math.round(n);
+  if (!(n > 0)) return 0;
+  if (CAPS[cat]) {
+    const d = ptsDay(), room = CAPS[cat] - d[cat];
+    if (room <= 0) {
+      if (!d.noted[cat]) { d.noted[cat] = true; toast(`Daily ${cat} points maxed (${CAPS[cat]}). More tomorrow!`); }
+      return 0;
+    }
+    n = Math.min(n, room); d[cat] += n;
+  }
+  S.points += n;
+  S.tot.earned = tot('earned') + n;
+  ptsFlash(n);
+  return n;
+}
+function ptsFlash(n) {
+  syncPts();
+  const g = $('#ptsGain'); if (!g) return;
+  g.textContent = `+${n}`; g.classList.remove('show'); void g.offsetWidth; g.classList.add('show');
+}
+function syncPts() {
+  const a = $('#ptsNow'), b = $('#shopPts');
+  if (a) a.textContent = S.points;
+  if (b) b.textContent = S.points;
+}
+function ensureQuests() {
+  const k = dayKey(Date.now());
+  if (S.quests && S.quests.day === k) return;
+  const pool = QUEST_POOL.slice(), list = [];
+  while (list.length < 3 && pool.length) {
+    const q = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+    list.push({ id: q.id, ev: q.ev, need: q.need, text: q.text, have: 0, done: false });
+  }
+  S.quests = { day: k, list, all: false };
+}
+// Count something that happened (a meal, a win, a cure). Advances today's quests and the lifetime totals for goals.
+function bump(ev, n = 1) {
+  S.tot[ev] = tot(ev) + n;
+  ensureQuests();
+  for (const q of S.quests.list) {
+    if (q.done || q.ev !== ev) continue;
+    q.have = Math.min(q.need, q.have + n);
+    if (q.have >= q.need) {
+      q.done = true;
+      const got = earn(PTS.quest, 'quest', 'bonus');
+      toast(`Daily quest done! +${got} pts`);
+      track('quest_done', { quest: q.id });
+    }
+  }
+  if (!S.quests.all && S.quests.list.every(q => q.done)) {
+    S.quests.all = true;
+    toast(`All daily quests done! +${earn(PTS.questAll, 'quests', 'bonus')} bonus pts`);
+  }
+}
+function checkGoals() {
+  if (!S.ach) S.ach = {};
+  const got = [];
+  for (const g of GOALS) {
+    if (S.ach[g.id] || g.val() < g.of) continue;
+    S.ach[g.id] = true;
+    got.push(`${g.name} +${earn(g.pts, 'goal', 'bonus')}`);
+    track('goal_done', { goal: g.id });
+  }
+  if (got.length) toast('Goal reached: ' + got.join(', '));
+}
+
+/* ---- Shop, pantry and medicine cabinet ---- */
+function iconCanvas(id) {
+  const c = mk(16, 16);
+  if (ICONS[id]) c.getContext('2d').drawImage(ICONS[id], 0, 0);
+  return c;
+}
+function itemButton(id, name, sub, attr, cls = '') {
+  const b = document.createElement('button');
+  b.className = 'opt sm ' + cls; b.dataset[attr] = id;
+  b.appendChild(iconCanvas(id));
+  const s = document.createElement('span');
+  s.innerHTML = `<b>${name}</b><small>${sub}</small>`;
+  b.appendChild(s);
+  return b;
+}
+function renderPantry() {
+  const box = $('#pantry'); if (!box) return;
+  box.textContent = '';
+  const ids = Object.keys(ITEMS).filter(k => ITEMS[k].kind === 'food' && (S.inv[k] || 0) > 0);
+  for (const id of ids) box.appendChild(itemButton(id, ITEMS[id].name, `×${S.inv[id]} · ${ITEMS[id].desc}`, 'food'));
+  $('#pantryHint').hidden = ids.length > 0;
+}
+function renderMed() {
+  const box = $('#cab'); if (!box) return;
+  box.textContent = '';
+  const d = S.sick ? (DISEASES[S.disease] || DISEASES.sporecough) : null, note = $('#medSick');
+  if (d) {
+    const n = Math.ceil(S.doses - 1e-6);
+    note.textContent = `${d.name} (${d.sev}). Needs ${ITEMS[d.med].name}: ${n} dose${n === 1 ? '' : 's'}.`;
+  } else note.textContent = S.immuneT > 0 ? 'Bubby is healthy and protected.' : 'Bubby is healthy.';
+  note.classList.toggle('ok', !d);
+  box.appendChild(itemButton('tea', TEA.name, 'free · cures Spore Cough slowly', 'med', d && d.med === 'syrup' ? 'rec' : ''));
+  for (const id of MED_IDS()) {
+    const n = S.inv[id] || 0;
+    if (n > 0) box.appendChild(itemButton(id, ITEMS[id].name, `×${n}`, 'med', d && (id === d.med || id === 'elixir') ? 'rec' : ''));
+  }
+}
+let SHOP_TAB = 'shop', MODAL = false, lastFocus = null;
+function openShop(tab) {
+  if (MODAL) return;
+  if (G) { toast('Finish the game first'); return; }
+  closeOverlays();
+  SHOP_TAB = tab || SHOP_TAB;
+  MODAL = true; lastFocus = document.activeElement;
+  $('#shopModal').hidden = false;
+  renderShop();
+  $('#shopClose').focus();
+  track('shop_open', { tab: SHOP_TAB });
+}
+function closeShop() {
+  MODAL = false; $('#shopModal').hidden = true;
+  if (lastFocus && lastFocus.focus) lastFocus.focus();
+  renderPantry();
+}
+function shopRow(id) {
+  const it = ITEMS[id], n = S.inv[id] || 0, row = document.createElement('div');
+  row.className = 'shop-row';
+  row.appendChild(iconCanvas(id));
+  const info = document.createElement('div');
+  info.innerHTML = `<b>${it.name}</b><small>${it.desc}${n ? ` · you have ${n}` : ''}</small>`;
+  row.appendChild(info);
+  const b = document.createElement('button');
+  b.className = 'buy'; b.dataset.buy = id;
+  b.textContent = n >= MAX_STACK ? 'Full' : `${it.price} pts`;
+  b.disabled = n >= MAX_STACK || S.points < it.price;
+  b.setAttribute('aria-label', `Buy ${it.name} for ${it.price} points`);
+  row.appendChild(b);
+  return row;
+}
+function renderShop() {
+  syncPts();
+  $$('#shopModal [data-tab]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tab === SHOP_TAB)));
+  const body = $('#shopBody'); body.textContent = '';
+  if (SHOP_TAB === 'shop') {
+    const sec = (title, ids) => {
+      const s = document.createElement('section'); s.className = 'shop-sec';
+      s.innerHTML = `<h3>${title}</h3>`;
+      ids.forEach(id => s.appendChild(shopRow(id)));
+      body.appendChild(s);
+    };
+    sec('Better food', ['salad', 'pie', 'stew', 'feast']);
+    sec('Medicine', ['syrup', 'salve', 'drops', 'tonic', 'elixir']);
+    sec('Protection', ['shield']);
+    const tip = document.createElement('p'); tip.className = 'shop-tip';
+    tip.textContent = 'Every illness needs its own medicine. Garden Tea is free and always in the cabinet, but it only cures Spore Cough, slowly.';
+    body.appendChild(tip);
+  } else if (SHOP_TAB === 'today') {
+    ensureQuests();
+    const d = ptsDay(), s = document.createElement('section'); s.className = 'shop-sec';
+    s.innerHTML = '<h3>Daily quests</h3>';
+    for (const q of S.quests.list) {
+      const r = document.createElement('div'); r.className = 'quest' + (q.done ? ' done' : '');
+      r.innerHTML = `<span>${q.done ? '✓ ' : ''}${q.text}</span><small>${q.have}/${q.need} · +${PTS.quest} pts</small>`;
+      s.appendChild(r);
+    }
+    const bonus = document.createElement('p'); bonus.className = 'shop-tip';
+    bonus.textContent = `Finish all three for +${PTS.questAll} bonus points. New quests every day.`;
+    s.appendChild(bonus);
+    body.appendChild(s);
+    const e = document.createElement('section'); e.className = 'shop-sec';
+    e.innerHTML = `<h3>Ways to earn</h3><ul class="earn">
+      <li><b>Open Bubby each day:</b> ${PTS.daily} pts, plus ${PTS.streakStep} per streak day (up to ${PTS.daily + PTS.streakStep * PTS.streakSteps}). Streak bonuses at 3, 7, 14 and 30 days.</li>
+      <li><b>Care</b> (${d.care}/${CAPS.care} today): meal or snack ${PTS.meal}, shop food ${PTS.premium}, each poop cleaned ${PTS.clean}, a good night's sleep ${PTS.sleep}, scolding a tantrum ${PTS.scold}.</li>
+      <li><b>Games</b> (${d.game}/${CAPS.game} today): Which way? ${PTS.guess} per right guess, +${PTS.guessPerfect} for 5/5. Seed catch: 1 per ${PTS.catchDiv} score, +${PTS.catchBest} for a new best.</li>
+      <li><b>Curing an illness:</b> ${PTS.cure} pts.</li>
+      <li><b>Growing up:</b> Bud ${PTS.bud}, Blossom ${PTS.blossom}, Elder ${PTS.elder}, a full life ${PTS.garden}. A rare Starling ${PTS.rare}.</li>
+      <li><b>Bubbydex:</b> a new race ${PTS.dexRace}, a new adult form ${PTS.dexForm}.</li>
+      <li><b>Goals:</b> one-time rewards, see the Goals tab.</li></ul>`;
+    body.appendChild(e);
+  } else {
+    const s = document.createElement('section'); s.className = 'shop-sec';
+    const done = GOALS.filter(g => S.ach[g.id]).length;
+    s.innerHTML = `<h3>Goals <small>${done} / ${GOALS.length}</small></h3>`;
+    for (const g of GOALS) {
+      const got = !!S.ach[g.id], v = Math.min(g.of, g.val()), r = document.createElement('div');
+      r.className = 'quest' + (got ? ' done' : '');
+      r.innerHTML = `<span>${got ? '✓ ' : ''}<b>${g.name}</b> · ${g.desc}</span><small>${got ? 'Done' : `${v}/${g.of}`} · +${g.pts} pts</small>`;
+      s.appendChild(r);
+    }
+    body.appendChild(s);
+  }
+}
+function buy(id) {
+  const it = ITEMS[id], msg = $('#shopMsg');
+  if (!it) return;
+  if ((S.inv[id] || 0) >= MAX_STACK) { msg.textContent = `You already have ${MAX_STACK} ${it.name}.`; return; }
+  if (S.points < it.price) { msg.textContent = `Not enough points for ${it.name}.`; return; }
+  S.points -= it.price;
+  S.inv[id] = (S.inv[id] || 0) + 1;
+  bump('buy');
+  msg.textContent = `Bought ${it.name}. ${S.inv[id]} in stock.`;
+  track('shop_buy', { item: id, price: it.price });
+  checkGoals();
+  save();
+  renderShop();
+}
+
+/* ---- Analytics: PostHog, anonymous random ID, opt-out with the Stats button ---- */
+function anonId() {
+  try {
+    let id = localStorage.getItem('bubby.anon.v1');
+    if (!id) {
+      id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+      localStorage.setItem('bubby.anon.v1', id);
+    }
+    return id;
+  } catch (e) {
+    return 'anon-' + Math.random().toString(36).slice(2);
+  }
+}
+function track(event, props = {}) {
+  if (S.analytics === false || PH_KEY.startsWith('phc_REPLACE')) return;
+  try {
+    fetch(`${PH_HOST}/capture/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        api_key: PH_KEY,
+        event,
+        distinct_id: anonId(),
+        timestamp: new Date().toISOString(),
+        properties: { ...props, stage: S.stage, gen: S.gen, $process_person_profile: false, $lib: 'bubby-web' },
+      }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch (e) {}
 }
 
 /* ---- Wiring ---- */
@@ -1264,6 +2011,8 @@ function syncControls() {
   $$('[data-speed]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.speed === S.speed)));
   $('#btnSound').setAttribute('aria-pressed', String(S.soundOn !== false));
   $('#btnSound').textContent = S.soundOn !== false ? 'Sound on' : 'Sound off';
+  $('#btnStats').setAttribute('aria-pressed', String(S.analytics !== false));
+  $('#btnStats').textContent = S.analytics !== false ? 'Stats on' : 'Stats off';
   $('#btnPower').setAttribute('aria-pressed', String(!!S.paused));
   $('#ovPause').hidden = !S.paused;
   $('#ovEnd').hidden = !S.ended;
@@ -1274,24 +2023,34 @@ function wire() {
     const b = e.target.closest('[data-act]'); if (b) { act(b.dataset.act); return; }
     if (e.target.closest('[data-close]')) { closeOverlays(); return; }
     const f = e.target.closest('[data-food]'); if (f) { feed(f.dataset.food); return; }
+    const md = e.target.closest('[data-med]'); if (md) { giveMed(md.dataset.med); return; }
+    if (e.target.closest('[data-shop]')) { openShop('shop'); return; }
     const g = e.target.closest('[data-g]'); if (g) { guess(+g.dataset.g); return; }
     const pg = e.target.closest('[data-game]'); if (pg) { startGame(pg.dataset.game); return; }
   });
   $('#btnReplant').addEventListener('click', () => {
     const gen = S.ended ? S.ended.gen + 1 : S.gen + 1;
-    const keep = { speed: S.speed, soundOn: S.soundOn };
+    const keep = keepSettings();
     S = Object.assign(fresh(gen), keep); A = null; G = null;
     $('#ovEnd').hidden = true; save(); toast('A new seed is planted'); syncControls();
   });
   $$('[data-speed]').forEach(b => b.addEventListener('click', () => { S.speed = +b.dataset.speed; syncControls(); save(); }));
   $('#btnSound').addEventListener('click', () => { S.soundOn = S.soundOn === false; if (S.soundOn) unlockAudio(); syncControls(); save(); beep(880, .05); });
+  $('#btnStats').addEventListener('click', () => { S.analytics = S.analytics === false; syncControls(); save(); });
+  $('#btnShop').addEventListener('click', () => openShop());
+  $('#shopClose').addEventListener('click', closeShop);
+  $('#shopModal').addEventListener('click', e => {
+    if (e.target.id === 'shopModal') { closeShop(); return; }
+    const t = e.target.closest('[data-tab]'); if (t) { SHOP_TAB = t.dataset.tab; $('#shopMsg').textContent = ''; renderShop(); return; }
+    const b = e.target.closest('[data-buy]'); if (b) buy(b.dataset.buy);
+  });
   const box = $('#resetBox');
   box.addEventListener('click', e => {
     if (e.target.id === 'btnReset') {
       box.innerHTML = '<span>Plant a new seed? Your current Bubby will be gone.</span><button class="chip danger" id="btnResetYes">Start over</button><button class="chip" id="btnResetNo">Keep playing</button>';
       $('#btnResetNo').focus();
     } else if (e.target.id === 'btnResetYes') {
-      const keep = { speed: S.speed, soundOn: S.soundOn };
+      const keep = keepSettings();
       S = Object.assign(fresh(1), keep); A = null; G = null; closeOverlays(); save(); syncControls(); toast('A new seed is planted');
       box.innerHTML = '<button class="chip" id="btnReset">Start over</button>';
     } else if (e.target.id === 'btnResetNo') {
@@ -1303,6 +2062,8 @@ function wire() {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.target.closest && e.target.closest('input, textarea')) return;
     const k = e.key.toLowerCase();
+    if (MODAL) { if (e.key === 'Escape') closeShop(); return; }
+    if (k === 'b') { openShop(); return; }
     if (G && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
       e.preventDefault();
       if (G.type === 'catch') { G.hold = e.key === 'ArrowLeft' ? -1 : 1; G.target = null; } else guess(e.key === 'ArrowLeft' ? -1 : 1);
@@ -1352,7 +2113,7 @@ let last = performance.now(), uiT = 0, saveT = 0, prevCall = false;
 function frame(now) {
   const rdt = Math.min(.25, (now - last) / 1000); last = now;
   const gdt = rdt * (S.speed || 1);
-  tick(gdt);
+  if (!MODAL) tick(gdt);   // time stands still while the shop is open
   if (A && !S.paused) { A.t += rdt; if (A.t >= A.dur) { const f = A.after; A = null; if (f) f(); } }
   if (!S.paused) { updateGame(rdt); updatePet(rdt); }
   if (toastT > 0) { toastT -= rdt; if (toastT <= 0) $toast.hidden = true; }
@@ -1365,7 +2126,9 @@ function frame(now) {
   if (uiT > .4) {
     uiT = 0;
     $('[data-act="lights"]')?.classList.toggle('on', S.lights);
-    $('#subtitle').textContent = `Gen ${S.gen} · ${S.ended ? 'New seed' : stageName()} · Day ${Math.floor(S.age / DAY)}`;
+    $('#subtitle').textContent = `Gen ${S.gen} · ${S.ended ? 'New seed' : stageName()} · Day ${Math.floor(S.age / DAY)}`
+      + (S.ended ? '' : ` · ${nearestCountdown()}`);
+    syncPts(); checkGoals();
     renderStatus();
   }
   if (saveT > 3) { saveT = 0; save(); }
@@ -1378,7 +2141,22 @@ function start(data) {
   if (S.soundOn === undefined) S.soundOn = true;
   if (![1, 2, 4].includes(S.speed)) S.speed = 1;
   if (data && data.PET) Object.assign(PET, data.PET);
-  buildTiles(); buildGuide(); wire(); syncControls();
+  // Bubbies from before races existed keep their classic look as Leaflings
+  if (!S.race && ['child', 'adult', 'senior'].includes(S.stage)) S.race = 'leafling';
+  // Saves from before illnesses had names: treat an ongoing sickness as Spore Cough
+  if (S.sick && !DISEASES[S.disease]) S.disease = 'sporecough';
+  if (!S.inv) S.inv = {};
+  if (!S.tot) S.tot = {};
+  if (!S.ach) S.ach = {};
+  if (S.race) {
+    dexAdd(S.race);
+    if ((S.stage === 'adult' || S.stage === 'senior') && S.variant) dexAdd(`${S.race}:${S.variant}`);
+  }
+  const now = Date.now();
+  if (restored) welcomeBack(now);
+  else { S.installedAt = now; S.lastCheckIn = dayKey(now); S.streak = 1; track('install'); }
+  track('session_start', { days: Math.floor(S.age / DAY) });
+  buildTiles(); buildGuide(); renderDex(); wire(); syncControls();
   if (!restored) toast('A seed! Watch it sprout');
   requestAnimationFrame(t => { last = t; frame(t); });
 }
