@@ -68,6 +68,8 @@ Tick items as they are done (`[x]`). Owner: **Claude** = can be done in a coding
 - [ ] Add a "Send feedback" link in Settings and keep an eye on reviews.
 - [ ] **Save compatibility:** any change to the saved state must keep existing Bubbies working. Saves are versioned
       (`v: 2` in `core/rules.js`); add a step in `migrate()` whenever the format changes.
+- [ ] Shop with clothes (a size per growth stage) and garden decor: plan and checklist in
+      [`docs/SHOP-PLAN.md`](SHOP-PLAN.md).
 - [ ] Then the phone plan: an installable web app first, then home-screen widgets (iOS WidgetKit, Android Glance)
       with a native wrapper.
 
