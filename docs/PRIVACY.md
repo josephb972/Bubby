@@ -8,7 +8,7 @@ Bubby is a virtual pet game that runs as a browser extension.
 
 - **Stored on your device:** your pet (the name you give it, its birthday, stage, race, hearts, weight, discipline, illness,
   personality and recent events), the list of things you've seen your pets do, the photo album of your past pets (their names, forms and dates), your points,
-  shop items, daily quests, goals and Bubbydex collection, and your Bubby settings (pace, bedtime, look, sound and
+  shop items, the clothes and garden decorations you bought and what Bubby wears, daily quests, goals and Bubbydex collection, and your Bubby settings (pace, bedtime, look, sound and
   notifications), in your browser's extension storage. Points are earned by playing and are not money.
 - **Collected:** nothing. There are no accounts, analytics, ads or trackers, and Bubby makes no network requests.
   Nobody, including the developer, can see your data.

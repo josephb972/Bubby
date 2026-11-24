@@ -1,6 +1,6 @@
 # Bubby: browser extension
 
-Current version: **<!-- version -->1.2.0<!-- /version -->** (see `docs/CHANGELOG.md` for what changed).
+Current version: **<!-- version -->1.3.0<!-- /version -->** (see `docs/CHANGELOG.md` for what changed).
 
 Bubby is a tiny pixel pet that lives in your browser toolbar. Its face on the toolbar shows how it feels, a badge
 tells you when it needs something, and one click opens a pocket-sized version of the game.
@@ -168,6 +168,20 @@ Nothing new punishes you for being away: illness still only comes from the same 
 overnight never make Bubby ill while you are not looking.
 
 How to test all of this, and how to publish an update: `docs/TEST-AND-PUBLISH.md`.
+
+## 2c. New in 1.3: clothes and garden decor
+
+In the ★ Shop, the Shop tab now has three sections: **Food & medicine**, **Clothes** and **Garden**. Everything here is
+cosmetic and paid with the same points.
+
+- **Clothes come in four sizes, one per stage: Bulb, Bud, Blossom and Elder.** Each size is bought separately and kept for
+  every future Bubby at that stage, of any race. Pick an item once and Bubby wears the size that fits as it grows. When it
+  grows out of something, the old piece pops off and the Shop shows the size to get (the ★ button gets a dot).
+- Every item fits every race's body and every form: the size chips show it on your Bubby's own race, and the preview at the
+  top tries things on before you buy. Buying asks once more to confirm, and can be undone for 10 seconds.
+- **Garden decor** sits in fixed spots that never hide the poop, the falling seeds or Bubby. The lantern and fireflies glow
+  when the lights are off.
+- Every Bubby gets a Petal bow in all four sizes as a welcome gift.
 
 ## 3. A 10-minute test drive
 

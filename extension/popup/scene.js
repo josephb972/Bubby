@@ -1,6 +1,11 @@
 // Draws Bubby's garden on the 100×75 pixel screen (ported from the original game).
-import { SW, SH, GROUND, E, R, P, petSprite, headTop, faceCenter, art, restingMood } from '../art/sprites.js';
+import { SW, SH, GROUND, PAD, E, R, P, petSprite, wornSprite, headTop, faceCenter, art, restingMood } from '../art/sprites.js';
 import { pace, RACES, RARE_RACE } from '../core/rules.js';
+import { drawBack, drawAmbient, drawGlow, groundStyle } from '../art/decor.js';
+import { looseGarment } from '../art/wardrobe.js';
+import { outfitFor } from '../core/shop.js';
+// Reduced motion freezes the garden's ambient effects (butterflies, petals, fireflies)
+const still = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function sparkles(sx, cx, cy, t, r = 16) {
   for (let i = 0; i < 6; i++) {
@@ -91,8 +96,10 @@ function halfWidth(spr, key) {
 export function drawScene(sx, S, A, G, PET, time, BH = null) {
   const { BG, POOP, ICONS, BANG, SKULL, PUFF, BUBBLE, ZED, SEEDI, GOLDSEED, PEBBLE, STARS, SLOTS } = art();
   const blit = (img, x, y) => sx.drawImage(img, Math.round(x), Math.round(y));
+  // The garden: the lawn and decorations bought in the Shop (1.3.0), in fixed spots that never cover the poop or Bubby
+  const W8 = S.wardrobe, home = W8 && W8.home;
   sx.clearRect(0, 0, SW, SH);
-  sx.drawImage(BG, 0, 0);
+  drawBack(sx, home);
 
   if (S.ended) {
     blit(petSprite('seed', {}), 50 - 24, GROUND - 44);
@@ -108,6 +115,8 @@ export function drawScene(sx, S, A, G, PET, time, BH = null) {
     if (wave !== null && px - 6 > wave) continue;
     blit(POOP, px - 6, py - 10);
   }
+
+  if (!G) drawAmbient(sx, home, time, { lights: S.lights, still: still() });
 
   // Bubby
   let stage = S.stage;
@@ -133,6 +142,7 @@ export function drawScene(sx, S, A, G, PET, time, BH = null) {
     else if (PET.moving || (G && G.moving)) bob = -(((time * 6) | 0) % 2);
     else bob = -(((time * 1.6) | 0) % 2);
     if (A && A.type === 'no') shake = (((A.t * 12) | 0) % 2) ? 1 : -1;
+    if (W8) o.outfit = outfitFor(W8, stage);   // what it wears in its size
     if (bp) {
       for (const k of ['mood', 'mouth', 'look', 'blink']) if (bp[k] !== undefined) o[k] = bp[k];
       if (bp.dy !== undefined) bob = bp.dy; else if (bp.still) bob = 0;
@@ -141,12 +151,13 @@ export function drawScene(sx, S, A, G, PET, time, BH = null) {
     }
   }
   if (A && A.type === 'evolve' && A.rare) evolveBack(sx, px, time, A);
-  const spr = petSprite(stage, o);
-  if (stage !== 'seed') E(sx, px, GROUND + 1.5, 9, 1.6, 'rgba(64,120,52,.45)');
-  const top = GROUND - 46 + headTop(stage, S.race) + bob;
+  // Bubby wearing its clothes: PAD pixels of headroom above the usual 48×48 sprite
+  const spr = wornSprite(stage, o);
+  if (stage !== 'seed') E(sx, px, GROUND + 1.5, 9, 1.6, groundStyle(home).shadow);
+  const top = GROUND - 46 + Math.min(headTop(stage, S.race), spr.topY == null ? 99 : spr.topY + 2) + bob;   // above a hat
   if (c) {
     const race = stage === 'baby' ? S.seedRace : S.race, fy = GROUND - 46 + faceCenter(stage, race)[1] + bob;
-    const w = halfWidth(spr, [stage, race, S.variant, S.chubby].join('|'));
+    const w = halfWidth(petSprite(stage, o), [stage, race, S.variant, S.chubby].join('|'));
     Object.assign(c, { w, px: Math.round(px), gy: GROUND, top, ey: Math.round(fy - 2), my: Math.round(fy + 2), hx: Math.round(px) + 10, hy: GROUND - 9 });
     if (BH.s.back) BH.s.back(c);
   }
@@ -158,9 +169,9 @@ export function drawScene(sx, S, A, G, PET, time, BH = null) {
     if (bp.rot) sx.rotate(bp.rot * Math.PI / 2);
     if (bp.flip) sx.scale(-1, 1);
     if (bp.sqy) sx.scale(1, bp.sqy);
-    sx.drawImage(spr, -24, -piv);
+    sx.drawImage(spr, -24, -piv - PAD);
     sx.restore();
-  } else blit(spr, px - 24 + shake, GROUND - 46 + bob);
+  } else blit(spr, px - 24 + shake, GROUND - 46 - PAD + bob);
   if (c && BH.s.front) BH.s.front(c);
   if (S.race === RARE_RACE && stage !== 'seed' && !(A && A.type === 'evolve' && A.rare)) twinkle(sx, px, GROUND - 24, time);
 
@@ -178,6 +189,17 @@ export function drawScene(sx, S, A, G, PET, time, BH = null) {
     if (A.type === 'med') blit(ICONS.med, px + 9, top - 6 - Math.round(Math.sin(k * Math.PI) * 4));
     if (A.type === 'scold' && ((A.t * 6) | 0) % 2 === 0) blit(BANG, px + 10, top - 4);
     if (A.type === 'evolve') evolveFront(sx, px, time, A, S);
+    // Clothes Bubby grew out of pop off and float away (waving goodbye, not sad)
+    if (A.type === 'evolve' && A.popOff && A.from && A.t >= 1.3) {
+      const f = Math.min(1, (A.t - 1.3) / Math.max(.1, Math.min(A.dur, 2.5) - 1.3));
+      A.popOff.forEach((id, i) => {
+        const g = looseGarment(id, A.from, { race: A.from === 'baby' ? S.seedRace : S.race, variant: S.variant, chubby: S.chubby });
+        if (!g || f >= 1) return;
+        sx.globalAlpha = 1 - f;
+        blit(g, px - 24 + (i % 2 ? -1 : 1) * f * 10, GROUND - 46 - PAD - f * 14 - Math.sin(f * Math.PI) * 4);
+        sx.globalAlpha = 1;
+      });
+    }
     if (A.type === 'sparkle' || A.type === 'happy') sparkles(sx, px, GROUND - 20, time, 15);
   }
 
@@ -196,6 +218,7 @@ export function drawScene(sx, S, A, G, PET, time, BH = null) {
   if (!S.lights) {
     R(sx, 0, 0, SW, SH, 'rgba(18,20,48,.8)');
     for (let i = 0; i < STARS.length; i++) { if (((time * 1.3 + i * .7) | 0) % 3 !== 0) P(sx, STARS[i], '#fff6c8'); }
+    if (!G) drawGlow(sx, home, time, { still: still() });   // the lantern and fireflies shine at night
   }
 
   // Status bubbles

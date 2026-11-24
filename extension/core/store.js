@@ -36,7 +36,7 @@ export async function updateAction(S) {
   ];
   if (b.text) tasks.push(chrome.action.setBadgeBackgroundColor({ color: b.color }));
   if (chrome.action.setBadgeTextColor && b.text) tasks.push(chrome.action.setBadgeTextColor({ color: '#ffffff' }));
-  const key = [S.stage, S.variant, S.race, S.disease, S.chubby, S.sick, S.asleep, S.call && S.call.reason, Math.ceil(S.hunger), Math.ceil(S.happy), S.poops.length, !!S.ended].join('|');
+  const key = [S.stage, S.variant, S.race, S.disease, S.chubby, S.sick, S.asleep, S.call && S.call.reason, Math.ceil(S.hunger), Math.ceil(S.happy), S.poops.length, !!S.ended, S.wardrobe ? JSON.stringify(S.wardrobe.equip) + JSON.stringify(S.wardrobe.owned).length : ''].join('|');
   if (key !== lastIconKey) {
     try {
       tasks.push(chrome.action.setIcon({ imageData: actionImageData(S) }).then(() => { lastIconError = null; }, e => { lastIconError = String(e); lastIconKey = ''; }));

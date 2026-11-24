@@ -1,6 +1,6 @@
 # Bubby extension: launch plan and checklist
 
-Status: extension **v<!-- version -->1.2.0<!-- /version -->** is built and tested; version 1.0.0 was the first store release (see `docs/CHANGELOG.md`). The
+Status: extension **v<!-- version -->1.3.0<!-- /version -->** is built and tested; version 1.0.0 was the first store release (see `docs/CHANGELOG.md`). The
 store package, images, listing text and privacy policy are ready. What's left needs the owner. Goal: publish on the Chrome Web
 Store, then Edge Add-ons.
 

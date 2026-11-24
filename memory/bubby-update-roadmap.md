@@ -1,7 +1,7 @@
 # Bubby: Update Roadmap (v1.1 to v1.6)
 
 Status (updated 15 Nov 2026): **v1.1 (races, rare Starling reveal, Bubbydex) and v1.3 (illnesses, medicine, points, shop) are built in the
-launched Chrome extension (current version <!-- version -->1.2.0<!-- /version -->).** Everything else is still planned. The web game `index.html` has a draft of the same
+launched Chrome extension (current version <!-- version -->1.3.0<!-- /version -->).** Everything else is still planned. The web game `index.html` has a draft of the same
 features (v1.3 there still needs small-screen polish). The roadmap below was written for the web game; for the extension,
 real-time lives last days, so rarity has a pity counter and illness timers scale with the pace. Details: `bubby-points-and-shop.md`.
 Also built (extension 1.1.1 to 1.1.2): the seed's race shows from the egg, naming at hatch with an ID card, the photo album,

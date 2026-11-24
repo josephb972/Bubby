@@ -1,6 +1,6 @@
 # Bubby: points, shop, illness and medicine (design)
 
-Status: **built** in the extension (current version <!-- version -->1.2.0<!-- /version -->; `extension/core/content.js` holds every number, `extension/core/rules.js` the logic)
+Status: **built** in the extension (current version <!-- version -->1.3.0<!-- /version -->; `extension/core/content.js` holds every number, `extension/core/rules.js` the logic)
 and drafted in the web game `index.html`. Checked by `node tools/rules-check.mjs`, `node tools/sim-check.mjs` and
 `node tools/check-v11.mjs`.
 
@@ -51,6 +51,20 @@ and drafted in the web game `index.html`. Checked by `node tools/rules-check.mjs
 | Plague Doctor’s Posy | 20 | no illness for a while (240 s on Quick; 30 h on Chill) |
 
 A full cure costs: cough 8 (or free with tea), Scurvy 20, Dancing Plague 20, The Plague 75 (or 45 with the Elixir). Stock is capped at 9 per item.
+
+### Clothes and garden decor (built in 1.3.0, `extension/core/shop.js`)
+Cosmetic only, paid with the same points, kept across lives in `S.wardrobe` (in `META_KEYS`).
+
+| Clothes (Blossom-size price; Bulb ×0.4, Bud ×0.65, Elder ×1) | Points |
+|---|---|
+| Petal bow | free gift, all four sizes |
+| Beanie, Sunglasses, Bow tie, Cosy scarf, Striped tee (common) | 60 (24 / 39 / 60 / 60) |
+| Little crown, Heart glasses, Overalls, Heart sweater (rare) | 120 (48 / 78 / 120 / 120) |
+| Wizard hat (epic) | 200 (80 / 130 / 200 / 200) |
+
+Decor: lawns 150, Bunting 80, Apple tree 180, Sunflowers and Mushroom house 120, Lantern, Gnome and Birdbath 120, Flower patch
+80, Lily pond 140, Stepping stones 80, ambience 180. Everything (every size of everything): 5,139 points, so a few
+months of play, on top of food and medicine. `SIZE_UP_DISCOUNT` (0 now) can give owners a discount on further sizes.
 
 ## Illness
 

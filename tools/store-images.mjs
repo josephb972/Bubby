@@ -35,6 +35,7 @@ async function capture(state, { look = 'toy', size = [468, 600], then, el } = {}
       // A fixed personality (1.2.0), so the status card reads the same on every run
       persona: { axes: { energy: 2, appetite: 0, manners: -1, nerve: 1, health: 0 }, quirks: ['jokester', 'songbird'], known: { q: 1, axes: ['energy'] } }, journal: [] }, state);
     Object.assign(S.cfg, { look, bed: 22 * 60, wake: 8 * 60 });
+    if (S.wardrobe) S.wardrobe.news = {};   // no "welcome gift" toast in the screenshots (1.3.0)
     S.lastT = now; S.lastSeenAt = now; S.seenSeq = S.evSeq; S.notifiedSeq = S.evSeq; // nothing "while you were away"
     await chrome.storage.local.set({ bubby: S });
   }, { state, look, dex });
@@ -53,8 +54,20 @@ async function capture(state, { look = 'toy', size = [468, 600], then, el } = {}
 }
 
 const bud = { stage: 'child', weight: 12, age: 2 * 86400, stageT: 3600 };
+// Clothes and garden decor (1.3.0): a dressed Bubby in a decorated garden
+const ALL = ['S', 'M', 'L', 'XL'];
+const dressed = { owned: { petalbow: ALL, crown: ['L'], shades: ['M', 'L'], bowtie: ['L'], scarf: ALL, beanie: ['S', 'M', 'L'], meadow: ['*'], pot: ['*'], tree: ['*'], bunting: ['*'], lantern: ['*'], flowerbed: ['*'] },
+  equip: { head: 'crown', face: 'shades', neck: 'bowtie', body: null }, home: { ground: 'meadow', centre: 'lantern', back: 'tree', sky: 'bunting', floor: 'flowerbed' }, news: {} };
 const img = {
-  blossom: await capture({ stage: 'adult', variant: 'radiant', race: 'emberling', weight: 24, age: 5 * 86400, stageT: 3600 }),
+  blossom: await capture({ stage: 'adult', variant: 'radiant', race: 'emberling', weight: 24, age: 5 * 86400, stageT: 3600, seedRace: 'emberling', wardrobe: dressed }),
+  clothes: await capture({ stage: 'adult', variant: 'radiant', race: 'emberling', weight: 24, age: 5 * 86400, stageT: 3600, seedRace: 'emberling', points: 260, wardrobe: dressed }, { el: '#viewShop', then: async p => {
+    await p.keyboard.press('b'); await p.click('[data-sub="clothes"]');
+    await p.click('article[data-id="beanie"] .cl-size[data-size="L"]'); await p.waitForTimeout(300);
+    // the beanie card just under the pinned try-on preview
+    await p.evaluate(() => { const b = document.getElementById('shopBody'), c = document.querySelector('article[data-id="beanie"]'), st = document.querySelector('.cl-stage');
+      b.scrollTop = c.offsetTop - b.offsetTop - st.offsetHeight - 8; });
+    await p.waitForTimeout(400);
+  } }),
   status: await capture({ ...bud, race: 'shroomling', hunger: 1, happy: 3, call: { reason: 'hungry', t: 0, counted: false } }, { then: p => p.keyboard.press('s') }),
   game: await capture({ ...bud, race: 'puddle' }, { then: async p => {
     await p.keyboard.press('p'); await p.waitForTimeout(200); await p.keyboard.press('2');
@@ -110,7 +123,8 @@ const shot = (title, line, src) => `<div class="page"><h1>${title}</h1><p>${line
 
 await render('screenshot-1.png', 1280, 800, shot('A tiny pixel pet for your <em>toolbar</em>', 'Feed it, play with it, clean up after it, and watch it grow.', img.blossom));
 await render('screenshot-2.png', 1280, 800, shot('See what Bubby <em>needs</em>', 'Hearts, weight and discipline, plus one button that does what it needs now.', img.status));
-await render('screenshot-3.png', 1280, 800, shot('Play <em>Seed catch</em>', 'Catch falling seeds for 20 seconds. Gold seeds are worth 3, pebbles cost 2.', img.game));
+await render('screenshot-3.png', 1280, 800, `<div class="page"><h1>Dress it <em>up</em></h1><p>Clothes in a size for every stage, made to fit every kind of Bubby. Plus decorations for its garden.</p>
+  <div class="row"><img class="pod" src="${img.blossom}"><img class="pod" src="${img.clothes}"></div></div>`);
 await render('screenshot-4.png', 1280, 800, `<div class="page"><h1>Six kinds of Bubby to <em>collect</em></h1><p>A flower, a tortoise, a droplet, a mushroom, a flame, and one very rare star. Fill the Bubbydex.</p>
   <div class="row"><img class="pod" src="${img.star}"><img class="pod" style="height:600px;width:auto" src="${img.dex}"></div></div>`);
 await render('screenshot-5.png', 1280, 800, shot('Old illnesses, old <em>remedies</em>', 'Ague, Scurvy, the Dancing Plague and The Plague. Earn points, then buy the right medicine.', img.cabinet));

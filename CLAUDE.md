@@ -10,7 +10,9 @@ A small virtual-pet game. Three parts (the web game shares no code or saves with
   forked) with a phone layer and a phone-shaped layout; see `mobile/README.md`. Build the test APK with
   `cd mobile && npm install && npm run apk`; check with `node tools/check-mobile.mjs`.
 
-The extension is the product that was launched. Version 1.2.0 gives every Bubby a personality (five traits and two quirks, leaning
+The extension is the product that was launched. Version 1.3.0 adds clothes (11 items, each sold in four sizes, one per stage:
+Bulb, Bud, Blossom, Elder; fitted to every race body) and garden decor, bought with points in the Shop's Clothes and Garden
+sections (`core/shop.js`, `art/wardrobe.js`, `art/decor.js`, `popup/closet.js`). Version 1.2.0 gives every Bubby a personality (five traits and two quirks, leaning
 its race's way, discovered as it grows, shown under Status → Nature) and 82 little things it does on its own while you watch.
 Version 1.1.2 hatches the egg while you watch, asks for a name (ID card),
 keeps every Bubby's card in a photo album and starts a newborn with empty hearts. Version 1.1.1 plants every seed with a random race, so the egg and Bulb already
@@ -19,7 +21,7 @@ with matching medicine, points and the shop (design in `memory/`). The web game 
 needs small-screen polish) and is not the priority. Anything else in `memory/` is still a plan.
 
 ## Version (read this first)
-- **Current version: <!-- version -->1.2.0<!-- /version -->.** `extension/manifest.json` is the single source of truth. The last version known to be submitted to the
+- **Current version: <!-- version -->1.3.0<!-- /version -->.** `extension/manifest.json` is the single source of truth. The last version known to be submitted to the
   stores is **<!-- submitted -->1.0.0<!-- /submitted -->** (confirm in the store dashboard). History: `docs/CHANGELOG.md`.
 - **Whenever there is a new version, do all of this in the same change (the owner asked for it every time):**
   1. `node tools/version.mjs bump X.Y.Z "short title"` sets the manifest and every version marker in the docs and memory and starts the changelog entry.

@@ -459,3 +459,56 @@ body.win.toy .app { width: 468px; } /* the fallback window shows the whole toy p
 }
 .name-row .chip { white-space: nowrap; }
 .name-go { margin-top: 4px; }
+
+/* ================= Version 1.3: clothes and garden decor in the Shop ================= */
+.pill.nudge { position: relative; }
+.pill.nudge::after, .pshop.nudge::after { content: ""; position: absolute; top: -3px; right: -3px; width: 10px; height: 10px; border-radius: 50%; background: var(--urgent); box-shadow: 0 0 0 2px var(--cream-hi); }
+.cl-seg { display: flex; gap: 3px; padding: 3px; background: rgba(255, 252, 243, .75); border: 2px solid rgba(94, 151, 140, .55); border-radius: 999px; }
+.cl-seg button { flex: 1; border: 0; background: transparent; border-radius: 999px; padding: 6px 2px; font: 600 12.5px/1 var(--font-display); color: var(--ink-2); }
+.cl-seg button[aria-pressed="true"] { background: var(--warn); color: var(--ink); }
+.cl-stage { position: sticky; top: 0; z-index: 2; display: grid; justify-items: center; gap: 3px; padding: 4px 0 6px; background: var(--mint); box-shadow: 0 7px 6px -6px rgba(59, 47, 74, .25); }
+.app.toy .cl-stage { background: #85c3d0; }
+#clScene, .cl-forms { width: 200px; height: 150px; border: 4px solid var(--screen-rim); border-radius: 10px; background: #9ad67f; image-rendering: pixelated; }
+.cl-forms { display: flex; align-items: center; justify-content: center; gap: 2px; box-sizing: content-box; }
+.cl-forms[hidden], #clScene[hidden] { display: none; }
+.cl-forms canvas { width: 64px; height: 75px; image-rendering: pixelated; }
+.cl-cap { margin: 0; min-height: 15px; font: 400 11.5px/1.25 var(--font-pixel); color: var(--ink-2); text-align: center; }
+.cl-snack { display: flex; align-items: center; gap: 8px; background: var(--ink); color: var(--cream-hi); border-radius: 10px; padding: 5px 6px 5px 11px; font: 400 12px/1.25 var(--font-pixel); }
+.cl-snack[hidden] { display: none; }
+.cl-snack .chip { background: #ffd34a; border-color: #ffd34a; color: var(--ink); }
+.cl-list { display: flex; flex-direction: column; gap: 10px; }
+.cl-banner { margin: 0; font-size: 12px; line-height: 1.35; padding: 6px 9px; border-radius: 10px; background: #fff1c9; border: 2px solid var(--warn); }
+.cl-item { background: rgba(255, 252, 243, .9); border: 2px solid rgba(94, 151, 140, .55); border-radius: 11px; padding: 7px 8px; display: flex; flex-direction: column; gap: 6px; }
+.cl-item.worn { border-color: var(--ok); }
+.cl-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.cl-name { min-width: 0; }
+.cl-name b { font: 600 13.5px/1.2 var(--font-display); }
+.cl-name small { display: block; font-size: 11.5px; color: var(--ink-2); line-height: 1.3; }
+.cl-tag { display: inline-block; font: 400 10px/1 var(--font-pixel); padding: 2px 5px 1px; border-radius: 999px; vertical-align: 1px; background: #e8e2ee; color: var(--ink); }
+.cl-tag.gift { background: #ffd6e6; }
+.cl-tag.rare { background: #d6e6ff; }
+.cl-tag.epic { background: #e3d8ff; }
+.cl-tag.on { background: #d9f0d2; color: var(--ok-d); }
+.cl-buy { flex: none; border: 2px solid var(--ink); border-bottom-width: 4px; background: var(--ink); color: var(--cream-hi); border-radius: 999px; padding: 6px 11px; font: 700 12.5px/1 var(--font-body); max-width: 160px; font-variant-numeric: tabular-nums; }
+.cl-buy:active { border-bottom-width: 2px; transform: translateY(2px); }
+.cl-buy.confirming { background: var(--warn); border-color: var(--warn-d); color: var(--ink); }
+.cl-buy[data-cl="off"], .cl-buy[data-cl="remove"] { background: var(--cream-hi); color: var(--ink); }
+.cl-buy:disabled { opacity: .45; cursor: default; transform: none; border-bottom-width: 4px; }
+.cl-sizes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.cl-size { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 3px 0 4px; background: #fff; border: 2px solid #e4ddd0; border-radius: 9px; font-family: var(--font-pixel); }
+.cl-size canvas { width: 48px; height: 56px; image-rendering: pixelated; }
+.cl-size span { font-size: 11px; color: var(--ink); }
+.cl-size em { font-style: normal; font-size: 11px; color: var(--ink-2); }
+.cl-size.own em { color: var(--ok-d); font-weight: 600; }
+.cl-size.now { background: #fff8e6; }
+.cl-size.now span::after { content: " ●"; color: var(--warn); font-size: 8px; vertical-align: 2px; }
+.cl-size[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 2px 0 var(--ink); }
+.cl-item.home { display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 8px; }
+.cl-thumb { width: 48px; height: 48px; background: #9ad67f; border-radius: 8px; border: 2px solid rgba(94, 151, 140, .55); image-rendering: pixelated; }
+.cl-closet ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.cl-closet li { display: flex; align-items: center; gap: 8px; background: rgba(255, 252, 243, .9); border: 2px solid rgba(94, 151, 140, .45); border-radius: 10px; padding: 5px 8px; font-size: 12.5px; }
+.cl-closet li b { width: 48px; flex: none; font: 600 12px/1 var(--font-pixel); color: var(--ink-2); }
+.cl-closet li span { flex: 1; min-width: 0; }
+.cl-closet .dim { color: #9a90a6; }
+.cl-closet .warn { font-style: normal; color: var(--warn-d); font-size: 11.5px; }
+.chip.small { padding: 5px 8px; font-size: 11px; }

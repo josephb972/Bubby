@@ -2,6 +2,8 @@
 // Works with a DOM canvas in the popup and with OffscreenCanvas in the background service worker.
 
 import { RACES, ITEMS, DISEASES } from '../core/content.js';
+import { dress, eyewear, PAD } from './wardrobe.js';
+export { PAD };
 
 export const INK = '#3b2f4a';
 export const SW = 100, SH = 75, GROUND = 67;
@@ -66,6 +68,7 @@ function face(x, cx, cy, o) {
   else if (mouth === 'small') R(x, mx, my, 2, 1, INK);
   else if (mouth === 'flat') R(x, mx - 1, my, 4, 1, INK);
   if (m === 'sick') P(x, [cx + 7, cy - 4, cx + 7, cy - 3, cx + 6, cy - 3, cx + 8, cy - 3, cx + 7, cy - 2], '#6fb8ea');
+  if (o.eyewear) eyewear(x, o.eyewear, { e1, e2, ey, cx, cy, L, mood: m });   // shop glasses follow the eyes (1.3.0)
 }
 
 /* ---- Bubby at each stage (48×48, feet at y≈46) ---- */
@@ -167,7 +170,7 @@ function tones(o, senior) {
 // Face on the body; the same expression rules as the Leafling's
 function raceFace(x, cx, cy, o, t, senior) {
   const th = o.variant === 'thistle';
-  face(x, cx, cy, { ...o, blush: t.blush, glasses: senior, skin: t.b[2],
+  face(x, cx, cy, { ...o, blush: t.blush, glasses: senior && !o.eyewear, skin: t.b[2],
     mood: (th && (o.mood || 'normal') === 'normal') ? 'normal' : o.mood, mouth: o.mouth || (th && (!o.mood || o.mood === 'normal') ? 'flat' : undefined) });
 }
 // What the care tier adds to a body: a rainbow gem (Radiant), a little flower (Daisy) or a row of spikes (Thistle)
@@ -359,9 +362,15 @@ function drawAdult(x, o, senior) {
   if (senior) P(x, [15, 14, 32, 13, 12, 22, 36, 24, 18, 31, 30, 31], mix(pal.petal, '#8a5a40', .35));
   ER(x, cx, hy, 8.5, 8.5, pal.faceRing, pal.face);
   E(x, 20, 16.5, 2, 1.3, mix(pal.face, '#ffffff', .45));
-  face(x, cx, hy + 1, { ...o, blush: pal.blush, glasses: senior, skin: pal.face, mood: (th && (o.mood || 'normal') === 'normal') ? 'normal' : o.mood, mouth: o.mouth || (th && (!o.mood || o.mood === 'normal') ? 'flat' : undefined) });
+  face(x, cx, hy + 1, { ...o, blush: pal.blush, glasses: senior && !o.eyewear, skin: pal.face, mood: (th && (o.mood || 'normal') === 'normal') ? 'normal' : o.mood, mouth: o.mouth || (th && (!o.mood || o.mood === 'normal') ? 'flat' : undefined) });
 }
 
+function drawBody(x, stage, o) {
+  if (stage === 'seed') drawSeed(x, o);
+  else if (stage === 'baby') drawBaby(x, o);
+  else if (stage === 'child') drawChild(x, o);
+  else drawAdult(x, o, stage === 'senior');
+}
 // Sprites are cached: the scene asks for the same pose every frame.
 const cache = new Map();
 export function petSprite(stage, o = {}) {
@@ -369,15 +378,64 @@ export function petSprite(stage, o = {}) {
   let c = cache.get(key);
   if (c) return c;
   c = mk(48, 48); const x = c.getContext('2d');
-  if (stage === 'seed') drawSeed(x, o);
-  else if (stage === 'baby') drawBaby(x, o);
-  else if (stage === 'child') drawChild(x, o);
-  else drawAdult(x, o, stage === 'senior');
+  drawBody(x, stage, o);
   outline(c);
   if (o.sick) { x.globalCompositeOperation = 'source-atop'; x.fillStyle = (DISEASES[o.sick] || {}).tint || 'rgba(140,190,60,.28)'; x.fillRect(0, 0, 48, 48); x.globalCompositeOperation = 'source-over'; }
   if (cache.size > 300) cache.clear();
   cache.set(key, c);
   return c;
+}
+
+/* ---- Bubby wearing its clothes (1.3.0) ----
+   48 wide and 48 + PAD tall: the usual 48×48 sprite sits PAD pixels down, leaving headroom for hats. o.outfit is
+   { head, face, neck, body }: item ids Bubby owns in its current size (core/shop.js outfitFor). Garments are put on before
+   the ink outline (art/wardrobe.js), so they're outlined with Bubby. Without an outfit it is petSprite moved down PAD. */
+const worn = new Map();
+export const outfitKey = f => f ? [f.head, f.face, f.neck, f.body].map(v => v || '').join('/') : '';
+export function wornSprite(stage, o = {}) {
+  const fit = stage === 'seed' ? '' : outfitKey(o.outfit);
+  const key = stage + '|' + [o.mood, o.mouth, o.variant, o.chubby, o.sick, o.blink, o.look, o.wobble, o.crack, o.race, o.fl, fit].join(',');
+  let c = worn.get(key);
+  if (c) return c;
+  c = mk(48, 48 + PAD); const x = c.getContext('2d', { willReadFrequently: true });
+  x.translate(0, PAD);
+  drawBody(x, stage, fit && o.outfit.face ? { ...o, eyewear: o.outfit.face } : o);
+  x.setTransform(1, 0, 0, 1, 0, 0);
+  c.topY = null;
+  if (fit && fit !== '///') dress(c, stage, o);
+  outline(c);
+  if (o.sick) { x.globalCompositeOperation = 'source-atop'; x.fillStyle = (DISEASES[o.sick] || {}).tint || 'rgba(140,190,60,.28)'; x.fillRect(0, 0, 48, 48 + PAD); x.globalCompositeOperation = 'source-over'; }
+  if (worn.size > 1500) worn.clear();
+  worn.set(key, c);
+  return c;
+}
+// The body without outline or clothes, in the padded box (the wardrobe measures it to fit clothes to every race)
+export function bodyPixels(stage, o) {
+  const c = mk(48, 48 + PAD), x = c.getContext('2d', { willReadFrequently: true });
+  x.translate(0, PAD); drawBody(x, stage, { ...o, eyewear: null });
+  return x.getImageData(0, 0, 48, 48 + PAD).data;
+}
+// The parts of the classic bodies that clothes may cover, drawn exactly as in the full sprite (matched pixel by pixel).
+// Every race shares the Bulb's body; the Leafling Bud and Blossom keep their original bodies. Other race bodies: null
+// (the wardrobe measures those from their pixels instead).
+export function torsoOf(stage, o) {
+  if (stage === 'baby') return x => { const t = bulbTones(o.race); ER(x, 24, 35, 11.5, 10, t.body[0], t.body[1]); E(x, 19, 30, 3, 2, t.shine); };
+  if (SHAPES[o.race]) return null;
+  if (stage === 'child') return x => {
+    ER(x, 14.5, 37, 2.6, 3.6, '#2f7d3a', '#5cbf5a', .3); ER(x, 33.5, 37, 2.6, 3.6, '#2f7d3a', '#5cbf5a', -.3);
+    ER(x, 24, 36, 9.5, 9, '#2f7d3a', '#5cbf5a'); E(x, 20, 31, 2.5, 1.6, '#8ad98a');
+  };
+  if (stage === 'adult' || stage === 'senior') return x => {
+    const senior = stage === 'senior', pal = palette(o.variant, senior), ch = o.chubby ? 2 : 0;
+    ER(x, 16 - ch, 38.5, 2.6, 3.6, pal.suit[0], pal.suit[1], .35); ER(x, 32 + ch, 38.5, 2.6, 3.6, pal.suit[0], pal.suit[1], -.35);
+    ER(x, 24, 39, 7.5 + ch, 6.5, pal.suit[0], pal.suit[1]);
+    if (o.variant === 'radiant' && !senior) {
+      P(x, [24, 37], '#ff5a5a'); P(x, [22, 38, 23, 38, 24, 38, 25, 38, 26, 38], '#ffb43a');
+      P(x, [23, 39, 24, 39, 25, 39], '#ffe14a'); P(x, [23, 40, 25, 40], '#5fcf6a'); P(x, [22, 41, 26, 41], '#5aa8ff');
+    }
+    if (o.variant === 'daisy') P(x, [21, 34, 22, 35, 23, 35, 24, 35, 25, 35, 26, 35, 27, 34], '#ffd54f');
+  };
+  return null;
 }
 export const HEADTOP = { seed: 23, baby: 17, child: 9, adult: 5, senior: 5 };
 // Where each stage's face sits inside its 48×48 sprite (used to crop the toolbar icon).

@@ -20,6 +20,7 @@ import {
   PTS, CAPS, STREAK_MS, QUEST_POOL, GOALS, medIds, foodIds,
 } from './content.js';
 import { rollPersona, mods, revealForStage } from './persona.js';
+import { freshWardrobe, fixWardrobe } from './shop.js';
 export * from './content.js';
 
 export const STAGE = {
@@ -71,7 +72,7 @@ export function defaultCfg() {
 }
 
 // What carries over from one Bubby to the next: the collection, the points, and what you bought.
-export const META_KEYS = ['journal', 'album', 'dex', 'rareMiss', 'points', 'inv', 'tot', 'ach', 'quests', 'ptsDay', 'streak', 'streakMs', 'lastCheckIn'];
+export const META_KEYS = ['journal', 'album', 'dex', 'rareMiss', 'points', 'inv', 'tot', 'ach', 'quests', 'ptsDay', 'streak', 'streakMs', 'lastCheckIn', 'wardrobe'];
 
 export function fresh(gen = 1, cfg = defaultCfg(), now = Date.now()) {
   const seedRace = pickCommon();
@@ -92,6 +93,8 @@ export function fresh(gen = 1, cfg = defaultCfg(), now = Date.now()) {
     // Kept across lives (see META_KEYS)
     journal: [], album: [], dex: [], rareMiss: 0, points: PTS.start, inv: {}, tot: {}, ach: {}, quests: null, ptsDay: null,
     streak: 0, streakMs: 0, lastCheckIn: '',
+    // Clothes and garden decor bought in the Shop (1.3.0, core/shop.js): cosmetic only
+    wardrobe: freshWardrobe(),
     events: [], evSeq: 0, notifiedSeq: 0, seenSeq: 0,
     notif: { day: '', count: 0, lastAt: 0 },
   };
@@ -749,6 +752,8 @@ export function migrate(o, now = Date.now()) {
   // Saves from before personalities (1.2.0): fresh() rolled one from a random race, so roll again from this Bubby's own.
   // A grown Bubby has already shown what it's like, so reveal what its stage would have revealed.
   if (!Array.isArray(S.journal)) S.journal = [];
+  // Saves from before clothes (1.3.0) get a wardrobe with the welcome gift; a damaged one is repaired
+  S.wardrobe = fixWardrobe(o.wardrobe);
   if (!o.persona) {
     S.persona = rollPersona(S.seedRace || S.race);
     const i = ['seed', 'baby', 'child', 'adult', 'senior'].indexOf(S.stage);

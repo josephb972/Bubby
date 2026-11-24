@@ -1,6 +1,6 @@
 # Test and publish a new Bubby version
 
-Current version: **<!-- version -->1.2.0<!-- /version -->**; the last one known to be submitted is **<!-- submitted -->1.0.0<!-- /submitted -->**. The store steps come from how the Chrome Web Store dashboard worked when this
+Current version: **<!-- version -->1.3.0<!-- /version -->**; the last one known to be submitted is **<!-- submitted -->1.0.0<!-- /submitted -->**. The store steps come from how the Chrome Web Store dashboard worked when this
 was written; its labels move around, so if a button has a different name, the idea is the same. Google's own guide is
 https://developer.chrome.com/docs/webstore/update (it could not be opened from the coding session, so the steps below are not
 checked against it).
@@ -8,10 +8,10 @@ checked against it).
 ## 1. Get the files
 
 ```bash
-node tools/package.mjs        # builds dist/bubby-<!-- version -->1.2.0<!-- /version -->.zip (needs Node)
+node tools/package.mjs        # builds dist/bubby-<!-- version -->1.3.0<!-- /version -->.zip (needs Node)
 ```
 
-Or use the `bubby-<!-- version -->1.2.0<!-- /version -->.zip` you were sent. Unzip it into a folder (for example `bubby-<!-- version -->1.2.0<!-- /version -->`). The folder must have
+Or use the `bubby-<!-- version -->1.3.0<!-- /version -->.zip` you were sent. Unzip it into a folder (for example `bubby-<!-- version -->1.3.0<!-- /version -->`). The folder must have
 `manifest.json` directly inside it.
 
 ## 2. Test it on your own computer (about 15 minutes)
@@ -27,7 +27,7 @@ If you also have the store version installed, **turn it off while testing**. Two
 ### B. The upgrade test (the one that matters for real players)
 Real players have a living Bubby saved by the version in the store. Check that it survives:
 1. Unzip the previous version from `release/` (for example `release/bubby-<!-- submitted -->1.0.0<!-- /submitted -->.zip`) into a folder called `bubby-test`. **Load unpacked** it. Play for a minute (feed it, wait for poop).
-2. Close the popup. Copy the <!-- version -->1.2.0<!-- /version --> files over the same folder (replace everything).
+2. Close the popup. Copy the <!-- version -->1.3.0<!-- /version --> files over the same folder (replace everything).
 3. On `chrome://extensions` click the circular arrow (reload) on Bubby, then open Bubby.
 4. You should see **the same Bubby**, now a Leafling, with **★ 35 points** (25 starter + 10 for the day) and a welcome toast.
    Click **Errors** on the extensions page: there should be none.
@@ -68,9 +68,9 @@ Does anything confuse you? (Numbers to tune are in `extension/core/content.js`.)
 Nothing changes about the listing's identity: it is an **update** to the same item, so players keep their Bubby and Chrome updates
 them automatically.
 
-1. **The version must go up.** `extension/manifest.json` says `<!-- version -->1.2.0<!-- /version -->`; the store has `<!-- submitted -->1.0.0<!-- /submitted -->`. (A rejected upload usually means the
+1. **The version must go up.** `extension/manifest.json` says `<!-- version -->1.3.0<!-- /version -->`; the store has `<!-- submitted -->1.0.0<!-- /submitted -->`. (A rejected upload usually means the
    version was not higher.)
-2. **Build the zip:** `node tools/package.mjs` → `dist/bubby-<!-- version -->1.2.0<!-- /version -->.zip`.
+2. **Build the zip:** `node tools/package.mjs` → `dist/bubby-<!-- version -->1.3.0<!-- /version -->.zip`.
 3. Open the **Chrome Web Store Developer Dashboard** (https://chrome.google.com/webstore/devconsole) with the account that
    published Bubby, and click **Bubby**.
 4. **Package** tab → **Upload new package** → choose the zip. The dashboard reads the manifest and shows the new version.
@@ -86,7 +86,7 @@ them automatically.
 9. When it goes live, Chrome updates installed copies on its own within a day or so (players can speed it up at
    `chrome://extensions` → **Update**). Their saved Bubby is migrated automatically; the upgrade test in 2B checks exactly that.
 10. **Edge Add-ons:** Partner Center → Microsoft Edge → Bubby → **Update** → upload the same zip → submit.
-11. **Afterwards:** make sure the zip is in `release/bubby-<!-- version -->1.2.0<!-- /version -->.zip` (commit it), run `node tools/version.mjs submitted <!-- version -->1.2.0<!-- /version -->`, and tick the box in `docs/LAUNCH-CHECKLIST.md`.
+11. **Afterwards:** make sure the zip is in `release/bubby-<!-- version -->1.3.0<!-- /version -->.zip` (commit it), run `node tools/version.mjs submitted <!-- version -->1.3.0<!-- /version -->`, and tick the box in `docs/LAUNCH-CHECKLIST.md`.
 
 **You cannot undo a published version.** If something is wrong, fix it and publish **1.1.1**. Test the zip (section 2) before you
 submit.

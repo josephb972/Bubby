@@ -3,6 +3,54 @@
 Newest first. `extension/manifest.json` holds the current version; `node tools/version.mjs` checks that every doc agrees with it.
 Each entry says whether that version has been submitted to the stores (set with `node tools/version.mjs submitted X.Y.Z`).
 
+## 1.3.0 (24 Nov 2026): Clothes in a size for every stage, and garden decor
+Status: built and tested; **not submitted**. Package: `release/bubby-1.3.0.zip`. Android test build: `dist/bubby-android-1.3.0.apk` (version code 10300, signed with the test key, so it installs over 1.2.0).
+
+Owner's request: a shop where players buy clothes for Bubby (fitting every race and every stage perfectly, with a different
+size to buy for each stage of growing up) and decorations for its garden, everything in the Android app as well.
+
+**Added**
+- **Clothes** (`core/shop.js`, art in `art/wardrobe.js`): 11 items in four slots: Petal bow (a gift), Beanie, Little crown,
+  Wizard hat (head); Sunglasses, Heart glasses (face); Bow tie, Cosy scarf (neck); Striped tee, Overalls, Heart sweater (body).
+- **A size for every stage:** Bulb, Bud, Blossom and Elder. Each size is bought separately (Bulb ×0.4, Bud ×0.65 of the
+  Blossom price) and kept for every future Bubby at that stage, of any race. Pick an item once and Bubby wears the size that
+  fits as it grows. Prices in points: common 24 / 39 / 60 / 60, rare 48 / 78 / 120 / 120, wizard hat 80 / 130 / 200 / 200.
+- **Fit on every body:** garments are drawn from each body's measurements: the classic bodies (every Bulb, the Leafling Bud and
+  Blossom) use measured rigs, the other races (Mossback, Puddle, Shroomling, Emberling, Starling) are measured from their own
+  pixels. Shirts are painted on the visible body only, nothing but glasses touches the face, glasses follow the eyes, an Elder's
+  own glasses step aside for shop glasses, and each garment picks the colourway that stands out on that body.
+- **Growing out of clothes:** when Bubby grows and has no size of what it wears, the old piece pops off and floats away at the
+  end of the growing-up flash, a toast says which size to get, the ★ button gets a dot, and the Shop opens on that item with a
+  note. It is also noticed when Bubby grew up while the popup was closed (in "while you were away", or as a toast).
+- **Garden decor** (`art/decor.js`): 3 lawns (Clover, Snow, Autumn), Bunting, Apple tree, Sunflowers, Mushroom house, Lantern
+  (glows at night), Garden gnome, Birdbath, Flower patch, Lily pond, Stepping stones, and ambience (Butterflies, Fireflies that
+  glow at night, Petal breeze), 80 to 180 points. Each sits in a fixed spot that never covers the poop, the falling seeds or
+  Bubby; the default Meadow and flower pot are pixel-identical to before. Ambience pauses during games and with reduced motion.
+- **Shop screen:** the Shop tab has three sections: Food & medicine (as before), Clothes and Garden. Clothes shows each item in
+  its four sizes, each drawn on Bubby's own race; a live preview (pinned while you scroll) tries things on before buying, and
+  Blossom and Elder sizes show on all three forms before Bubby has grown. Buying asks once more to confirm and can be undone
+  for 10 seconds; a "Wearing now" list takes things off. Buying counts for the Shopper goal.
+- **Welcome gift:** every Bubby, new or from an older save, gets the Petal bow in all four sizes, worn, with a toast.
+- The toolbar icon shows the outfit (a hat or scarf the crop would cut in half is left out).
+- Checks: `tools/wardrobe-audit.mjs` (every garment on every race, stage, form, chubby and pose: 29,568 sprites, plus a check
+  that Bubby without clothes is pixel-identical to before), `tools/garden-audit.mjs`, `tools/test-shop.mjs`, and new clothes
+  and garden steps in `tools/check-mobile.mjs`.
+
+**Changed**
+- Bubby is drawn in the garden with `wornSprite` (8 px of headroom for hats, clothes put on before the ink outline);
+  `petSprite` is unchanged (album, ID card, Bubbydex, tests). Status bubbles sit above a hat.
+
+**Saves:** the wardrobe is `S.wardrobe` (owned sizes, what's worn, the garden), in `META_KEYS`, so it carries over to every new
+seed and "Start over" like the points. Older saves get a wardrobe with the welcome gift in `migrate()`; a damaged one is
+repaired (unknown items are kept but never drawn).
+
+**Checks:** rules-check 158 passed, sim-check, check-extension, check-v11, check-mobile, test-shop (20), wardrobe-audit
+(29,568 dressed sprites), garden-audit: all pass. One check-mobile run out of eight had an intermittent failure that didn't
+come back in seven reruns.
+
+**Owner still to do:** try the Android test build and the zip; look at the clothes contact sheets
+(`node tools/wardrobe-audit.mjs` → `dist/audit/`); then submit when happy.
+
 ## 1.2.0 (21 Nov 2026): Personalities and 82 things Bubby does on its own
 Status: built and tested; **not submitted**. Package: `release/bubby-1.2.0.zip`. Android test build: `dist/bubby-android-1.2.0.apk`.
 

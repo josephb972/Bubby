@@ -120,6 +120,8 @@
   margin: calc(-12px - var(--safe-t) / var(--uiz)) -16px 0; padding: calc(12px + var(--safe-t) / var(--uiz)) 16px 10px;
   background: var(--mint-hi);
 }
+/* Clothes and Garden (1.3.0): the try-on preview stays pinned just under the title bar while the list scrolls. */
+:root.mobile #viewShop .cl-stage { top: calc(62px + var(--safe-t) / var(--uiz)); background: var(--mint); }
 :root.mobile .settings .group { padding: 10px 14px 12px; border-radius: 16px; }
 :root.mobile .chip { padding: 10px 14px; }
 :root.mobile .pace { padding-block: 6px; }

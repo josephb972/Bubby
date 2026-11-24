@@ -2,7 +2,7 @@
 
 Works for the Chrome Web Store and Edge Add-ons. Everything here is true of the code; update it if the code changes.
 
-- **Upload:** `release/bubby-<!-- version -->1.2.0<!-- /version -->.zip`, the current version (`node tools/package.mjs` rebuilds it into `dist/`; older versions stay in `release/`).
+- **Upload:** `release/bubby-<!-- version -->1.3.0<!-- /version -->.zip`, the current version (`node tools/package.mjs` rebuilds it into `dist/`; older versions stay in `release/`).
 - **Images:** `store/`, made by `node tools/store-images.mjs` from the real popup.
 
 ## Listing
@@ -14,7 +14,7 @@ Works for the Chrome Web Store and Edge Add-ons. Everything here is true of the 
 | Category | Lifestyle → Games (Lifestyle → Just for Fun also fits) |
 | Language | English |
 | Icon | `extension/icons/icon-128.png` |
-| Screenshots (refresh them for 1.1: `node tools/store-images.mjs`), in order | `store/screenshot-1.png` the toy pod with a Bubby · `-2` what Bubby needs · `-3` Seed catch · `-4` the six races and the Bubbydex · `-5` illness and medicine (all 1280×800; the store takes at most 5) |
+| Screenshots (refresh them for 1.1: `node tools/store-images.mjs`), in order | `store/screenshot-1.png` the toy pod with a dressed Bubby in a decorated garden · `-2` what Bubby needs · `-3` clothes and the Shop's Clothes section (1.3.0; Seed catch moved out, the store takes 5) · `-4` the six races and the Bubbydex · `-5` illness and medicine (all 1280×800; the store takes at most 5) |
 | Small promo tile | `store/promo-small.png` (440×280) |
 | Marquee (optional) | `store/promo-marquee.png` (1400×560) |
 
@@ -44,6 +44,11 @@ When Bubby gets sick
 Earn points, spend them in the Shop
 • Open Bubby each day, look after it, win games, finish daily quests and reach goals to earn points.
 • Spend them on better food, medicine and a Plague Doctor’s Posy. Points are earned by playing, never bought.
+
+Dress it up
+• Hats, glasses, scarves and shirts, drawn to fit every race and every form. Each comes in a size for every stage (Bulb, Bud, Blossom, Elder), and every future Bubby wears the sizes you own.
+• Grows out of its hat? It pops off, and the Shop shows the next size.
+• Decorate the garden: lawns, an apple tree, a lantern and fireflies that glow at night, and more.
 
 Bubby is a game. The history is simplified and nothing in it is medical advice.
 

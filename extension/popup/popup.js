@@ -6,6 +6,8 @@ import { drawScene, catchY } from './scene.js';
 import * as Persona from '../core/persona.js';
 import * as Behaviors from '../core/behaviors.js';
 import { startBehavior } from './behave.js';
+import * as Shop from '../core/shop.js';
+import { createCloset } from './closet.js';
 
 const { clamp, rand } = Rules;
 const $ = (s, r = document) => r.querySelector(s);
@@ -314,7 +316,17 @@ function noticeBehavior(b) {
 
 /* ---------------- Events from the simulation ---------------- */
 // A Bulb that becomes a rare race gets the long special reveal; every other growth is the short one.
-function evolveAnim(e) { return { type: 'evolve', t: 0, dur: e.rare ? 4.4 : 1.8, from: e.from, to: e.to, race: e.race, rare: !!e.rare }; }
+function evolveAnim(e) {
+  // Clothes Bubby grew out of (no size for the new stage yet) pop off at the end of the growing-up flash (1.3.0)
+  const popOff = e.from && e.from !== 'seed' ? Shop.outgrown(S.wardrobe, e.from, e.to) : [];
+  return { type: 'evolve', t: 0, dur: e.rare ? 4.4 : popOff.length ? 2.5 : 1.8, from: e.from, to: e.to, race: e.race, rare: !!e.rare, popOff };
+}
+const outgrownText = (ids, to) => `${S.name || 'Bubby'} grew out of its ${ids.map(id => Shop.ITEM[id].name.toLowerCase()).join(' and ')}! The ${Shop.SIZE_NAME[Shop.SIZE_OF[to]]} size is in the Shop (★).`;
+function noteOutgrown(ids, to) {
+  if (!ids.length || !S.wardrobe) return null;
+  S.wardrobe.news = { ...(S.wardrobe.news || {}), outgrown: ids };
+  return outgrownText(ids, to);
+}
 function handleEvents() {
   if (S.evSeq <= shownSeq) return;
   const msgs = [];   // one toast for the whole batch, so a later event never wipes out an earlier one
@@ -323,7 +335,7 @@ function handleEvents() {
   for (const e of S.events) {
     if (e.id <= shownSeq) continue;
     switch (e.type) {
-      case 'evolve': G = null; closeOverlays(); A = evolveAnim(e); if (e.rare) rareFanfare(); else beepUp(); say(e.text); break;
+      case 'evolve': { G = null; closeOverlays(); A = evolveAnim(e); if (e.rare) rareFanfare(); else beepUp(); say(e.text); const o = noteOutgrown(A.popOff, e.to); if (o) learned.push(o); break; }
       case 'end': G = null; A = null; closeOverlays(); showEnd(); break;
       case 'call': beepCall(); if (e.reason !== 'tantrum') say(e.text); break;
       case 'poop': beep(200, .08); break;
@@ -359,6 +371,8 @@ function summarize(evs, ms) {
   if (n('wake')) lines.push(n('wake') > 1 ? `Bubby slept ${n('wake')} nights.` : 'Bubby had a good night’s sleep.');
   else if (n('sleep')) lines.push('Bubby went to sleep.');
   const m = n('mistake'); if (m) lines.push(`${m} care mistake${m > 1 ? 's' : ''} while you were gone.`);
+  const first = evs.find(e => e.type === 'evolve');
+  if (first && first.from !== 'seed') { const o = noteOutgrown(Shop.outgrown(S.wardrobe, first.from, S.stage), S.stage); if (o) lines.push(o); }
   // A few things Bubby got up to on its own (core/behaviors.js)
   const all = lines.length, who = S.name || 'Bubby';
   for (const d of Behaviors.diary(S, ms || 0)) if (lines.length < 6) lines.push(d.replace(/^Bubby/, who));
@@ -547,6 +561,9 @@ function renderPoints() {
     $$('[data-gain]').forEach(g => { g.textContent = `+${n}`; g.classList.remove('show'); void g.offsetWidth; g.classList.add('show'); });
   }
   lastPts = S.points;
+  // A dot on the ★ button when the wardrobe has news (a welcome gift, or clothes Bubby grew out of)
+  const news = S.wardrobe && S.wardrobe.news, dot = !!(news && (news.gift || (news.outgrown && news.outgrown.length)));
+  $$('#btnShop, #btnShopPhoto').forEach(b => b.classList.toggle('nudge', dot));
 }
 
 /* ---------------- Medicine cabinet and pantry: one item at a time on the small screen ---------------- */
@@ -610,11 +627,15 @@ function renderPantry() {
 }
 
 /* ---------------- Shop, daily quests, goals and the Bubbydex ---------------- */
-let SHOP_TAB = 'shop';
+let SHOP_TAB = 'shop', SHOP_SUB = 'care', CL = null;   // SHOP_SUB: the Shop tab's section (food and medicine, clothes, garden)
 function openShop(tab) {
   if (G) return toast('Finish the game first');
   closeOverlays();
   if (tab) SHOP_TAB = tab;
+  // News from the wardrobe: open on the clothes Bubby grew out of
+  const news = S.wardrobe && S.wardrobe.news;
+  if (!tab && news && news.outgrown && news.outgrown.length) { SHOP_TAB = 'shop'; SHOP_SUB = 'clothes'; CL.focus(news.outgrown[0]); }
+  if (news && (news.outgrown || news.gift)) { S.wardrobe.news = {}; persist(); }
   $('#shopMsg').textContent = '';
   renderShop();
   $('#viewMain').hidden = true; $('#viewSettings').hidden = true; $('#viewShop').hidden = false;
@@ -645,9 +666,13 @@ function shopRow(id) {
 function renderShop() {
   renderPoints();
   $$('#shopTabs [data-tab]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tab === SHOP_TAB)));
-  const body = $('#shopBody'); body.textContent = '';
+  const body = $('#shopBody'), keep = body.scrollTop; body.textContent = '';
   const P = Rules.PTS, C = Rules.CAPS;
   if (SHOP_TAB === 'shop') {
+    const seg = document.createElement('div'); seg.className = 'cl-seg'; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'What to buy');
+    seg.innerHTML = [['care', 'Food & medicine'], ['clothes', 'Clothes'], ['garden', 'Garden']].map(([k, t]) => `<button data-sub="${k}" aria-pressed="${SHOP_SUB === k}">${t}</button>`).join('');
+    body.appendChild(seg);
+    if (SHOP_SUB !== 'care') { CL.render(body, SHOP_SUB); body.scrollTop = keep; return; }
     for (const [title, ids] of [['Better food', Rules.foodIds()], ['Medicine', Rules.medIds().filter(k => k !== 'shield')], ['Protection', ['shield']]]) {
       const sec = document.createElement('section'); sec.className = 'shop-sec';
       sec.innerHTML = `<h3>${title}</h3>`;
@@ -846,7 +871,17 @@ function wire() {
   $('#btnShopPhoto').addEventListener('click', () => openShop());
   $('#btnShopBack').addEventListener('click', closeShop);
   $('#shopTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) { SHOP_TAB = b.dataset.tab; $('#shopMsg').textContent = ''; renderShop(); } });
-  $('#shopBody').addEventListener('click', e => { const b = e.target.closest('[data-buy]'); if (b) buyItem(b.dataset.buy); });
+  $('#shopBody').addEventListener('click', e => {
+    const sub = e.target.closest('[data-sub]');
+    if (sub) { SHOP_SUB = sub.dataset.sub; CL.reset(); $('#shopBody').scrollTop = 0; renderShop(); return; }
+    const c = CL.click(e);
+    if (c) {
+      renderShop();
+      if (typeof c === 'string') { const card = $(`#shopBody article[data-id="${c.slice(7)}"]`); if (card) card.scrollIntoView({ block: 'center' }); }
+      return;
+    }
+    const b = e.target.closest('[data-buy]'); if (b) buyItem(b.dataset.buy);
+  });
   $('#stCall').addEventListener('click', () => { const a = $('#stCall').dataset.need; closeOverlays(); if (a) runAction(a); });
   $('#looks').addEventListener('change', e => { if (e.target.name === 'look') { S.cfg.look = e.target.value; applyLook(); persist(); } });
   $('#btnBack').addEventListener('click', closeSettings);
@@ -939,6 +974,7 @@ function frame(nowP) {
   if (!S.paused) { updateGame(rdt); updatePet(rdt); updateBehavior(rdt); }
   handleEvents();
   drawScene(ctx, S, A, G, PET, nowP / 1000, BH);
+  if (!$('#viewShop').hidden && SHOP_TAB === 'shop' && SHOP_SUB !== 'care' && CL.tick(rdt, nowP / 1000)) renderShop();
   if (toastT > 0) { toastT -= rdt; if (toastT <= 0) { $toast.hidden = true; if (toastQ.length) toast(toastQ.shift()); } }
   const blinkOn = !!S.call && !S.ended && ((nowP / 1000 * 2.5) | 0) % 2 === 0;
   if (blinkOn !== prevBlink) { prevBlink = blinkOn; const t = $('.tile[data-act="attn"]'); if (t) t.classList.toggle('alert', blinkOn); }
@@ -956,12 +992,16 @@ async function boot() {
   S = await loadState();
   const now = Date.now();
   const seenBefore = S.seenSeq || 0, lastSeen = S.lastSeenAt || 0;
+  const stageBefore = S.stage;
   Rules.advance(S, now); // catch up on the time Bubby spent alone
+  // Clothes Bubby grew out of while the popup was closed: noticed now, however long you were away (1.3.0)
+  const grewOut = stageBefore !== 'seed' && stageBefore !== S.stage && !S.ended ? noteOutgrown(Shop.outgrown(S.wardrobe, stageBefore, S.stage), S.stage) : null;
   const ci = Rules.checkIn(S, now); // opening Bubby on a new day pays points and keeps the streak
   Rules.checkGoals(S, now);
   shownSeq = S.evSeq;
   const ciText = !ci.newDay ? '' : `${ci.gift ? 'Bubby missed you! Daily gift: +1 heart and ' : 'Daily bonus: '}+${ci.daily} pts. Streak: ${S.streak} day${S.streak === 1 ? '' : 's'}${ci.mile ? `. ${ci.mile}-day bonus +${ci.milePts}!` : ''}`;
 
+  CL = createCloset({ S: () => S, save: () => { persist(); renderPoints(); }, beep: (f, d) => beep(f, d), bought: () => { Rules.bump(S, 'buy', Date.now()); Rules.checkGoals(S, Date.now()); } });
   const a = art();
   HEART = { full: a.HEART_FULL.toDataURL(), empty: a.HEART_EMPTY.toDataURL() };
   $$('canvas[data-icon]').forEach(c => drawIcon(c, c.dataset.icon));
@@ -987,6 +1027,12 @@ async function boot() {
       if (ciText) toast(ciText);
     }
   } else if (ciText && lastSeen) toast(ciText);
+  if (grewOut && $('#ovAway').hidden) toast(grewOut, true);   // when the away card is open, it lists this already
+  // The welcome gift of the clothes update (1.3.0): new players and existing saves alike
+  if (S.wardrobe && S.wardrobe.news && S.wardrobe.news.gift === true) {
+    toast(`A gift! ${S.name || 'Bubby'} got a petal bow. Find clothes and garden decor in the Shop (★).`, true);
+    S.wardrobe.news.gift = 'seen';
+  }
   // A rare reveal always plays, even when Bubby grew up only a minute after you closed it (no away card then)
   const rareNews = away.filter(e => e.type === 'evolve' && e.rare).pop();
   if (rareNews && !A && !S.ended) { A = evolveAnim(rareNews); toast(rareNews.text); }

@@ -202,6 +202,64 @@ for (const name of ['Pixel 7', 'Galaxy S9+']) {
   await ctx.close();
 }
 
+// Clothes and garden decor (1.3.0): buy a size with points, confirm, undo, wear it, decorate, and grow out of it.
+{
+  const { ctx, page, errors } = await phone('Pixel 7');
+  const vp = page.viewportSize();
+  const seed = (over) => page.evaluate(over => {
+    const S = JSON.parse(localStorage.getItem('bubby')), now = Date.now();
+    Object.assign(S, { stage: 'adult', race: 'puddle', seedRace: 'puddle', variant: 'daisy', stageT: 3600, hatchedAt: now - 3 * 86400e3, weight: 24, lastT: now,
+      name: 'Pip', sick: false, disease: null, call: null, poops: [], hunger: 4, happy: 4, asleep: false, lights: true, lastSeenAt: now, seenSeq: S.evSeq, points: 500 }, over);
+    S.ach = { ...(S.ach || {}), shopper: true };   // the "Shopper" goal (+5 points on a first buy) is done, so prices add up exactly
+    if (over.wardrobe) S.wardrobe = over.wardrobe;
+    localStorage.setItem('bubby', JSON.stringify(S));
+    Storage.prototype.setItem = () => {};   // the running page must not save over this before the reload
+  }, over);
+  const state = () => page.evaluate(() => JSON.parse(localStorage.getItem('bubby')));
+  await seed({});
+  await page.reload(); await page.waitForSelector('#app.toy'); await page.waitForTimeout(700);
+  await page.evaluate(() => document.querySelector('#btnAwayOk:not([hidden])')?.click());
+  let st = await state();
+  check(st.wardrobe && st.wardrobe.equip.head === 'petalbow' && st.wardrobe.owned.petalbow.length === 4, 'a 1.2.0 save gets a wardrobe with the welcome bow in every size');
+  await page.tap('#btnShopPhoto'); await page.waitForTimeout(200);
+  await page.tap('[data-sub="clothes"]'); await page.waitForTimeout(300);
+  check(await page.isVisible('#clScene'), 'Shop → Clothes shows the try-on preview');
+  check(await page.locator('.cl-item').count() === 11 && await page.locator('.cl-size').count() === 44, 'eleven clothes, each in four sizes');
+  check(await page.evaluate(() => document.documentElement.scrollWidth) <= vp.width + 1, 'clothes have no sideways scroll on the phone');
+  if (shots) await page.screenshot({ path: join(shots, 'Pixel7-clothes.png') });
+  const buy = 'article[data-id="beanie"] .cl-buy';
+  check(/Blossom · ★60/.test(await page.textContent(buy)), 'a grown Bubby is offered the Blossom size first, priced in points');
+  await page.tap(buy);
+  check(/Buy for ★60\? Leaves 440/.test(await page.textContent(buy)), 'buying asks to confirm');
+  const cb = await page.locator(buy).boundingBox(), card = await page.locator('article[data-id="beanie"]').boundingBox();
+  check(cb.width > 80 && cb.x >= card.x && cb.x + cb.width <= card.x + card.width + 1, 'the confirm button stays in its card');
+  await page.tap(buy); await page.waitForTimeout(300);
+  st = await state();
+  check(st.points === 440 && st.wardrobe.owned.beanie.join() === 'L' && st.wardrobe.equip.head === 'beanie', 'bought the Blossom size only, and Bubby wears it');
+  await page.tap('[data-undo]'); await page.waitForTimeout(300);
+  st = await state();
+  check(st.points === 500 && !st.wardrobe.owned.beanie && st.wardrobe.equip.head === 'petalbow', 'undo refunds the points and puts the bow back');
+  await page.tap(buy); await page.tap(buy); await page.waitForTimeout(200);
+  await page.tap('[data-sub="garden"]'); await page.waitForTimeout(300);
+  await page.tap('article[data-id="lantern"] .cl-buy'); await page.tap('article[data-id="lantern"] .cl-buy'); await page.waitForTimeout(300);
+  st = await state();
+  check(st.wardrobe.home.centre === 'lantern' && st.points === 320, 'a lantern bought and placed in the garden');
+  if (shots) await page.screenshot({ path: join(shots, 'Pixel7-garden.png') });
+  await page.tap('#btnShopBack'); await page.waitForTimeout(400);
+  if (shots) await page.screenshot({ path: join(shots, 'Pixel7-dressed.png') });
+  // Growing out of clothes: a Bud in its Bud-size beanie becomes a Blossom
+  await seed({ stage: 'child', variant: null, stageT: 1e9, lastT: Date.now() - 5000,
+    wardrobe: { owned: { petalbow: ['S', 'M', 'L', 'XL'], beanie: ['M'], meadow: ['*'], pot: ['*'] }, equip: { head: 'beanie', face: null, neck: null, body: null }, home: { ground: 'meadow', centre: 'pot' }, news: {} } });
+  await page.reload(); await page.waitForSelector('#app.toy'); await page.waitForTimeout(900);
+  st = await state();
+  check(st.stage === 'adult' && (st.wardrobe.news.outgrown || []).includes('beanie'), `grew into a Blossom and noticed the beanie doesn't fit (${st.stage})`);
+  await page.evaluate(() => document.querySelector('#btnAwayOk:not([hidden])')?.click());
+  await page.tap('#btnShopPhoto'); await page.waitForTimeout(400);
+  check(/outgrown its Beanie/.test(await page.textContent('#shopBody')), 'the Shop opens on Clothes and says what was outgrown');
+  check(!errors.length, `no errors in the clothes and garden shop${errors.length ? ': ' + errors.join('; ') : ''}`);
+  await ctx.close();
+}
+
 await browser.close();
 console.log(failed ? `${failed} check(s) failed` : 'All mobile checks passed');
 process.exit(failed ? 1 : 0);
