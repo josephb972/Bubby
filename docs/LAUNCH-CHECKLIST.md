@@ -1,8 +1,8 @@
 # Bubby extension: launch plan and checklist
 
-Status: extension **v1.1.0** (adds the shop). The coding fixes are done without changing Bubby's UI design; the store package, images,
-listing text and privacy policy are ready. What's left needs the owner. Goal: publish on the Chrome Web Store, then
-Edge Add-ons.
+Status: extension **v<!-- version -->1.2.0<!-- /version -->** is built and tested; version 1.0.0 was the first store release (see `docs/CHANGELOG.md`). The
+store package, images, listing text and privacy policy are ready. What's left needs the owner. Goal: publish on the Chrome Web
+Store, then Edge Add-ons.
 
 Tick items as they are done (`[x]`). Owner: **Claude** = can be done in a coding session, **You** = needs the owner.
 
@@ -47,7 +47,7 @@ Tick items as they are done (`[x]`). Owner: **Claude** = can be done in a coding
 - [ ] **Register as a Chrome Web Store developer** (one-time US$5 fee). (You)
 - [x] **Store assets** (`node tools/store-images.mjs`, screenshots of the real popup):
   - [x] 128×128 icon (`extension/icons/icon-128.png`)
-  - [x] Five 1280×800 screenshots: toy pod, status card, Seed catch, shop, compact look (`store/screenshot-1..5.png`).
+  - [x] Four 1280×800 screenshots: toy pod, status card, Seed catch, compact look (`store/screenshot-1..4.png`).
         No notification shot: a real system notification can't be captured automatically, and a drawn one wouldn't be
         the real UI. Add your own screenshot of one if you'd like (1280×800).
   - [x] Small promo tile, 440×280 (`store/promo-small.png`), plus optional marquee 1400×560
@@ -68,10 +68,44 @@ Tick items as they are done (`[x]`). Owner: **Claude** = can be done in a coding
 - [ ] Add a "Send feedback" link in Settings and keep an eye on reviews.
 - [ ] **Save compatibility:** any change to the saved state must keep existing Bubbies working. Saves are versioned
       (`v: 2` in `core/rules.js`); add a step in `migrate()` whenever the format changes.
-- [x] Shop with clothes (a size per growth stage) and garden decor, v1.1.0: plan and checklist in
-      [`docs/SHOP-PLAN.md`](SHOP-PLAN.md). Playtest still to do (You).
 - [ ] Then the phone plan: an installable web app first, then home-screen widgets (iOS WidgetKit, Android Glance)
       with a native wrapper.
+
+## 6. Android app (test build)
+
+See `mobile/README.md`. The extension's popup runs in a Capacitor app; notifications are planned ahead with the game
+rules when the app goes to the background.
+
+- [x] Android project (`mobile/`), Bubby launcher icons and splash, notification icon, fixed test signing key.
+- [x] Phone-size checks pass (`node tools/check-mobile.mjs`): toy pod fits, taps, saving, notification forecast.
+- [x] Brought up to extension 1.1.0 (races, illnesses, shop); the app's version now follows the manifest.
+- [x] Phone layout: full-width pod with faded photo edges, bottom sheet (hearts, need button, status line),
+      full-screen Settings and Shop, egg app icon, dark status-bar icons.
+- [x] Mini-game arrows move into a big thumb pad in the bottom sheet during a game (owner's request).
+- [ ] **Install the test APK on your phone (You)** and play for a few days. Check: does the pod fit your screen,
+      do notifications arrive while the app is closed (also after a restart), does the sound work?
+- [ ] Notification buttons (Feed a meal, Clean up…) like the extension's.
+- [ ] Home-screen widget with Bubby's face (Android Glance).
+- [ ] Play Store: developer account (US$25 one-time), private upload key, store listing, privacy policy URL.
+
+---
+
+## 6. Version 1.1.0: races, illnesses, points and the shop
+
+- [x] **Built (Claude):** races with a rare Starling reveal and the Bubbydex; four illnesses with matching medicine, Garden
+      Tea and the Theriac; points, daily quests, goals and the shop. Rules in `core/rules.js` and `core/content.js`.
+- [x] **Checked (Claude):** `node tools/rules-check.mjs` (102 checks), `node tools/sim-check.mjs` (everyone who checks in still
+      reaches a full life, as in 1.0.0), `node tools/check-extension.mjs` and `node tools/check-v11.mjs` (the real extension in
+      Chromium, both looks).
+- [x] Privacy policy wording updated (more is stored on the device; still nothing collected).
+- [ ] **Playtest (You):** 3–5 friends on Chill for a few days. Is the shop too stingy or too generous? (`PTS` and `CAPS` in
+      `core/content.js`.) Is the rare Starling too rare? (`RARE_BASE`, `RARE_PITY`.)
+- [ ] **Refresh the store images (You or Claude):** `node tools/store-images.mjs`, and update the listing text from
+      `docs/STORE-LISTING.md`.
+- [ ] **Upload `dist/bubby-1.1.0.zip` as an update (You)**, then copy it into `release/`.
+- [x] Races have their own body shapes; illnesses use historical names (see `memory/bubby-points-and-shop.md`, *Naming*).
+- [ ] **Before submitting:** follow `docs/TEST-AND-PUBLISH.md` (test, then publish the update).
+- [ ] Decide what comes next: visiting (v1.2) needs a server or shareable Bubby Cards; see `memory/bubby-update-roadmap.md`.
 
 ---
 
@@ -80,6 +114,7 @@ Tick items as they are done (`[x]`). Owner: **Claude** = can be done in a coding
 - Extension guide (install, test drive, troubleshooting): `extension/README.md`
 - Game rules and paces: `extension/core/rules.js`; balance check: `node tools/sim-check.mjs`
 - Store package: `node tools/package.mjs`; store images: `node tools/store-images.mjs`; end-to-end checks:
-  `node tools/check-extension.mjs`; listing text: `docs/STORE-LISTING.md`
+  `node tools/check-extension.mjs` and `node tools/check-v11.mjs`; rules checks: `node tools/rules-check.mjs`;
+  listing text: `docs/STORE-LISTING.md`
 - Background worker console helpers (chrome://extensions → Bubby → service worker): `bubby.skip(6)`,
   `bubby.tick()`, `bubby.act('meal')`, `bubby.dev(true)`, `bubby.state()`

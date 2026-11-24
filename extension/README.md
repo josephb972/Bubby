@@ -1,5 +1,7 @@
 # Bubby: browser extension
 
+Current version: **<!-- version -->1.2.0<!-- /version -->** (see `docs/CHANGELOG.md` for what changed).
+
 Bubby is a tiny pixel pet that lives in your browser toolbar. Its face on the toolbar shows how it feels, a badge
 tells you when it needs something, and one click opens a pocket-sized version of the game.
 
@@ -106,26 +108,66 @@ leaving Bubby sick too long. Discipline comes from scolding **tantrums**: when B
 it's acting out, so press **Scold**. Scolding a well-behaved Bubby only upsets it. Meals before snacks (too many sweets
 cause a toothache), and clean poop quickly or Bubby gets sick.
 
-### The shop: clothes and garden decor
+### Every Bubby is different
 
-Press the **bag** button (next to ⚙, or **B**) to open the shop. Everything in it is cosmetic: it never changes how Bubby
-grows.
+Every Bubby has a personality, rolled when the seed is planted and leaning its race's way (Leaflings playful and sweet,
+Mossbacks serious and hardy, Puddles delicate and picky, Shroomlings timid and peckish, Emberlings bratty and brave):
 
-- **Petals** are earned by playing: Seed catch pays up to 12 and a Which way? win pays 3 (the first 3 games each day),
-  a new best catch +5, the first care of the day +5, each time Bubby grows up +20, and a full life +60.
-- **Clothes come in four sizes**, one per body: **Bulb, Bud, Blossom and Elder**. Each size is bought separately, and
-  each size is kept for every future Bubby, so a Bulb-size hat is worn again by each new generation. Choose an item
-  once and Bubby wears the size that fits its current stage. When it grows out of something, it pops off and the
-  shop says which size to get.
-- **Try before you buy:** tap a size to see it on that body. Before Bubby is grown, Blossom and Elder sizes are shown
-  on all three adult forms.
-- Buying asks once more to confirm, and can be **undone for 10 seconds**.
-- **Garden decor** goes into fixed spots (lawn, sky, back corner, centrepiece, front corner, path, ambience), so it
-  never hides the poop, the falling seeds or Bubby. The lantern and fireflies glow at night.
-- Clothes, decor and Petals are saved apart from Bubby, so they stay when you plant a new seed or start over.
-  ⚙ Settings → **Wardrobe backup** makes a code to restore them after reinstalling.
+- **Temperament:** five traits, each with two sides: Serious/Playful, Picky/Peckish, Sweet/Bratty, Timid/Brave and
+  Delicate/Hardy. They change the care a little, for example a Peckish Bubby gets hungry sooner but loves every meal,
+  and a Timid one is scared of the dark. Every trait is a trade-off, so no Bubby is harder overall.
+- **Quirks:** two of Jokester, Diva, Dreamer, Neat-freak, Mud-pie, Cuddlebug, Explorer, Songbird, Show-off,
+  Sleepyhead, Night owl or Bookworm.
+
+You get to know it over time: a quirk is revealed when it hatches, another when it becomes a Bud, and the
+traits as you watch it, with everything known by the time it blossoms. See what you know in **Status → Nature**.
+
+While the popup is open, Bubby does its own little things every so often: 82 of them, like chasing a butterfly,
+reading, taking a bath, sulking or telling itself a joke. Its personality decides which ones it does most, some only
+happen when it's hungry, sad or sleepy, and a few are rare. They never change its hearts. "While you were away" also
+mentions a few. The Personality screen counts how many of the 82 you've seen, across all your Bubbies.
 
 ---
+
+## 2b. New in 1.1: races, illnesses, points and the shop
+
+**Hatching, names and the photo album (1.1.2).** The egg hatches while you watch (if it's ready while you're away, it waits
+and sends one notification). A newborn is hungry and bored, so feed it and play with it first. When it hatches you give it a
+name, which makes its **ID card**: a photo in its current form, name, race, generation and birthday. The ★ Shop's **Album**
+tab shows the card, and every Bubby that leaves (a full life, moving away or Start over) keeps its card there with its last
+form.
+
+**Races.** Every seed is planted with a random race, and its egg and Bulb wear that race's colours. When the Bulb grows into a
+Bud it shows the race's own body (any Bulb can also turn into the rare Starling instead). Each race has its own body, not just its
+own colours: the sprouting **Leafling** (a flower when grown), the mossy tortoise **Mossback**, the water droplet **Puddle**, the
+mushroom **Shroomling**, the flame spirit **Emberling**, and the very rare star **Starling**, which arrives with a special reveal. How you raise it still decides
+the adult form (Radiant, Daisy or Thistle). The **Bubbydex** (★ button, then the Bubbydex tab) shows the 18 forms you have
+found. If a rare race has not turned up, the chance grows a little with every Bubby that is not one.
+
+**Illness and medicine.** Sickness now has the names of old diseases that once swept medieval towns, drawn as cartoon sniffles,
+and each needs its own medicine, named after the old remedy. *Bubby is a game: the history is simplified and none of it is medical advice.*
+
+| Illness | Usually comes from | Medicine | Doses |
+|---|---|---|---|
+| Ague (mild) | a dirty garden | Cinchona Bark, or **Garden Tea** (free, 2 cups) | 1 |
+| Scurvy | too many sweets, extra weight, sometimes a dirty garden | Lime Juice | 2 |
+| Dancing Plague | sleeping with the lights on while you watch | Valerian Root | 2 |
+| The Plague (severe) | neglect | Four Thieves Vinegar | 3 |
+
+The **Medicine** button opens the cabinet: browse with ◀ ▶ and press *Give*. It starts on the medicine that fits.
+A wrong medicine is refused and not used up. Garden Tea is always there and only soothes the other illnesses for a while,
+so there is always time to earn the right medicine. The **Theriac** cures anything at once and the **Plague Doctor’s Posy**
+keeps Bubby well for a while. Notification buttons give the best medicine you have.
+
+**Points and the shop.** The ★ button (top right, or press **B**) shows your points and opens the shop. Points come from
+opening Bubby each day (and keeping a streak), caring for it, winning games, daily quests, goals, growing up and the
+Bubbydex. Care and game points stop at a daily limit so they cannot be farmed. Spend them on better food (Garden Salad,
+Sunberry Pie, Hearty Stew, Golden Feast), medicine and the Plague Doctor’s Posy. Points are earned by playing and are never sold.
+
+Nothing new punishes you for being away: illness still only comes from the same causes as before, and lights left on
+overnight never make Bubby ill while you are not looking.
+
+How to test all of this, and how to publish an update: `docs/TEST-AND-PUBLISH.md`.
 
 ## 3. A 10-minute test drive
 
@@ -179,16 +221,15 @@ extension/
   manifest.json        Manifest V3: permissions are only storage, alarms and notifications
   background.js        service worker: once-a-minute check, toolbar icon and badge, notifications
   core/rules.js        the game rules (shared by popup and background), paces, catch-up simulation
+  core/persona.js      temperament and quirks (leaning by race), and how they change the rules
+  core/behaviors.js    the 82 passive behaviours and how often each one shows up
   core/store.js        saving, plus toolbar badge, tooltip and icon
-  core/shop.js         the shop: catalogue, sizes, prices, earning Petals, wearing and placing (pure logic)
-  core/meta.js         saving the wardrobe, separately from Bubby
-  art/pixel.js         pixel-drawing helpers
-  art/sprites.js       Bubby and the small art, drawn in code (works in the popup and in the background)
-  art/wardrobe.js      clothes: one rig per body, garment drawings, and the compositing that makes them fit
-  art/decor.js         garden lawns, props and effects, in fixed slots
+  art/sprites.js       all pixel art, drawn in code (works in the popup and in the background)
   art/icon.js          Bubby's live toolbar face
+  art/props.js         props, particles and the tiny speech-bubble font for the behaviours
   art/photo/toy.webp   the toy pod artwork used as the popup background
-  popup/               the popup: toy pod and compact looks, game loop, minigames, shop, settings
+  popup/               the popup: toy pod and compact looks, game loop, minigames, settings
+  popup/behave.js      the animation for each passive behaviour
   welcome/             first-run page
   icons/               static icons (rebuild with `node tools/make-icons.mjs`)
   fonts/               bundled fonts (SIL Open Font License, see fonts/OFL-LICENSES.txt)
@@ -204,15 +245,11 @@ you watched or not. While the popup is open it runs the game live and the backgr
 **Developer checks.** These need Node.js; the ones marked (Playwright) also need Playwright with Chromium.
 - `node tools/sim-check.mjs` plays 80 simulated lives (players who check in every 30 minutes, every
   2 hours, 3 times a day, morning and evening, or never) and prints how often each ends up Radiant, Daisy or
-  Thistle, how sick Bubby got, and how many notifications a day each player would get.
+  Thistle, how sick Bubby got, and how many notifications a day each player would get. A second table plays the
+  hardest and the easiest possible personalities.
 - `node tools/check-extension.mjs` (Playwright) loads the extension and checks the welcome page's bedtime fields,
-  the popup, the hidden time-skip buttons, the notification fallback window, the shop (buy, confirm, undo, sizes,
-  growing out of clothes, new seed, start over, backup code) and the background worker.
-- `node tools/test-shop.mjs` unit-tests the shop logic; `node tools/sim-economy.mjs` checks how fast Petals come in.
-- `node tools/wardrobe-audit.mjs` (Playwright) renders every garment on every body and pose and fails on any fitting
-  problem; `node tools/garden-audit.mjs` (Playwright) checks decor slots and contrast. Both write contact sheets to
-  `dist/audit/` to look at.
-- `node tools/golden-sprites.mjs` (Playwright) checks that Bubby without clothes is pixel-identical to before.
+  the popup, the hidden time-skip buttons, the notification fallback window, the background worker and the
+  Personality screen.
 - `node tools/package.mjs` makes `dist/bubby-<version>.zip` to upload to the Chrome Web Store and Edge Add-ons.
 - `node tools/store-images.mjs` (Playwright) makes the store screenshots and promo tiles in `store/`.
 - `node tools/make-icons.mjs` (Playwright) regenerates the PNG icons from the pixel art.

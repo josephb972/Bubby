@@ -1,0 +1,132 @@
+/* Bubby on Android: the phone layout. Loaded after popup.css; the extension's own look is unchanged.
+   Main screen (toy pod look):
+     - the toy pod artwork fills the width, edge to edge, its photo edges fading into a matching sky-blue screen,
+       and sits centred in the space between the status bar and the bottom sheet;
+     - a cream bottom sheet holds the hearts, the "what Bubby needs" button and the "grows up in…" line (the compact
+       look's own elements, which the game already keeps up to date).
+   Settings and Shop become full-width scrolling screens at phone text size.
+   mobile.js sets --podz (pod scale) and --uiz (text scale). */
+:root.mobile {
+  --podz: 1; --uiz: 1;
+  /* Capacitor sets --safe-area-inset-* to the status and navigation bar sizes (the app draws behind them). */
+  --safe-t: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --safe-r: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  --safe-b: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --safe-l: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+  --sky: #88c4d1;
+  --sheet: #fffaf0;
+  height: 100%;
+  background: linear-gradient(180deg, #8dc7d3 0%, #86c2cf 60%, #7fbdcb 100%) fixed, var(--sky);
+  background-color: var(--sky);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+:root.mobile body { width: auto; min-height: 100%; margin: 0; background: transparent; }
+:root.mobile .app { width: auto; min-height: 100%; }
+
+/* No keyboard hints or hover tooltips on a phone. */
+:root.mobile kbd, :root.mobile p.foot:has(kbd) { display: none; }
+:root.mobile #smartHint:empty { display: none; }
+
+/* ---------------- Main screen, toy pod ---------------- */
+:root.mobile:not(.scrolls) { overflow: hidden; }
+:root.mobile.scrolls { background: var(--mint); }
+:root.mobile:not(.scrolls) body, :root.mobile:not(.scrolls) .app { height: 100%; }
+:root.mobile .app.toy #viewMain:not([hidden]) { height: 100%; display: flex; flex-direction: column; }
+
+:root.mobile .app.toy #photoWrap {
+  flex: 1 1 auto; min-height: 0; width: auto; height: auto;
+  display: grid; place-items: center; overflow: hidden;
+  padding: var(--safe-t) var(--safe-r) 0 var(--safe-l);
+}
+:root.mobile .app.toy .pdev { zoom: var(--podz); }
+/* Fade the photo's edges into the screen so it reads as one scene, not a picture in a box. */
+:root.mobile .app.toy .pimg {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 5%, #000 95%, transparent 100%),
+                      linear-gradient(180deg, transparent 0, #000 6%, #000 90%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent 0, #000 5%, #000 95%, transparent 100%),
+              linear-gradient(180deg, transparent 0, #000 6%, #000 90%, transparent 100%);
+  mask-composite: intersect;
+}
+/* The pod buttons press down a little, like the real toy. */
+:root.mobile .app.toy .hot:active { background: radial-gradient(circle, rgba(0, 0, 0, .14) 0 58%, transparent 62%); }
+/* The status line moves into the sheet. */
+:root.mobile .app.toy .pfoot { display: none; }
+
+/* Bottom sheet */
+:root.mobile .app.toy #compactWrap {
+  display: flex; flex-direction: column; gap: 10px; flex: none;
+  zoom: var(--uiz);
+  position: relative; z-index: 2;
+  background: var(--sheet);
+  border-radius: 26px 26px 0 0;
+  padding: 18px calc(16px + var(--safe-r)) calc(14px + var(--safe-b) / var(--uiz)) calc(16px + var(--safe-l));
+  box-shadow: 0 -1px 0 rgba(59, 47, 74, .06), 0 -10px 30px rgba(31, 64, 71, .16);
+}
+/* Drag handle: says "sheet" at a glance (Material bottom sheet). */
+:root.mobile .app.toy #compactWrap::before {
+  content: ""; position: absolute; left: 50%; top: 7px; width: 36px; height: 4px; margin-left: -18px;
+  border-radius: 2px; background: rgba(59, 47, 74, .18);
+}
+:root.mobile .app.toy #compactWrap > .top,
+:root.mobile .app.toy #compactWrap > .bezel,
+:root.mobile .app.toy #compactWrap > .actions { display: none; }
+:root.mobile .app.toy #compactWrap .meters { padding: 0; gap: 8px 10px; }
+:root.mobile .app.toy #compactWrap .meter { padding-block: 6px; border-radius: 12px; }
+:root.mobile .app.toy #compactWrap .smart { min-height: 56px; border-radius: 16px; }
+:root.mobile .app.toy #compactWrap .foot { font-size: 11.5px; }
+
+/* Mini-game pad: while a game is on, the sheet keeps its size (so the pod doesn't move) and shows two big arrow
+   buttons instead of the hearts. Same yellow game buttons as on the pod's screen, sized for thumbs. */
+:root.mobile .mpad { display: none; }
+:root.mobile .app.toy #compactWrap.gaming > :not(.mpad) { visibility: hidden; }
+:root.mobile .app.toy #compactWrap.gaming .mpad {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  position: absolute; inset: 20px calc(16px + var(--safe-r)) calc(16px + var(--safe-b) / var(--uiz)) calc(16px + var(--safe-l));
+}
+:root.mobile .mpad .g-btn {
+  width: auto; height: auto; min-height: 72px; opacity: 1;
+  display: grid; place-items: center; padding: 0;
+  background: #ffd34a; border: 3px solid var(--ink); border-radius: 20px; box-shadow: 0 6px 0 var(--ink);
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  transition: transform .05s, box-shadow .05s;
+}
+:root.mobile .mpad .g-btn svg { width: 34%; max-width: 44px; height: auto; aspect-ratio: 1; fill: var(--ink); pointer-events: none; }
+:root.mobile .mpad .g-btn:active { transform: translateY(5px); box-shadow: 0 1px 0 var(--ink); }
+:root.mobile .mpad .g-btn:disabled { opacity: .4; box-shadow: 0 6px 0 var(--ink); transform: none; }
+
+/* ---------------- Main screen, compact look ---------------- */
+:root.mobile .app:not(.toy) #viewMain:not([hidden]) {
+  zoom: var(--uiz);
+  padding: calc(var(--safe-t) / var(--uiz)) var(--safe-r) calc(var(--safe-b) / var(--uiz)) var(--safe-l);
+  min-height: calc(100% / var(--uiz));
+  display: flex; flex-direction: column; justify-content: center;
+}
+:root.mobile .app:not(.toy) .compact-wrap { display: flex; flex-direction: column; gap: 10px; }
+
+/* ---------------- Settings and Shop: full-width phone screens ---------------- */
+:root.mobile #viewSettings:not([hidden]), :root.mobile #viewShop:not([hidden]), :root.mobile #viewName:not([hidden]) {
+  zoom: var(--uiz);
+  min-height: calc(100% / var(--uiz));
+  padding: calc(12px + var(--safe-t) / var(--uiz)) calc(16px + var(--safe-r)) calc(24px + var(--safe-b) / var(--uiz)) calc(16px + var(--safe-l));
+  background: linear-gradient(180deg, var(--mint-hi), var(--mint) 220px) , var(--mint);
+}
+:root.mobile .app.toy .settings { padding: 0; }
+:root.mobile #viewShop .shop-body { max-height: none; overflow: visible; }
+/* The screen titles stay put while the page scrolls. */
+:root.mobile #viewSettings > .top, :root.mobile #viewShop > .top, :root.mobile #viewName > .top {
+  position: sticky; top: 0; z-index: 5;
+  margin: calc(-12px - var(--safe-t) / var(--uiz)) -16px 0; padding: calc(12px + var(--safe-t) / var(--uiz)) 16px 10px;
+  background: var(--mint-hi);
+}
+:root.mobile .settings .group { padding: 10px 14px 12px; border-radius: 16px; }
+:root.mobile .chip { padding: 10px 14px; }
+:root.mobile .pace { padding-block: 6px; }
+/* With the arrows in the pad, the score sits alone in the middle of the pod's screen. */
+:root.mobile .app.toy .g-bot:not(:has(.g-btn)) { justify-content: center; }
+/* Naming a newborn: a roomier card and a big name field on a phone. */
+:root.mobile .naming .idcard { grid-template-columns: 104px 1fr; }
+:root.mobile .naming .id-photo { width: 104px; height: 104px; }
+:root.mobile .naming .id-photo canvas { width: 96px; height: 96px; }
+:root.mobile .name-row input { font-size: 19px; padding: 10px 12px; }

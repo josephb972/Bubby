@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Bubby</string>
+    <string name="title_activity_main">Bubby</string>
+    <string name="package_name">app.bubby.pet</string>
+    <string name="custom_url_scheme">app.bubby.pet</string>
+</resources>

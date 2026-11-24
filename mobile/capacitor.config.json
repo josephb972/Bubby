@@ -1,0 +1,17 @@
+{
+  "appId": "app.bubby.pet",
+  "appName": "Bubby",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#88c4d1"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_bubby",
+      "iconColor": "#3d7f48"
+    },
+    "SystemBars": {
+      "style": "LIGHT"
+    }
+  }
+}

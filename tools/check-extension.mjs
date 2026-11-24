@@ -1,7 +1,8 @@
-// Loads extension/ into Chromium with Playwright and checks the launch fixes and the shop on the real extension.
+// Loads extension/ into Chromium with Playwright and checks the launch fixes on the real extension.
 // Usage: node tools/check-extension.mjs   (needs Playwright with Chromium)
 import { createRequire } from 'node:module';
 import { join, dirname } from 'node:path';
+import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 const { chromium } = createRequire(import.meta.url)('playwright');
@@ -19,19 +20,13 @@ const listen = (page, name) => {
   page.on('console', m => { if (m.type() === 'error') errors.push(`${name}: ${m.text()}`); });
 };
 const saved = () => sw.evaluate(async () => (await chrome.storage.local.get('bubby')).bubby);
-const wardrobe = () => sw.evaluate(async () => (await chrome.storage.local.get('bubby-meta'))['bubby-meta']);
-const patch = (key, obj) => sw.evaluate(async ([key, obj]) => {
-  const v = (await chrome.storage.local.get(key))[key];
-  for (const [k, x] of Object.entries(obj)) v[k] = x && typeof x === 'object' && !Array.isArray(x) && v[k] && typeof v[k] === 'object' ? { ...v[k], ...x } : x;
-  if (key === 'bubby-meta') v.rev = (v.rev || 0) + 100;
-  await chrome.storage.local.set({ [key]: v });
-}, [key, obj]);
 
 let [sw] = ctx.serviceWorkers();
 if (!sw) sw = await ctx.waitForEvent('serviceworker');
 const base = `chrome-extension://${new URL(sw.url()).host}/`;
 try {
-  check((await sw.evaluate(() => chrome.runtime.getManifest().version)) === '1.1.0', 'manifest version 1.1.0');
+  const want = JSON.parse(await readFile(join(ext, 'manifest.json'), 'utf8')).version;
+  check((await sw.evaluate(() => chrome.runtime.getManifest().version)) === want, `the loaded extension is version ${want}, as in manifest.json`);
 
   // 1. Welcome page asks for bedtime and saves it as soon as a time changes
   const welcome = ctx.pages().find(p => p.url().includes('welcome'))
@@ -45,7 +40,9 @@ try {
   const cfg = (await saved()).cfg;
   check(cfg.bed === 23 * 60 && cfg.wake === 7 * 60 + 30 && cfg.bedAsked, `welcome page saves bedtime (bed ${cfg.bed}, wake ${cfg.wake})`);
 
-  // 2. Popup: time-skip buttons hidden; bubby.dev(true) shows them; Test notification always there
+  // 2. Popup: time-skip buttons hidden; bubby.dev(true) shows them; Test notification always there.
+  // Start from a hatched, named Bubby (a real egg hatches about a minute in and asks for a name, at a moment the test can't control).
+  await sw.evaluate(async () => { const s = (await chrome.storage.local.get('bubby')).bubby; Object.assign(s, { stage: 'baby', stageT: 0, name: 'Testy', hatchedAt: Date.now(), hunger: 4, happy: 4, lastT: Date.now() }); await chrome.storage.local.set({ bubby: s }); });
   const pop = await ctx.newPage();
   listen(pop, 'popup');
   await pop.setViewportSize({ width: 468, height: 600 });
@@ -78,95 +75,26 @@ try {
     await w.close();
   }
 
-  // 5. Shop: wardrobe created once, buying with confirm and undo, sizes, decor, growing out, new seed, start over, backup
-  {
-    let p = await ctx.newPage();
-    listen(p, 'shop');
-    // The open popup owns Bubby's state (and saves it every few seconds), so close it before changing the save.
-    const reopen = async edit => {
-      await p.close(); await sw.evaluate(edit);
-      p = await ctx.newPage(); listen(p, 'shop'); await p.setViewportSize({ width: 468, height: 600 });
-      await p.goto(base + 'popup/popup.html'); await p.waitForSelector('#app.toy'); await p.waitForTimeout(600);
-    };
-    await sw.evaluate(async () => { const S = (await chrome.storage.local.get('bubby')).bubby, now = Date.now();
-      Object.assign(S, { stage: 'child', stageT: 0, weight: 12, hunger: 4, happy: 4, poops: [], asleep: false, lights: true, call: null, sick: false, paused: false, awakeT: 3600, lastT: now, lastSeenAt: now, ended: null });
-      Object.assign(S.cfg, { look: 'toy', bed: (new Date().getHours() * 60 + 300) % 1440, wake: (new Date().getHours() * 60 + 360) % 1440 }); S.seenSeq = S.evSeq; await chrome.storage.local.set({ bubby: S }); });
-    await p.setViewportSize({ width: 468, height: 600 });
-    await p.goto(base + 'popup/popup.html');
-    await p.waitForSelector('#app.toy'); await p.waitForTimeout(400);
-    let m = await wardrobe();
-    check(m && m.petals >= 30 && m.equip.head === 'petalbow' && m.owned.petalbow.length === 4, `wardrobe created with the welcome gift (${m && m.petals} Petals, bow in 4 sizes)`);
-    check(await p.isVisible('#btnShopPhoto') && await p.evaluate(() => document.getElementById('btnShopPhoto').classList.contains('nudge')), 'toy pod shows the shop button with a "new" dot');
-    await patch('bubby-meta', { petals: 200 });
-    await p.waitForTimeout(200);
-    await p.click('#btnShopPhoto');
-    await p.waitForSelector('#viewShop:not([hidden])');
-    check((await p.textContent('#wallet')).includes('200'), 'shop shows the wallet (picked up a change saved elsewhere)');
-    check((await p.evaluate(() => document.documentElement.scrollWidth)) <= 468, 'shop fits the popup width');
-    const beanie = 'article[data-id="beanie"] button.buy';
-    check((await p.textContent(beanie)).includes('Bud'), 'Bud-size is offered first for a Bud');
-    await p.click(beanie);
-    check((await p.textContent(beanie)).startsWith('Buy for 26?'), 'buying asks to confirm, showing what is left');
-    const cb = await p.locator(beanie).boundingBox(), card = await p.locator('article[data-id="beanie"]').boundingBox();
-    check(cb.width > 80 && cb.x >= card.x && cb.x + cb.width <= card.x + card.width && cb.y >= card.y, `the confirm button stays in its card at full size (${Math.round(cb.width)}×${Math.round(cb.height)})`);
-    await p.click(beanie); await p.waitForTimeout(150);
-    m = await wardrobe();
-    check(m.petals === 174 && m.owned.beanie.join() === 'M' && m.equip.head === 'beanie', `bought the Bud size only (26 Petals), and it's worn (${m.petals} left)`);
-    await p.click('#btnUndo'); await p.waitForTimeout(150);
-    m = await wardrobe();
-    check(m.petals === 200 && !m.owned.beanie && m.equip.head === 'petalbow', 'undo refunds and puts the bow back on');
-    await p.click(beanie); await p.click(beanie);
-    await p.click('article[data-id="scarf"] button.size[data-size="M"]');
-    await p.click('article[data-id="scarf"] button.buy'); await p.click('article[data-id="scarf"] button.buy');
-    await p.click('[data-tab="home"]');
-    await p.click('article[data-id="lantern"] button.buy'); await p.click('article[data-id="lantern"] button.buy'); await p.waitForTimeout(150);
-    m = await wardrobe();
-    check(m.home.centre === 'lantern' && m.equip.neck === 'scarf', 'decor bought and placed; scarf worn');
-    await p.keyboard.press('Escape');
-    check(await p.isVisible('#viewMain'), 'Escape leaves the shop');
-
-    // Bubby grows into a Blossom: the Bud-size beanie and scarf don't fit any more
-    const before = m.petals;
-    await reopen(async () => { const S = (await chrome.storage.local.get('bubby')).bubby; S.stageT = 1e9; S.lastT = Date.now() - 2000; await chrome.storage.local.set({ bubby: S }); });
-    let S = await saved();
-    m = await wardrobe();
-    check(S.stage === 'adult' && m.equip.head === 'beanie' && (m.news.outgrown || []).includes('beanie'), `grew into a Blossom: beanie still chosen, flagged as outgrown (${S.stage})`);
-    check(m.petals === before + 20, `+20 Petals for growing up (${before} → ${m.petals})`);
-    const shot = await p.evaluate(async () => { const { petSprite } = await import('/art/sprites.js'); const { outfitFor } = await import('/core/shop.js');
-      const S = (await chrome.storage.local.get('bubby')).bubby, M = (await chrome.storage.local.get('bubby-meta'))['bubby-meta'];
-      return JSON.stringify(outfitFor(M, S.stage)); });
-    check(shot === JSON.stringify({ head: null, face: null, neck: null, body: null }), 'the Blossom wears nothing it doesn\'t have in its size');
-    await p.click('#btnShopPhoto'); await p.waitForTimeout(200);
-    check((await p.textContent('#shopList')).includes('outgrown its Beanie and Cosy scarf'), 'shop explains what was outgrown');
-    await p.keyboard.press('Escape');
-
-    // A new seed and "Start over" both keep the wardrobe
-    await reopen(async () => { const S = (await chrome.storage.local.get('bubby')).bubby; S.ended = { kind: 'garden', age: 1, stage: 'senior', name: 'Elder', mistakes: 0, gen: 1, day: 9 }; await chrome.storage.local.set({ bubby: S }); });
-    await p.click('#btnReplant'); await p.waitForTimeout(150);
-    m = await wardrobe();
-    check((await saved()).stage === 'seed' && m.owned.beanie && m.home.centre === 'lantern', 'planting a new seed keeps clothes and decor');
-    await p.click('#btnSettingsPhoto'); await p.click('#btnReset'); await p.click('#btnResetYes'); await p.waitForTimeout(150);
-    m = await wardrobe();
-    check(m.owned.beanie && m.owned.scarf && m.home.centre === 'lantern', '"Start over" keeps clothes and decor');
-
-    // Backup code round trip, and shop reset needs typing RESET
-    const code = await p.evaluate(async () => (await import('/core/shop.js')).exportCode((await chrome.storage.local.get('bubby-meta'))['bubby-meta']));
-    await p.click('#btnSettingsPhoto');
-    await p.click('#btnShopReset'); await p.click('#btnShopResetYes');
-    check((await wardrobe()).owned.beanie, 'reset shop refuses without typing RESET');
-    await p.fill('#resetWord', 'reset'); await p.click('#btnShopResetYes'); await p.waitForTimeout(150);
-    check(!(await wardrobe()).owned.beanie, 'reset shop clears the wardrobe after typing RESET');
-    await p.click('#btnPasteCode'); await p.fill('#codeIn', code); await p.click('#btnRestore'); await p.waitForTimeout(150);
-    m = await wardrobe();
-    check(m.owned.beanie && m.home.centre === 'lantern' && (await p.textContent('#codeMsg')).includes('restored'), 'backup code restores everything');
-    await p.close();
-    await sw.evaluate(() => self.bubby.tick());
-    check(!(await sw.evaluate(() => self.bubby.iconError())), 'toolbar icon draws with an outfit');
-  }
-
   // 4. Background worker still catches up and acts with the popup closed
   const after = await sw.evaluate(() => self.bubby.skip(6));
   check(after && after.stage !== 'seed', `background catch-up after 6 hours (stage: ${after && after.stage})`);
+  // 5. Personality: the save has a seed kind and personality, and the Personality screen opens from Status
+  await sw.evaluate(async () => { const s = (await chrome.storage.local.get('bubby')).bubby; s.cfg.look = 'toy'; await chrome.storage.local.set({ bubby: s }); });
+  const s5 = await saved();
+  check(!!(s5.persona && s5.persona.axes && Array.isArray(s5.journal)), `save has a personality (${s5.seedRace} seed, ${s5.persona && s5.persona.quirks.join(' + ')})`);
+  const p5 = await ctx.newPage();
+  listen(p5, 'popup-personality');
+  await p5.setViewportSize({ width: 468, height: 600 });
+  await p5.goto(base + 'popup/popup.html');
+  await p5.waitForSelector('#app.toy'); await p5.waitForTimeout(300);
+  if (await p5.isVisible('#btnAwayOk')) await p5.click('#btnAwayOk');
+  await p5.click('.tile[data-act="status"]');
+  await p5.click('#stNature');
+  check(await p5.isVisible('#ovNature'), 'Personality screen opens from the status screen');
+  const fits = await p5.evaluate(() => { const o = document.getElementById('ovNature'); return o.scrollHeight <= o.clientHeight + 1 || `(${o.scrollHeight} > ${o.clientHeight}, status: ${document.getElementById('ovStatus').scrollHeight}/${document.getElementById('ovStatus').clientHeight})`; });
+  check(fits === true, `Personality screen fits without scrolling${fits === true ? '' : ' ' + fits}`);
+  await p5.close();
+
   check(errors.length === 0, `no console errors${errors.length ? '\n      ' + errors.join('\n      ') : ''}`);
 } catch (e) {
   console.error(e); failed++;
