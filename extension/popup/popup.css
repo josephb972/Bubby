@@ -375,7 +375,7 @@ body.win.toy .app { width: 468px; } /* the fallback window shows the whole toy p
 .tag.gift { background: #ffd6e6; } .tag.rare { background: #d6e6ff; } .tag.epic { background: #e3d8ff; } .tag.on { background: #d9f0d2; color: var(--ok-d); }
 .buy { flex: none; font: 600 12px/1 var(--font-pixel); padding: 7px 9px 6px; border-radius: 9px; background: var(--ok); color: #fff; border: 2px solid var(--ok-d); border-bottom-width: 4px; max-width: 150px; }
 .buy:active { border-bottom-width: 2px; transform: translateY(2px); }
-.buy.hot { background: var(--warn); border-color: var(--warn-d); color: var(--ink); }
+.buy.confirming { background: var(--warn); border-color: var(--warn-d); color: var(--ink); }
 .buy[data-act="off"], .buy[data-act="remove"] { background: #fff; color: var(--ink); border-color: var(--mint-line); }
 .buy:disabled { background: #eee8e2; color: var(--ink-2); border-color: #d6cdbf; cursor: default; transform: none; border-bottom-width: 4px; }
 .buy .pt { filter: brightness(1.15); }

@@ -85,7 +85,7 @@ export function createShop(env) {
     }
     const c = Shop.canBuy(m, it.id, size), price = Shop.priceOf(m, it.id, size);
     if (!c.ok) return { act: null, label: `Need ${c.short} more`, poor: true };
-    if (confirm && confirm.id === it.id && confirm.size === size && Date.now() < confirm.until) return { act: 'confirm', label: `Buy for ${price}? Leaves ${m.petals - price}`, hot: true };
+    if (confirm && confirm.id === it.id && confirm.size === size && Date.now() < confirm.until) return { act: 'confirm', label: `Buy for ${price}? Leaves ${m.petals - price}`, confirming: true };
     const sz = it.kind === 'wear' ? ` ${Shop.SIZE_NAME[size]}` : '';
     return { act: 'buy', label: `Buy${sz} · ${petals(price)}`, html: true };
   }
@@ -102,7 +102,7 @@ export function createShop(env) {
     const worn = m.equip[it.slot] === it.id;
     return `<article class="item${worn ? ' worn' : ''}" data-id="${it.id}">
       <div class="item-top"><div class="item-name"><b>${it.name}</b> <span class="tag ${it.rarity}">${Shop.RARITY[it.rarity].label}</span>${worn ? ' <span class="tag on">Worn</span>' : ''}<small>${it.blurb} · ${Shop.SLOT_NAME[it.slot]}</small></div>
-      <button class="buy${a.hot ? ' hot' : ''}${a.poor ? ' poor' : ''}" data-act="${a.act || ''}" data-id="${it.id}" data-size="${size}" ${a.act ? '' : 'disabled'}>${a.html ? a.label : esc(a.label)}</button></div>
+      <button class="buy${a.confirming ? ' confirming' : ''}${a.poor ? ' poor' : ''}" data-act="${a.act || ''}" data-id="${it.id}" data-size="${size}" ${a.act ? '' : 'disabled'}>${a.html ? a.label : esc(a.label)}</button></div>
       <div class="sizes" role="group" aria-label="Sizes">${chips}</div></article>`;
   }
   function homeCard(it) {
@@ -110,7 +110,7 @@ export function createShop(env) {
     return `<article class="item home${placed ? ' worn' : ''}" data-id="${it.id}">
       <canvas class="thumb" width="32" height="32" data-thumb="${it.id}"></canvas>
       <div class="item-name"><b>${it.name}</b>${placed ? ' <span class="tag on">Placed</span>' : ''}<small>${it.blurb} · ${Shop.SLOT_NAME[it.slot]}</small></div>
-      <button class="buy${a.hot ? ' hot' : ''}${a.poor ? ' poor' : ''}" data-act="${a.act || ''}" data-id="${it.id}" data-size="*" ${a.act ? '' : 'disabled'}>${a.html ? a.label : esc(a.label)}</button></article>`;
+      <button class="buy${a.confirming ? ' confirming' : ''}${a.poor ? ' poor' : ''}" data-act="${a.act || ''}" data-id="${it.id}" data-size="*" ${a.act ? '' : 'disabled'}>${a.html ? a.label : esc(a.label)}</button></article>`;
   }
   function closet() {
     const m = env.meta(), stage = curStage(), size = curSize();

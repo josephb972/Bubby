@@ -107,6 +107,8 @@ try {
     check((await p.textContent(beanie)).includes('Bud'), 'Bud-size is offered first for a Bud');
     await p.click(beanie);
     check((await p.textContent(beanie)).startsWith('Buy for 26?'), 'buying asks to confirm, showing what is left');
+    const cb = await p.locator(beanie).boundingBox(), card = await p.locator('article[data-id="beanie"]').boundingBox();
+    check(cb.width > 80 && cb.x >= card.x && cb.x + cb.width <= card.x + card.width && cb.y >= card.y, `the confirm button stays in its card at full size (${Math.round(cb.width)}×${Math.round(cb.height)})`);
     await p.click(beanie); await p.waitForTimeout(150);
     m = await wardrobe();
     check(m.petals === 174 && m.owned.beanie.join() === 'M' && m.equip.head === 'beanie', `bought the Bud size only (26 Petals), and it's worn (${m.petals} left)`);
