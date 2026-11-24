@@ -20,6 +20,11 @@ session about the extension, work through open items, and tick them off (`[x]`) 
   loads the extension into Chromium).
 - Keep existing saves working: saved state is versioned; update `migrate()` in `core/rules.js` when the format changes.
 - Don't change Bubby's UI design (layouts, colours, fonts, artwork) unless the owner asks.
+- Shop (clothes per growth stage, garden decor, Petals): plan in `docs/SHOP-PLAN.md`. Logic in `extension/core/shop.js`
+  (pure), saved separately from Bubby by `core/meta.js`; art in `art/wardrobe.js` and `art/decor.js`. Cosmetic only:
+  never touch `rules.js` for it. After changing clothes, decor or prices run `node tools/wardrobe-audit.mjs`,
+  `node tools/garden-audit.mjs`, `node tools/test-shop.mjs`, `node tools/sim-economy.mjs` and
+  `node tools/golden-sprites.mjs`, and look at the contact sheets in `dist/audit/`.
 - Store package: `node tools/package.mjs` → `dist/` (gitignored). Store images: `node tools/store-images.mjs` →
   `store/` (committed; re-run after visible changes). Listing and privacy text: `docs/STORE-LISTING.md`, `docs/PRIVACY.md`.
 - Time-skip buttons are hidden test tools: `bubby.dev(true)` in the service worker console shows them.

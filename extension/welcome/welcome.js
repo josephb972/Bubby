@@ -1,5 +1,5 @@
 // Welcome page: wobbling seed, and the bedtime fields in step 4 (extension pages can't run inline scripts).
-import { petSprite } from '../art/sprites.js';
+import { petSprite, PAD } from '../art/sprites.js';
 import { loadState } from '../core/store.js';
 
 const c = document.getElementById('pet').getContext('2d');
@@ -7,7 +7,7 @@ let t = 0;
 (function loop() {
   t++;
   c.clearRect(0, 0, 48, 48);
-  c.drawImage(petSprite('seed', { wobble: (t >> 4) % 2 ? 1 : -1, crack: true }), 0, 0);
+  c.drawImage(petSprite('seed', { wobble: (t >> 4) % 2 ? 1 : -1, crack: true }), 0, -PAD);
   setTimeout(() => requestAnimationFrame(loop), 30);
 })();
 

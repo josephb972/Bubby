@@ -1,5 +1,8 @@
 // Draws Bubby's garden on the 100×75 pixel screen (ported from the original game).
-import { SW, SH, GROUND, E, R, P, petSprite, HEADTOP, art, restingMood } from '../art/sprites.js';
+// `look` (optional) carries the shop's cosmetics: { home, wear(stage) → outfit, still, popOff }.
+import { SW, SH, GROUND, PAD, E, R, P, petSprite, HEADTOP, art, restingMood } from '../art/sprites.js';
+import { drawBack, drawAmbient, drawGlow, groundStyle } from '../art/decor.js';
+import { looseGarment } from '../art/wardrobe.js';
 import { pace } from '../core/rules.js';
 
 function sparkles(sx, cx, cy, t, r = 16) {
@@ -25,17 +28,19 @@ function moodNow(S, A, G) {
 
 export function catchY(S) { return GROUND - 46 + HEADTOP[S.stage] + 3; }
 
-export function drawScene(sx, S, A, G, PET, time) {
-  const { BG, POOP, ICONS, BANG, SKULL, PUFF, BUBBLE, ZED, SEEDI, GOLDSEED, PEBBLE, STARS, SLOTS } = art();
+export function drawScene(sx, S, A, G, PET, time, look = {}) {
+  const { POOP, ICONS, BANG, SKULL, PUFF, BUBBLE, ZED, SEEDI, GOLDSEED, PEBBLE, STARS, SLOTS } = art();
   const blit = (img, x, y) => sx.drawImage(img, Math.round(x), Math.round(y));
+  const home = look.home;
   sx.clearRect(0, 0, SW, SH);
-  sx.drawImage(BG, 0, 0);
+  drawBack(sx, home);
 
   if (S.ended) {
-    blit(petSprite('seed', {}), 50 - 24, GROUND - 44);
+    blit(petSprite('seed', {}), 50 - 24, GROUND - 44 - PAD);
     sparkles(sx, 50, GROUND - 16, time, 14);
     return;
   }
+  if (!G) drawAmbient(sx, home, time, { lights: S.lights, still: look.still });
 
   // Poop, washed away progressively by the cleaning wave
   const wave = A && A.type === 'clean' ? SW + 14 - (A.t / A.dur) * (SW + 34) : null;
@@ -59,6 +64,7 @@ export function drawScene(sx, S, A, G, PET, time) {
     const mn = moodNow(S, A, G);
     o = { mood: mn.mood, mouth: mn.mouth, variant: S.variant, chubby: S.chubby, sick: S.sick && !S.asleep, blink: !S.asleep && (time % 3.4) < .13 };
     o.look = G ? (G.type === 'catch' ? (G.moving ? G.dir : 0) : (G.phase === 'reveal' ? G.look * 2 : 0)) : (PET.moving ? PET.dir : 0);
+    if (look.wear) o.outfit = look.wear(stage);
     if (S.asleep) bob = ((time * 1.1) | 0) % 2;
     else if (A && A.type === 'happy') bob = -(((time * 8) | 0) % 2) * 2;
     else if (S.call && S.call.reason === 'tantrum') bob = -(((time * 7) | 0) % 2);
@@ -67,9 +73,10 @@ export function drawScene(sx, S, A, G, PET, time) {
     if (A && A.type === 'no') shake = (((A.t * 12) | 0) % 2) ? 1 : -1;
   }
   const spr = petSprite(stage, o);
-  if (stage !== 'seed') E(sx, px, GROUND + 1.5, 9, 1.6, 'rgba(64,120,52,.45)');
-  blit(spr, px - 24 + shake, GROUND - 46 + bob);
-  const top = GROUND - 46 + HEADTOP[stage] + bob;
+  if (stage !== 'seed') E(sx, px, GROUND + 1.5, 9, 1.6, groundStyle(home).shadow);
+  blit(spr, px - 24 + shake, GROUND - 46 - PAD + bob);
+  // Status bubbles sit above the head, or above a hat
+  const top = GROUND - 46 + Math.min(HEADTOP[stage], spr.topY == null ? 99 : spr.topY + 2) + bob;
 
   // Action effects
   if (A) {
@@ -84,7 +91,21 @@ export function drawScene(sx, S, A, G, PET, time) {
     }
     if (A.type === 'med') blit(ICONS.med, px + 9, top - 6 - Math.round(Math.sin(k * Math.PI) * 4));
     if (A.type === 'scold' && ((A.t * 6) | 0) % 2 === 0) blit(BANG, px + 10, top - 4);
-    if (A.type === 'evolve') { sparkles(sx, px, GROUND - 22, time, 18 + Math.sin(time * 6) * 2); if (A.t < .2) R(sx, 0, 0, SW, SH, 'rgba(255,255,255,.8)'); }
+    if (A.type === 'evolve') {
+      sparkles(sx, px, GROUND - 22, time, 18 + Math.sin(time * 6) * 2);
+      if (A.t < .2) R(sx, 0, 0, SW, SH, 'rgba(255,255,255,.8)');
+      // Outgrown clothes pop off and float away, waving goodbye rather than looking sad
+      if (A.popOff && A.from && A.t >= 1.3) {
+        const f = Math.min(1, (A.t - 1.3) / Math.max(.1, A.dur - 1.3));
+        A.popOff.forEach((id, i) => {
+          const g = looseGarment(id, A.from, S.variant, S.chubby);
+          if (!g) return;
+          sx.globalAlpha = 1 - f;
+          blit(g, px - 24 + (i % 2 ? -1 : 1) * f * 10, GROUND - 46 - PAD - f * 14 - Math.sin(f * Math.PI) * 4);
+          sx.globalAlpha = 1;
+        });
+      }
+    }
     if (A.type === 'sparkle' || A.type === 'happy') sparkles(sx, px, GROUND - 20, time, 15);
   }
 
@@ -99,10 +120,11 @@ export function drawScene(sx, S, A, G, PET, time) {
     }
   }
 
-  // Night
+  // Night (glowing decor shines through)
   if (!S.lights) {
     R(sx, 0, 0, SW, SH, 'rgba(18,20,48,.8)');
     for (let i = 0; i < STARS.length; i++) { if (((time * 1.3 + i * .7) | 0) % 3 !== 0) P(sx, STARS[i], '#fff6c8'); }
+    if (!G) drawGlow(sx, home, time, { still: look.still });
   }
 
   // Status bubbles

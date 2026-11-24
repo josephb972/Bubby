@@ -1,6 +1,6 @@
 # Bubby extension: launch plan and checklist
 
-Status: extension **v1.0.0**. The coding fixes are done without changing Bubby's UI design; the store package, images,
+Status: extension **v1.1.0** (adds the shop). The coding fixes are done without changing Bubby's UI design; the store package, images,
 listing text and privacy policy are ready. What's left needs the owner. Goal: publish on the Chrome Web Store, then
 Edge Add-ons.
 
@@ -47,7 +47,7 @@ Tick items as they are done (`[x]`). Owner: **Claude** = can be done in a coding
 - [ ] **Register as a Chrome Web Store developer** (one-time US$5 fee). (You)
 - [x] **Store assets** (`node tools/store-images.mjs`, screenshots of the real popup):
   - [x] 128×128 icon (`extension/icons/icon-128.png`)
-  - [x] Four 1280×800 screenshots: toy pod, status card, Seed catch, compact look (`store/screenshot-1..4.png`).
+  - [x] Five 1280×800 screenshots: toy pod, status card, Seed catch, shop, compact look (`store/screenshot-1..5.png`).
         No notification shot: a real system notification can't be captured automatically, and a drawn one wouldn't be
         the real UI. Add your own screenshot of one if you'd like (1280×800).
   - [x] Small promo tile, 440×280 (`store/promo-small.png`), plus optional marquee 1400×560
@@ -68,8 +68,8 @@ Tick items as they are done (`[x]`). Owner: **Claude** = can be done in a coding
 - [ ] Add a "Send feedback" link in Settings and keep an eye on reviews.
 - [ ] **Save compatibility:** any change to the saved state must keep existing Bubbies working. Saves are versioned
       (`v: 2` in `core/rules.js`); add a step in `migrate()` whenever the format changes.
-- [ ] Shop with clothes (a size per growth stage) and garden decor: plan and checklist in
-      [`docs/SHOP-PLAN.md`](SHOP-PLAN.md).
+- [x] Shop with clothes (a size per growth stage) and garden decor, v1.1.0: plan and checklist in
+      [`docs/SHOP-PLAN.md`](SHOP-PLAN.md). Playtest still to do (You).
 - [ ] Then the phone plan: an installable web app first, then home-screen widgets (iOS WidgetKit, Android Glance)
       with a native wrapper.
 

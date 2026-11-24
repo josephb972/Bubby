@@ -1,6 +1,7 @@
 // Save/load and toolbar badge helpers shared by the popup and the background worker.
 import { fresh, migrate, stageName, topNeed, CALL_TEXT } from './rules.js';
 import { actionImageData } from '../art/icon.js';
+import { outfitFor, WEAR_SLOTS } from './shop.js';
 
 export const KEY = 'bubby';
 
@@ -28,7 +29,8 @@ export function badgeFor(S) {
 
 let lastIconKey = '';
 export let lastIconError = null;
-export async function updateAction(S) {
+// M: the wardrobe (optional), so the icon shows what Bubby wears.
+export async function updateAction(S, M) {
   const b = badgeFor(S);
   const tasks = [
     chrome.action.setBadgeText({ text: b.text }),
@@ -36,10 +38,11 @@ export async function updateAction(S) {
   ];
   if (b.text) tasks.push(chrome.action.setBadgeBackgroundColor({ color: b.color }));
   if (chrome.action.setBadgeTextColor && b.text) tasks.push(chrome.action.setBadgeTextColor({ color: '#ffffff' }));
-  const key = [S.stage, S.variant, S.chubby, S.sick, S.asleep, S.call && S.call.reason, Math.ceil(S.hunger), Math.ceil(S.happy), S.poops.length, !!S.ended].join('|');
+  const key = [S.stage, S.variant, S.chubby, S.sick, S.asleep, S.call && S.call.reason, Math.ceil(S.hunger), Math.ceil(S.happy), S.poops.length, !!S.ended,
+    M && S.stage !== 'seed' ? WEAR_SLOTS.map(k => outfitFor(M, S.stage)[k] || '').join('/') : ''].join('|');
   if (key !== lastIconKey) {
     try {
-      tasks.push(chrome.action.setIcon({ imageData: actionImageData(S) }).then(() => { lastIconError = null; }, e => { lastIconError = String(e); lastIconKey = ''; }));
+      tasks.push(chrome.action.setIcon({ imageData: actionImageData(S, M) }).then(() => { lastIconError = null; }, e => { lastIconError = String(e); lastIconKey = ''; }));
       lastIconKey = key;
     } catch (e) { lastIconError = String(e); /* keep the static icon */ }
   }

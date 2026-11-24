@@ -106,6 +106,25 @@ leaving Bubby sick too long. Discipline comes from scolding **tantrums**: when B
 it's acting out, so press **Scold**. Scolding a well-behaved Bubby only upsets it. Meals before snacks (too many sweets
 cause a toothache), and clean poop quickly or Bubby gets sick.
 
+### The shop: clothes and garden decor
+
+Press the **bag** button (next to ⚙, or **B**) to open the shop. Everything in it is cosmetic: it never changes how Bubby
+grows.
+
+- **Petals** are earned by playing: Seed catch pays up to 12 and a Which way? win pays 3 (the first 3 games each day),
+  a new best catch +5, the first care of the day +5, each time Bubby grows up +20, and a full life +60.
+- **Clothes come in four sizes**, one per body: **Bulb, Bud, Blossom and Elder**. Each size is bought separately, and
+  each size is kept for every future Bubby, so a Bulb-size hat is worn again by each new generation. Choose an item
+  once and Bubby wears the size that fits its current stage. When it grows out of something, it pops off and the
+  shop says which size to get.
+- **Try before you buy:** tap a size to see it on that body. Before Bubby is grown, Blossom and Elder sizes are shown
+  on all three adult forms.
+- Buying asks once more to confirm, and can be **undone for 10 seconds**.
+- **Garden decor** goes into fixed spots (lawn, sky, back corner, centrepiece, front corner, path, ambience), so it
+  never hides the poop, the falling seeds or Bubby. The lantern and fireflies glow at night.
+- Clothes, decor and Petals are saved apart from Bubby, so they stay when you plant a new seed or start over.
+  ⚙ Settings → **Wardrobe backup** makes a code to restore them after reinstalling.
+
 ---
 
 ## 3. A 10-minute test drive
@@ -161,10 +180,15 @@ extension/
   background.js        service worker: once-a-minute check, toolbar icon and badge, notifications
   core/rules.js        the game rules (shared by popup and background), paces, catch-up simulation
   core/store.js        saving, plus toolbar badge, tooltip and icon
-  art/sprites.js       all pixel art, drawn in code (works in the popup and in the background)
+  core/shop.js         the shop: catalogue, sizes, prices, earning Petals, wearing and placing (pure logic)
+  core/meta.js         saving the wardrobe, separately from Bubby
+  art/pixel.js         pixel-drawing helpers
+  art/sprites.js       Bubby and the small art, drawn in code (works in the popup and in the background)
+  art/wardrobe.js      clothes: one rig per body, garment drawings, and the compositing that makes them fit
+  art/decor.js         garden lawns, props and effects, in fixed slots
   art/icon.js          Bubby's live toolbar face
   art/photo/toy.webp   the toy pod artwork used as the popup background
-  popup/               the popup: toy pod and compact looks, game loop, minigames, settings
+  popup/               the popup: toy pod and compact looks, game loop, minigames, shop, settings
   welcome/             first-run page
   icons/               static icons (rebuild with `node tools/make-icons.mjs`)
   fonts/               bundled fonts (SIL Open Font License, see fonts/OFL-LICENSES.txt)
@@ -182,7 +206,13 @@ you watched or not. While the popup is open it runs the game live and the backgr
   2 hours, 3 times a day, morning and evening, or never) and prints how often each ends up Radiant, Daisy or
   Thistle, how sick Bubby got, and how many notifications a day each player would get.
 - `node tools/check-extension.mjs` (Playwright) loads the extension and checks the welcome page's bedtime fields,
-  the popup, the hidden time-skip buttons, the notification fallback window and the background worker.
+  the popup, the hidden time-skip buttons, the notification fallback window, the shop (buy, confirm, undo, sizes,
+  growing out of clothes, new seed, start over, backup code) and the background worker.
+- `node tools/test-shop.mjs` unit-tests the shop logic; `node tools/sim-economy.mjs` checks how fast Petals come in.
+- `node tools/wardrobe-audit.mjs` (Playwright) renders every garment on every body and pose and fails on any fitting
+  problem; `node tools/garden-audit.mjs` (Playwright) checks decor slots and contrast. Both write contact sheets to
+  `dist/audit/` to look at.
+- `node tools/golden-sprites.mjs` (Playwright) checks that Bubby without clothes is pixel-identical to before.
 - `node tools/package.mjs` makes `dist/bubby-<version>.zip` to upload to the Chrome Web Store and Edge Add-ons.
 - `node tools/store-images.mjs` (Playwright) makes the store screenshots and promo tiles in `store/`.
 - `node tools/make-icons.mjs` (Playwright) regenerates the PNG icons from the pixel art.

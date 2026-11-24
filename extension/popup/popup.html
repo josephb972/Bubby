@@ -32,6 +32,7 @@
         <button class="hot" data-act="lights" style="left:271.7px;top:467.4px" aria-label="Sleep: lights on or off" title="Sleep: lights on/off (L)"></button>
         <button class="hot power" data-act="pause" style="left:302.8px;top:415.2px" aria-label="Pause" aria-pressed="false" title="Pause (time stops for Bubby)"></button>
         <p class="pfoot" id="photoFoot"></p>
+        <button class="pgear pshop" id="btnShopPhoto" aria-label="Shop" title="Shop (B)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/></svg></button>
         <button class="corner-gear pgear" id="btnSettingsPhoto" aria-label="Settings" title="Settings">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
         </button>
@@ -46,6 +47,7 @@
         <p id="sub">Gen 1 · Seed · Day 0</p>
       </div>
       <div class="top-btns">
+        <button class="round shopbtn" id="btnShop" aria-label="Shop" title="Shop (B)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/></svg></button>
         <button class="round" id="btnPause" aria-label="Pause" aria-pressed="false" title="Pause (time stops for Bubby)">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" /></svg>
         </button>
@@ -144,6 +146,35 @@
     </div>
   </section>
 
+  <!-- ============ Shop view ============ -->
+  <section id="viewShop" class="shop" aria-label="Shop" hidden>
+    <header class="top">
+      <div class="brand"><h1>Shop</h1></div>
+      <div class="top-btns">
+        <span class="wallet" id="wallet" role="status"></span>
+        <button class="round" id="btnShopBack" aria-label="Back to Bubby" title="Back">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+      </div>
+    </header>
+    <div class="stage">
+      <canvas id="shopScene" width="100" height="75" role="img" aria-label="Preview of Bubby and the garden"></canvas>
+      <div class="forms" id="shopForms" hidden>
+        <canvas width="48" height="56" data-form="radiant" role="img" aria-label="Radiant Blossom"></canvas>
+        <canvas width="48" height="56" data-form="daisy" role="img" aria-label="Daisy Blossom"></canvas>
+        <canvas width="48" height="56" data-form="thistle" role="img" aria-label="Thistle"></canvas>
+      </div>
+      <p class="caption" id="shopCaption" aria-live="polite"></p>
+    </div>
+    <div class="tabs" role="tablist">
+      <button role="tab" data-tab="wear" aria-selected="true">Clothes</button>
+      <button role="tab" data-tab="home" aria-selected="false">Garden</button>
+      <button role="tab" data-tab="closet" aria-selected="false">Closet</button>
+    </div>
+    <div class="shop-list" id="shopList"></div>
+    <div class="snack" id="shopSnack" role="status" hidden><span id="snackText"></span><button class="chip small" id="btnUndo">Undo</button></div>
+  </section>
+
   <!-- ============ Settings view ============ -->
   <section id="viewSettings" class="settings" aria-label="Settings" hidden>
     <header class="top">
@@ -194,6 +225,18 @@
         <button class="chip" data-skip="12">+12 hours</button>
       </div>
       <div class="row" id="resetBox"><button class="chip" id="btnTestNote">Test notification</button><button class="chip danger" id="btnReset">Start over</button></div>
+    </fieldset>
+
+    <fieldset class="group">
+      <legend>Wardrobe backup</legend>
+      <p class="note">Clothes, decorations and Petals are kept in this browser, and stay when you plant a new seed or start over. Uninstalling Bubby removes them, so keep a backup code.</p>
+      <div class="row"><button class="chip" id="btnCopyCode">Copy backup code</button><button class="chip" id="btnPasteCode">Restore from a code</button></div>
+      <div class="codebox" id="codeBox" hidden>
+        <textarea id="codeIn" rows="2" spellcheck="false" aria-label="Backup code"></textarea>
+        <div class="row"><button class="chip" id="btnRestore">Restore</button><button class="chip" id="btnCodeCancel">Cancel</button></div>
+      </div>
+      <p class="note" id="codeMsg" role="status"></p>
+      <div class="row" id="shopResetBox"><button class="chip danger" id="btnShopReset">Reset shop…</button></div>
     </fieldset>
     <p class="foot">Open Bubby from any tab: <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd></p>
   </section>

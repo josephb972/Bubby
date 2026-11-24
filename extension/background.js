@@ -3,6 +3,9 @@
 // notification when Bubby really needs you. While the popup is open, the popup runs the game instead.
 import { advance, doAction, pace, needKey, stageName } from './core/rules.js';
 import { loadState, saveState, updateAction } from './core/store.js';
+import { loadMeta } from './core/meta.js';
+// The wardrobe is only read here (to dress the toolbar icon); the popup is the only page that changes it.
+const wardrobe = () => loadMeta(null, { create: false }).catch(() => null);
 import * as store from './core/store.js';
 
 const ALARM = 'bubby-tick';
@@ -24,7 +27,7 @@ chrome.runtime.onInstalled.addListener(details => serial(async () => {
   const S = await loadState();
   advance(S, Date.now());
   await saveState(S);
-  await updateAction(S);
+  await updateAction(S, await wardrobe());
   if (details.reason === 'install') chrome.tabs.create({ url: chrome.runtime.getURL('welcome/welcome.html') });
 }));
 chrome.runtime.onStartup.addListener(() => serial(async () => { await ensureAlarm(); await tick(); }));
@@ -37,7 +40,7 @@ async function tick() {
   advance(S, Date.now());
   await maybeNotify(S);
   await saveState(S);
-  await updateAction(S);
+  await updateAction(S, await wardrobe());
 }
 
 /* ---------- Notifications ---------- */
@@ -105,7 +108,7 @@ async function quickAction(action) {
   S.notif.lastKey = needKey(S);
   S.notifiedSeq = S.evSeq;
   await saveState(S);
-  await updateAction(S);
+  await updateAction(S, await wardrobe());
   await chrome.notifications.create('bubby-done', {
     type: 'basic', iconUrl: chrome.runtime.getURL('icons/icon-128.png'),
     title: r.ok ? 'Done!' : 'Hmm…', message: r.msg || 'Bubby is fine.', priority: 0, silent: true,
@@ -146,7 +149,7 @@ function setCfg(patch) {
     const S = await loadState();
     Object.assign(S.cfg, patch);
     await saveState(S);
-    await updateAction(S);
+    await updateAction(S, await wardrobe());
     if (popupPort) popupPort.postMessage({ type: 'cfg', cfg: patch });
   });
 }

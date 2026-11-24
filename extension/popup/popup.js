@@ -1,14 +1,19 @@
 // Bubby popup: runs the game live while open, then hands back to the background worker.
 import * as Rules from '../core/rules.js';
+import * as Shop from '../core/shop.js';
 import { loadState, saveState, updateAction } from '../core/store.js';
+import { loadMeta, saveMeta, watchMeta } from '../core/meta.js';
 import { art, SW, GROUND } from '../art/sprites.js';
 import { drawScene, catchY } from './scene.js';
+import { createShop } from './shop.js';
 
 const { clamp, rand } = Rules;
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
 let S = null;          // game state (saved)
+let M = null;          // wardrobe, decor and Petals (saved separately, see core/meta.js)
+let SHOP = null;       // the shop view
 let A = null;          // current animation { type, t, dur, ... }
 let G = null;          // minigame state
 let OV = null;         // open overlay
@@ -41,8 +46,13 @@ function persist() {
   if (!S) return;
   markSeen();
   saveState(S);
-  updateAction(S);
+  updateAction(S, M);
 }
+function saveM() { if (!M) return; saveMeta(M); updateAction(S, M); updateNudge(); }
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+// What the scene needs from the shop: the garden and what Bubby wears at each stage.
+const LOOK = { get home() { return M && M.home; }, wear: st => Shop.outfitFor(M, st), get still() { return reducedMotion.matches; } };
+const petalsText = n => `+${n} Petal${n === 1 ? '' : 's'}`;
 
 /* ---------------- Sound ---------------- */
 let AC = null;
@@ -65,9 +75,11 @@ function beepUp() { beep(523, .1); later(120, () => beep(659, .1)); later(240, (
 
 /* ---------------- Toast ---------------- */
 let toastT = 0;
-const $toast = $('#toast');
-function toast(msg) {
+const $toast = $('#toast'), toastQ = [];
+// queue: wait for the current toast instead of replacing it (used for Petals and shop news)
+function toast(msg, queue = false) {
   if (!msg) return;
+  if (queue && toastT > .3) { if (!toastQ.includes(msg)) toastQ.push(msg); return; }
   $toast.textContent = msg; $toast.hidden = false;
   $toast.classList.remove('show'); void $toast.offsetWidth; $toast.classList.add('show');
   toastT = 2.6;
@@ -111,7 +123,9 @@ function runAction(a) {
   }
   const poopsBefore = S.poops.length, wasSick = S.sick;
   const r = Rules.doAction(S, a, Date.now());
+  const earned = r.ok && ['meal', 'snack', 'clean', 'med'].includes(a) ? Shop.earnCare(M, Date.now()) : 0;
   toast(r.msg);
+  if (earned) { toast(`${petalsText(earned)} for today’s first care`, true); saveM(); }
   if (r.anim) {
     A = { ...ANIM[r.anim], t: 0, poops: poopsBefore };
     if (r.anim === 'clean') { beep(520, .08); later(90, () => beep(440, .1)); }
@@ -133,6 +147,7 @@ function togglePause() {
 }
 
 function replant() {
+  claim();
   const gen = S.ended ? S.ended.gen + 1 : S.gen + 1;
   const keep = { stats: { bestCatch: S.stats.bestCatch || 0 } };
   S = Rules.fresh(gen, S.cfg, Date.now());
@@ -153,11 +168,18 @@ function startGame(kind) {
   else G = { type: 'guess', round: 1, score: 0, phase: 'guess', look: 0, t: 0, last: false };
   showOv('game'); $('#ovGame').classList.toggle('catch', G.type === 'catch'); renderGame();
 }
-function endGame(gain, msg) {
+function endGame(gain, msg, earn) {
   Rules.finishGame(S, gain);
   if (gain) A = { type: 'happy', t: 0, dur: 1 };
   G = null; closeOverlays();
-  toast(msg); persist(); renderUI();
+  toast(msg);
+  if (earn) {
+    const r = Shop.earnGame(M, earn.kind, earn.score, earn.won, earn.best, Date.now());
+    if (r.petals) toast(`${petalsText(r.petals)}${r.capped ? ' for your new best' : ''}`, true);
+    else if (r.capped) toast('Today’s Petals from games are collected. More tomorrow!', true);
+    saveM();
+  }
+  persist(); renderUI();
 }
 function guess(d) {
   if (!G || G.type !== 'guess' || G.phase !== 'guess') return;
@@ -193,7 +215,7 @@ function updateCatch(rdt) {
       const gain = g.score >= 20 ? 2 : g.score >= 10 ? 1 : 0;
       const best = g.score > (S.stats.bestCatch || 0);
       if (best) S.stats.bestCatch = g.score;
-      endGame(gain, (best ? 'New best! ' : '') + (gain ? `+${gain} happy, -1g` : 'Good exercise anyway. -1g'));
+      endGame(gain, (best ? 'New best! ' : '') + (gain ? `+${gain} happy, -1g` : 'Good exercise anyway. -1g'), { kind: 'catch', score: g.score, won: true, best });
     }
     return;
   }
@@ -236,7 +258,7 @@ function updateGame(rdt) {
     renderGame();
   } else if (G.phase === 'done' && G.t > 1.6) {
     const win = G.score >= 3;
-    endGame(win ? 1 : 0, win ? 'Bubby had fun! +1 happy, -1g' : 'Good exercise anyway. -1g');
+    endGame(win ? 1 : 0, win ? 'Bubby had fun! +1 happy, -1g' : 'Good exercise anyway. -1g', { kind: 'guess', score: G.score, won: win, best: false });
   }
 }
 
@@ -256,8 +278,16 @@ function handleEvents() {
   for (const e of S.events) {
     if (e.id <= shownSeq) continue;
     switch (e.type) {
-      case 'evolve': G = null; closeOverlays(); A = { type: 'evolve', t: 0, dur: 1.8, from: e.from }; beepUp(); toast(e.text); break;
-      case 'end': G = null; A = null; closeOverlays(); showEnd(); break;
+      case 'evolve': {
+        G = null; closeOverlays();
+        const pop = outgrown(e.from, e.to);
+        A = { type: 'evolve', t: 0, dur: pop.length ? 2.5 : 1.8, from: e.from, popOff: pop };
+        beepUp(); toast(e.text);
+        claim();
+        if (pop.length) toast(outgrownText(pop, e.to), true);
+        break;
+      }
+      case 'end': G = null; A = null; closeOverlays(); showEnd(); claim(); break;
       case 'call': beepCall(); if (e.reason !== 'tantrum') toast(e.text); break;
       case 'poop': beep(200, .08); break;
       case 'sick': beep(330, .12); later(140, () => beep(260, .18)); toast(e.text); break;
@@ -267,6 +297,37 @@ function handleEvents() {
   shownSeq = S.evSeq;
   persist();
 }
+
+/* ---------------- Shop: rewards, outgrown clothes, the shop view ---------------- */
+// Pay out Bubby's milestones (growing up, a full life). Safe to call often: each event pays once.
+function claim(quiet = false) {
+  if (!M || !S) return null;
+  const c = Shop.claimLife(M, S, Date.now());
+  if (c.petals) { saveM(); if (!quiet) toast(`${petalsText(c.petals)}: ${c.lines.map(l => l.replace(/^\+\d+ /, '')).join(', ')}`, true); }
+  return c;
+}
+// Items Bubby wore at the old stage that it doesn't have in the new size.
+function outgrown(from, to) {
+  if (!M) return [];
+  const a = Shop.outfitFor(M, from), b = Shop.outfitFor(M, to);
+  const ids = Shop.WEAR_SLOTS.filter(k => a[k] && !b[k]).map(k => a[k]);
+  if (ids.length) { M.news.outgrown = ids; saveM(); }
+  return ids;
+}
+const outgrownText = (ids, to) => `Bubby grew out of its ${ids.map(id => Shop.ITEM[id].name.toLowerCase()).join(' and ')}! The ${Shop.SIZE_NAME[Shop.SIZE_OF[to]]} size is in the shop.`;
+function updateNudge() {
+  const on = !!(M && M.news && (M.news.outgrown || M.news.gift));
+  for (const b of [$('#btnShop'), $('#btnShopPhoto')]) { b.classList.toggle('nudge', on); b.setAttribute('aria-label', on ? 'Shop (something new)' : 'Shop'); }
+}
+function openShop(goto) {
+  closeOverlays(); G = null;
+  const news = M.news || {};
+  if (!goto && news.outgrown && news.outgrown.length) goto = news.outgrown[0];
+  M.news = {}; saveM();
+  $('#viewMain').hidden = true; $('#viewSettings').hidden = true; $('#viewShop').hidden = false;
+  SHOP.open(goto);
+}
+function closeShop() { $('#viewShop').hidden = true; $('#viewMain').hidden = false; renderUI(); }
 
 /* ---------------- "While you were away" ---------------- */
 function fmtDur(ms) {
@@ -292,9 +353,9 @@ function summarize(evs) {
   if (!lines.length) lines.push('Bubby pottered around the garden. All good!');
   return lines.slice(0, 6);
 }
-function showAway(evs, ms) {
+function showAway(evs, ms, extra = []) {
   const list = $('#awayList'); list.textContent = '';
-  for (const t of summarize(evs)) { const li = document.createElement('li'); li.textContent = t; list.appendChild(li); }
+  for (const t of [...summarize(evs), ...extra].slice(0, 7)) { const li = document.createElement('li'); li.textContent = t; list.appendChild(li); }
   $('#awayFor').textContent = fmtDur(ms);
   $toast.hidden = true; toastT = 0;
   showOv('away');
@@ -460,10 +521,11 @@ function renderSettings() {
   $('#devSkip').hidden = !S.cfg.dev; // test tool only: bubby.dev(true) in the service worker console
   $$('[data-skip]').forEach(b => { b.disabled = !clock || !!S.ended || S.paused; });
 }
-function openSettings() { closeOverlays(); G = null; renderSettings(); $('#viewMain').hidden = true; $('#viewSettings').hidden = false; $('#btnBack').focus(); }
+function openSettings() { closeOverlays(); G = null; renderSettings(); $('#viewMain').hidden = true; $('#viewShop').hidden = true; $('#viewSettings').hidden = false; $('#codeMsg').textContent = ''; $('#codeBox').hidden = true; shopResetBox(); $('#btnBack').focus(); }
 function closeSettings() { $('#viewSettings').hidden = true; $('#viewMain').hidden = false; resetBox(); renderUI(); }
 const RESET_HTML = '<button class="chip" id="btnTestNote">Test notification</button><button class="chip danger" id="btnReset">Start over</button>';
 function resetBox() { $('#resetBox').innerHTML = RESET_HTML; }
+function shopResetBox() { $('#shopResetBox').innerHTML = '<button class="chip danger" id="btnShopReset">Reset shop…</button>'; }
 
 function skipAhead(hours) {
   const before = S.evSeq, ms = hours * 3600 * 1000;
@@ -489,6 +551,35 @@ function wire() {
   $('#smart').addEventListener('click', () => { const a = $('#smart').dataset.do; if (a) runAction(a); });
   $('#btnPause').addEventListener('click', () => runAction('pause'));
   $('#btnSettings').addEventListener('click', openSettings);
+  $('#btnShop').addEventListener('click', () => openShop());
+  $('#btnShopPhoto').addEventListener('click', () => openShop());
+
+  // Wardrobe backup and reset (Settings)
+  const codeMsg = t => { $('#codeMsg').textContent = t; };
+  $('#btnCopyCode').addEventListener('click', async () => {
+    const code = Shop.exportCode(M);
+    try { await navigator.clipboard.writeText(code); codeMsg('Copied! Keep it somewhere safe, like a note or an email to yourself.'); }
+    catch (e) { $('#codeBox').hidden = false; $('#codeIn').value = code; $('#codeIn').select(); $('#btnRestore').hidden = true; codeMsg('Copy this code and keep it somewhere safe.'); }
+  });
+  $('#btnPasteCode').addEventListener('click', () => { $('#codeBox').hidden = false; $('#btnRestore').hidden = false; $('#codeIn').value = ''; $('#codeIn').focus(); codeMsg('Paste your backup code. It replaces the current wardrobe.'); });
+  $('#btnCodeCancel').addEventListener('click', () => { $('#codeBox').hidden = true; codeMsg(''); });
+  $('#btnRestore').addEventListener('click', () => {
+    const r = Shop.importCode($('#codeIn').value, M);
+    if (!r.ok) return codeMsg(r.msg);
+    M = r.meta; saveM(); $('#codeBox').hidden = true;
+    codeMsg(`Wardrobe restored: ${M.petals} Petals and everything you owned.`);
+  });
+  $('#shopResetBox').addEventListener('click', e => {
+    const id = e.target.id;
+    if (id === 'btnShopReset') {
+      $('#shopResetBox').innerHTML = '<input id="resetWord" class="reset-word" placeholder="Type RESET" aria-label="Type RESET to confirm"><button class="chip danger" id="btnShopResetYes">Reset shop</button><button class="chip" id="btnShopResetNo">Cancel</button><p class="note">This removes all clothes, decorations and Petals. It can’t be undone (unless you have a backup code).</p>';
+      $('#resetWord').focus();
+    } else if (id === 'btnShopResetYes') {
+      if ($('#resetWord').value.trim().toUpperCase() !== 'RESET') { codeMsg('Type RESET to confirm.'); return; }
+      const rev = M.rev; M = Shop.freshMeta(Date.now(), null); M.rev = rev; M.news = {}; M.claim = { born: S.born, seq: S.evSeq };
+      saveM(); shopResetBox(); codeMsg('The shop was reset.');
+    } else if (id === 'btnShopResetNo') shopResetBox();
+  });
   $('#btnSettingsPhoto').addEventListener('click', openSettings);
   $('#stCall').addEventListener('click', () => { const a = $('#stCall').dataset.need; closeOverlays(); if (a) runAction(a); });
   $('#looks').addEventListener('change', e => { if (e.target.name === 'look') { S.cfg.look = e.target.value; applyLook(); persist(); } });
@@ -513,9 +604,10 @@ function wire() {
       if (port) port.postMessage({ type: 'test-notify' });
       e.target.textContent = 'Sent! Check your notifications';
     } else if (id === 'btnReset') {
-      $('#resetBox').innerHTML = '<button class="chip danger" id="btnResetYes">Yes, lose this Bubby</button><button class="chip" id="btnResetNo">Keep Bubby</button>';
+      $('#resetBox').innerHTML = '<button class="chip danger" id="btnResetYes">Yes, lose this Bubby</button><button class="chip" id="btnResetNo">Keep Bubby</button><p class="note">Your clothes, decorations and Petals stay.</p>';
       $('#btnResetNo').focus();
     } else if (id === 'btnResetYes') {
+      claim(true);
       S = Rules.fresh(1, S.cfg, Date.now()); A = null; G = null; shownSeq = S.evSeq;
       persist(); closeSettings(); toast('A new seed is planted');
     } else if (id === 'btnResetNo') resetBox();
@@ -526,6 +618,8 @@ function wire() {
   document.addEventListener('keydown', e => {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (!$('#viewSettings').hidden) { if (e.key === 'Escape') { e.preventDefault(); closeSettings(); } return; }
+    if (!$('#viewShop').hidden) { if (e.key === 'Escape') { e.preventDefault(); closeShop(); } return; }
+    if (e.key.toLowerCase() === 'b' && !G) { e.preventDefault(); openShop(); return; }
     const k = e.key.toLowerCase();
     if (G && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
       e.preventDefault();
@@ -572,8 +666,9 @@ function frame(nowP) {
   if (A && !S.paused) { A.t += rdt; if (A.t >= A.dur) { const f = A.after; A = null; if (f) f(); } }
   if (!S.paused) { updateGame(rdt); updatePet(rdt); }
   handleEvents();
-  drawScene(ctx, S, A, G, PET, nowP / 1000);
-  if (toastT > 0) { toastT -= rdt; if (toastT <= 0) $toast.hidden = true; }
+  if ($('#viewShop').hidden) drawScene(ctx, S, A, G, PET, nowP / 1000, LOOK);
+  else SHOP.tick(rdt, nowP / 1000);
+  if (toastT > 0) { toastT -= rdt; if (toastT <= 0) { if (toastQ.length) toast(toastQ.shift()); else $toast.hidden = true; } }
   const blinkOn = !!S.call && !S.ended && ((nowP / 1000 * 2.5) | 0) % 2 === 0;
   if (blinkOn !== prevBlink) { prevBlink = blinkOn; const t = $('.tile[data-act="attn"]'); if (t) t.classList.toggle('alert', blinkOn); }
   uiT += rdt; saveT += rdt;
@@ -584,10 +679,14 @@ function frame(nowP) {
 
 async function boot() {
   S = await loadState();
+  M = await loadMeta(S);
   const now = Date.now();
   const seenBefore = S.seenSeq || 0, lastSeen = S.lastSeenAt || 0;
+  const stageBefore = S.stage;
   Rules.advance(S, now); // catch up on the time Bubby spent alone
   shownSeq = S.evSeq;
+  SHOP = createShop({ $, S: () => S, meta: () => M, save: saveM, toast, beep: (f, d) => { unlockAudio(); beep(f, d); }, close: closeShop, get still() { return reducedMotion.matches; } });
+  watchMeta(() => M.rev, m => { M = m; updateNudge(); SHOP.render(); });
 
   const a = art();
   HEART = { full: a.HEART_FULL.toDataURL(), empty: a.HEART_EMPTY.toDataURL() };
@@ -598,13 +697,23 @@ async function boot() {
   renderUI();
 
   const away = S.events.filter(e => e.id > seenBefore);
+  // Milestones reached while the popup was closed pay out now, and clothes Bubby grew out of are noticed.
+  const grew = away.filter(e => e.type === 'evolve').pop();
+  const pop = grew && stageBefore !== S.stage ? outgrown(stageBefore === 'seed' ? grew.from : stageBefore, S.stage) : [];
+  const paid = claim(true);
+  const extra = [...(paid && paid.petals ? [`You earned ${paid.petals} Petals (${paid.lines.map(l => l.replace(/^\+\d+ /, '')).join(', ')}).`] : []), ...(pop.length ? [outgrownText(pop, S.stage)] : [])];
   if (S.ended) showEnd();
   else if (!lastSeen && S.stage === 'seed') toast('A seed! It sprouts in a minute');
   else if (away.length && (!lastSeen || now - lastSeen > 2 * 60 * 1000)) {
-    showAway(away, now - (lastSeen || S.born || now));
-    const grew = away.filter(e => e.type === 'evolve').pop();
-    if (grew) A = { type: 'evolve', t: 0, dur: 1.8, from: grew.from };
+    showAway(away, now - (lastSeen || S.born || now), extra);
+    if (grew) A = { type: 'evolve', t: 0, dur: pop.length ? 2.5 : 1.8, from: grew.from, popOff: pop };
+  } else if (paid && paid.petals) toast(`${petalsText(paid.petals)}: ${paid.lines.map(l => l.replace(/^\+\d+ /, '')).join(', ')}`, true);
+  // The welcome gift (and a thank-you for players who were here before the shop)
+  if (M.news && M.news.gift) {
+    toast(M.news.returning ? `Thanks for playing! ${M.petals} Petals and a petal bow are waiting in the new shop.` : 'A gift! Bubby got a petal bow. Find more in the shop (B).', true);
+    M.news.gift = 'seen'; saveM();
   }
+  updateNudge();
   persist();
   connect();
   requestAnimationFrame(t => { lastFrame = t; frame(t); });

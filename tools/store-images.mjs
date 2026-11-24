@@ -1,6 +1,6 @@
 // Store images from the real extension: screenshots of the actual popup, nothing redrawn.
 // Usage: node tools/store-images.mjs   (needs Playwright with Chromium) → store/
-//   screenshot-1..4.png 1280×800 · promo-small.png 440×280 · promo-marquee.png 1400×560
+//   screenshot-1..5.png 1280×800 · promo-small.png 440×280 · promo-marquee.png 1400×560
 import { createRequire } from 'node:module';
 import { mkdir, readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
@@ -23,14 +23,21 @@ if (!sw) sw = await ctx.waitForEvent('serviceworker');
 const base = `chrome-extension://${new URL(sw.url()).host}/`;
 await sw.evaluate(async () => { for (let i = 0; i < 50 && !(await chrome.storage.local.get('bubby')).bubby; i++) await new Promise(r => setTimeout(r, 100)); });
 
-async function capture(state, { look = 'toy', size = [468, 600], then } = {}) {
-  await sw.evaluate(async ({ state, look }) => {
+// The wardrobe for each shot: nothing worn unless the shot says so, and no news toasts.
+const ALL = ['S', 'M', 'L', 'XL'];
+const wardrobe = (equip = {}, home = {}) => ({ v: 1, rev: Date.now(), petals: 186, lifetime: 420,
+  owned: { petalbow: ALL, beanie: ALL, scarf: ALL, crown: ['L'], bowtie: ['L', 'XL'], shades: ALL, overalls: ['M', 'L'], meadow: ['*'], pot: ['*'], tree: ['*'], lantern: ['*'], flowerbed: ['*'], bunting: ['*'] },
+  equip: { head: null, face: null, neck: null, body: null, ...equip },
+  home: { ground: 'meadow', sky: null, back: null, centre: 'pot', floor: null, path: null, ambient: null, ...home }, news: {} });
+async function capture(state, { look = 'toy', size = [468, 600], then, meta = wardrobe(), shot } = {}) {
+  await sw.evaluate(async ({ state, look, meta }) => {
     const S = (await chrome.storage.local.get('bubby')).bubby, now = Date.now();
     Object.assign(S, { hunger: 4, happy: 4, poops: [], sick: false, call: null, asleep: false, lights: true, paused: false, ended: null, mistakes: 0, discipline: 100, awakeT: 3600 }, state);
     Object.assign(S.cfg, { look, bed: 22 * 60, wake: 8 * 60 });
     S.lastT = now; S.lastSeenAt = now; S.seenSeq = S.evSeq; S.notifiedSeq = S.evSeq; // nothing "while you were away"
-    await chrome.storage.local.set({ bubby: S });
-  }, { state, look });
+    meta.claim = { born: S.born, seq: S.evSeq }; meta.earned = { day: '', games: 0, care: false };
+    await chrome.storage.local.set({ bubby: S, 'bubby-meta': meta });
+  }, { state, look, meta });
   const p = await ctx.newPage();
   await p.setViewportSize({ width: size[0], height: size[1] });
   await p.goto(base + 'popup/popup.html');
@@ -40,14 +47,19 @@ async function capture(state, { look = 'toy', size = [468, 600], then } = {}) {
   if (then) await then(p);
   await p.evaluate(() => document.activeElement && document.activeElement.blur());
   await p.waitForTimeout(100);
-  const png = await p.locator(look === 'toy' ? '.pdev' : '#app').screenshot();
+  const png = await p.locator(shot || (look === 'toy' ? '.pdev' : '#app')).screenshot();
   await p.close();
   return 'data:image/png;base64,' + png.toString('base64');
 }
 
 const bud = { stage: 'child', weight: 12, age: 2 * 86400, stageT: 3600 };
+const blossom = { stage: 'adult', variant: 'radiant', weight: 24, age: 5 * 86400, stageT: 3600 };
+let shopScene = null;
 const img = {
-  blossom: await capture({ stage: 'adult', variant: 'radiant', weight: 24, age: 5 * 86400, stageT: 3600 }),
+  blossom: await capture(blossom, { meta: wardrobe({ head: 'beanie', neck: 'scarf' }, { back: 'tree', floor: 'flowerbed' }) }),
+  shop: await capture(blossom, { shot: '#viewShop', meta: wardrobe({ head: 'crown', face: 'shades', neck: 'bowtie' }, { back: 'tree', centre: 'lantern', sky: 'bunting' }),
+    then: async p => { await p.keyboard.press('b'); await p.waitForTimeout(300); await p.click('article[data-id="crown"] button.size[data-size="L"]'); await p.waitForTimeout(300);
+      shopScene = await p.evaluate(() => document.getElementById('shopScene').toDataURL()); } }),
   status: await capture({ ...bud, hunger: 1, happy: 3, call: { reason: 'hungry', t: 0, counted: false } }, { then: p => p.keyboard.press('s') }),
   game: await capture(bud, { then: async p => {
     await p.keyboard.press('p'); await p.waitForTimeout(200); await p.keyboard.press('2');
@@ -60,9 +72,9 @@ const img = {
 const page0 = await ctx.newPage();
 await page0.goto(base + 'welcome/welcome.html');
 img.bulb = await page0.evaluate(async () => {
-  const { petSprite } = await import('/art/sprites.js');
+  const { petSprite, PAD } = await import('/art/sprites.js');
   const c = document.createElement('canvas'); c.width = c.height = 384;
-  const x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(petSprite('baby', { mood: 'happy' }), 0, 0, 384, 384);
+  const x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(petSprite('baby', { mood: 'happy' }), 0, PAD, 48, 48, 0, 0, 384, 384);
   return c.toDataURL();
 });
 await ctx.close();
@@ -96,6 +108,8 @@ const shot = (title, line, src) => `<div class="page"><h1>${title}</h1><p>${line
 await render('screenshot-1.png', 1280, 800, shot('A tiny pixel pet for your <em>toolbar</em>', 'Feed it, play with it, clean up after it, and watch it grow.', img.blossom));
 await render('screenshot-2.png', 1280, 800, shot('See what Bubby <em>needs</em>', 'Hearts, weight and discipline, plus one button that does what it needs now.', img.status));
 await render('screenshot-3.png', 1280, 800, shot('Play <em>Seed catch</em>', 'Catch falling seeds for 20 seconds. Gold seeds are worth 3, pebbles cost 2.', img.game));
+await render('screenshot-5.png', 1280, 800, `<div class="page"><h1>Dress Bubby <em>up</em></h1><p>Earn Petals by playing. Clothes come in a size for every stage, plus decorations for the garden.</p>
+  <div class="row"><img class="pod" src="${img.shop}"><div class="zoom" style="width:${100 * 4 + 12}px;height:${75 * 4 + 12}px;background:url(${shopScene}) center/${100 * 4}px ${75 * 4}px no-repeat;background-origin:content-box;image-rendering:pixelated"></div></div></div>`);
 await render('screenshot-4.png', 1280, 800, `<div class="page"><h1>Prefer it simple? Try the <em>compact</em> look</h1><p>Bigger hearts, one big "what to do now" button, and every action one click away.</p>
   <div class="row"><img class="pod" style="width:450px;height:auto" src="${img.compact}"></div></div>`);
 const promo = (w, h, s, t, l) => `<div style="height:100%;display:flex;align-items:center;justify-content:center;gap:${w * .03}px">

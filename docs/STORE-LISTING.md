@@ -2,7 +2,7 @@
 
 Works for the Chrome Web Store and Edge Add-ons. Everything here is true of the code; update it if the code changes.
 
-- **Upload:** `dist/bubby-1.0.0.zip`, made by `node tools/package.mjs`.
+- **Upload:** `dist/bubby-1.1.0.zip`, made by `node tools/package.mjs`.
 - **Images:** `store/`, made by `node tools/store-images.mjs` from the real popup.
 
 ## Listing
@@ -14,7 +14,7 @@ Works for the Chrome Web Store and Edge Add-ons. Everything here is true of the 
 | Category | Lifestyle → Games (Lifestyle → Just for Fun also fits) |
 | Language | English |
 | Icon | `extension/icons/icon-128.png` |
-| Screenshots, in order | `store/screenshot-1.png` toy pod · `-2` status card · `-3` Seed catch · `-4` compact look (all 1280×800) |
+| Screenshots, in order | `store/screenshot-1.png` toy pod · `-2` status card · `-3` Seed catch · `-5` shop · `-4` compact look (all 1280×800) |
 | Small promo tile | `store/promo-small.png` (440×280) |
 | Marquee (optional) | `store/promo-marquee.png` (1400×560) |
 
@@ -44,8 +44,13 @@ Two minigames
 • Seed catch: catch falling seeds for 20 seconds. Gold seeds are worth 3, pebbles cost 2.
 • Which way?: guess which way Bubby will look.
 
+Dress it up
+• Earn Petals by playing and caring, and spend them in the shop. There is nothing to buy with money.
+• Hats, glasses, scarves and shirts in a size for every stage, drawn to fit every form of Bubby. Bubby keeps each size for its future generations.
+• Decorate the garden: lawns, an apple tree, a lantern that glows at night, fireflies and more.
+
 Private
-• No account, no ads, no tracking. Your pet is saved only in your browser, and Bubby sends nothing over the internet.
+• No account, no ads, no tracking. Your pet and its wardrobe are saved only in your browser, and Bubby sends nothing over the internet.
 
 Tip: pin Bubby to your toolbar (puzzle-piece icon → pin) so its face is always in view. Alt+Shift+B opens it from any tab.
 ```
@@ -57,7 +62,7 @@ up over time.
 
 | Permission | Why Bubby needs it |
 |---|---|
-| `storage` | To save your pet and your Bubby settings in the browser. |
+| `storage` | To save your pet, its wardrobe and your Bubby settings in the browser. |
 | `alarms` | To update Bubby once a minute while the popup is closed, so it lives in real time and its toolbar face stays current. |
 | `notifications` | To tell you when Bubby needs care, with buttons that fix it directly. Can be turned off in Bubby's settings. |
 

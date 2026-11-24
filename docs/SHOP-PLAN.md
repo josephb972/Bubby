@@ -1,6 +1,7 @@
 # Bubby shop: clothes and home decoration
 
-Status: **plan, nothing built yet.** Scope: the extension (`extension/`). The original `index.html` game keeps its own
+Status: **Phase 0 and Phase 1 built (extension v1.1.0)**, plus part of Phase 2 (11 clothes, 16 paid decor items,
+ambient effects). Waiting on the owner's playtest. Scope: the extension (`extension/`). The original `index.html` game keeps its own
 rules and is not touched unless the owner asks.
 
 Goal: players spend an earned currency on **clothes for Bubby** (a separate size for each growth stage) and
@@ -19,7 +20,7 @@ every decoration sits well in the 100×75 pixel garden, and nothing about the ca
 | D4 | **Four sizes: Bulb (S), Bud (M), Blossom (L), Elder (XL).** Each size is bought separately, as asked. The seed has no body, so no clothes (decor still shows). | Matches the four bodies in `art/sprites.js`. Elder shares Blossom's body but has its own shifted petals, glasses and cane, so it gets its own size. |
 | D5 | **Sizes are reusable in every future generation.** Each new Bubby starts as a Bulb again. | This is what makes buying several sizes fair: a Bulb-size hat is worn again every generation. |
 | D6 | **Clothes are drawn by code, not image files** (like all of Bubby's art today). | Fit is calculated per body, the package stays tiny, no asset-rights issues, and every combination can be tested automatically. |
-| D7 | **Optional, to confirm:** owners of a garment get **40% off the next size**. | The brief says sizes are bought separately; this keeps that, but softens the "my Bubby just grew and now it's naked" moment. Off by default in the price table. |
+| D7 | **Optional, to confirm:** owners of a garment get **40% off the next size**. | The brief says sizes are bought separately; this keeps that, but softens the "my Bubby just grew and now it's naked" moment. Built but **off** (`SIZE_UP_DISCOUNT = 0` in `core/shop.js`); set it to `0.4` to turn it on. |
 
 ---
 
@@ -162,27 +163,29 @@ background worker and the popup never both write the wallet.
 
 | Rarity | Blossom-size price | Examples |
 |--------|-------------------|----------|
-| Common | 30 | beanie, bow, scarf |
-| Rare | 60 | sunglasses, overalls, flower crown |
-| Epic | 110 | wizard hat set, chef outfit |
+| Common | 40 | beanie, sunglasses, bow tie, scarf, striped tee |
+| Rare | 80 | little crown, heart glasses, overalls, heart sweater |
+| Epic | 150 | wizard hat |
 
-Size multipliers: **Bulb ×0.4, Bud ×0.65, Blossom ×1.0, Elder ×1.0**, rounded to a multiple of 1. So a common item is
-12 / 20 / 30 / 30, and the whole family costs about 92 (about 3 days of casual play). With D7 on, the 2nd, 3rd and 4th
-size cost 60% for owners.
+Size multipliers: **Bulb ×0.4, Bud ×0.65, Blossom ×1.0, Elder ×1.0**, rounded. So a common item is 16 / 26 / 40 / 40,
+and the whole family costs 122 (about 4 days of casual play). With D7 on, the 2nd, 3rd and 4th size cost 60% for owners.
+(The first draft had 30 / 60 / 110; `sim-economy` showed a hardcore player finishing in 48 days, so prices went up.)
 
 Bulb is cheap on purpose: that stage lasts only 12 hours (Chill) or minutes (Quick). It's mainly used from the second
 generation on.
 
-Decor: ground themes 80, back props 40–90, centrepieces 60, ambient effects 100.
+Decor: lawns 100, bunting 50, back props 80–120, centrepieces 80, corner 50–90, path 50, ambient effects 120.
 
-Launch catalogue target (Phase 2): about 20 clothes and 16 decor, worth about 3,400 Petals in total, which is about
-100 days of casual play. Enough for months, not so large that nobody feels progress.
+Built catalogue: 11 clothes (one free gift) and 18 decor items (two free defaults), **3,464 Petals** for everything.
+`sim-economy`: a casual player (31 Petals a day) completes it around day 110, a hardcore one (55 a day) around day 62,
+and an idle one still earns 14 a day from Bubby growing up.
 
 ### 4.3 Economy safety
 
-- Everything is tested with **`tools/sim-economy.mjs`**: simulated casual, hardcore and idle players over 30 and 100
-  days. Targets: first purchase within the **first session**, one new item about every 2–3 days, no player can
-  finish the catalogue in under 60 days with the daily caps, and an idle player still earns something on return.
+- Everything is tested with **`tools/sim-economy.mjs`**: simulated casual, hardcore and idle players over 120 days.
+  Targets: first purchase within the **first session**, something new to buy every 0.5–3.5 days early on (the
+  simulated shopper buys the cheapest thing first, often a Bulb size, so this is faster than "an item every 2–3
+  days"), no player can finish the catalogue in under 60 days with the daily caps, and an idle player still earns.
 - **Clock cheating:** the caps are keyed to the local date, and a clock that goes backwards is ignored (`lastEarnAt`).
   The game is offline and single-player, so a determined player editing storage can't be stopped and isn't harmed;
   just don't make it easy by accident (time-zone changes must not pay twice or lock a player out for a day).
@@ -190,7 +193,7 @@ Launch catalogue target (Phase 2): about 20 clothes and 16 decor, worth about 3,
 - **Accidental buys:** a confirm step that shows balance before and after, plus **10 seconds of Undo** after buying
   (full refund within that window only).
 - **Can't afford:** show "12 more Petals" and a hint on how to earn them, never a dead button.
-- **Existing players** (saves from v1.0.0): a one-time **welcome grant** of 40 Petals, plus 3 per past win
+- **Welcome grant:** 30 Petals for everyone, and existing players (saves from v1.0.0) get 3 more per past win
   (`stats.wins`, capped at 150), so nobody who has played a lot starts at zero.
 
 ---
@@ -352,27 +355,28 @@ tools/shop-sheet.mjs        garden contact sheet (5.3)
 Tick items as they are done. Owner: **Claude** = a coding session, **You** = needs the owner.
 
 ### Phase 0: groundwork (no visible change)
-- [ ] Decide D1–D7 above, and pick the currency name. (You)
-- [ ] Headroom refactor of `petSprite` plus golden-image test showing the unclothed sprites are pixel-identical. (Claude)
-- [ ] `core/meta.js` with load, save, migrate, backup code, and unit tests (including corrupt data and a v1.0.0 save). (Claude)
-- [ ] Rig table in `art/wardrobe.js` for baby, child, adult, senior (+ variants, chubby). (Claude)
-- [ ] `tools/wardrobe-audit.mjs` working with a dummy garment. (Claude)
+- [x] D1–D7 built as written above (D7 off), currency called Petals. Change any of them if you disagree. (You)
+- [x] Headroom refactor of `petSprite` plus golden-image test showing the unclothed sprites are pixel-identical. (Claude)
+- [x] `core/meta.js` with load, save, migrate, backup code, and unit tests (including corrupt data and a v1.0.0 save). (Claude)
+- [x] Rig table in `art/wardrobe.js` for baby, child, adult, senior (+ variants, chubby). (Claude)
+- [x] `tools/wardrobe-audit.mjs` working with a dummy garment. (Claude)
 
 ### Phase 1: MVP (about 6 clothes, 6 decor, one release)
-- [ ] 1 starter item in four sizes (free) plus 5 more items across Head, Face, Neck, Body. (Claude)
-- [ ] Fit audit passes and the contact sheet is reviewed. (Claude, then You)
-- [ ] Earning rules and the welcome grant; `sim-economy` targets met. (Claude)
-- [ ] Shop view, closet, size chips, outgrown moment, undo. (Claude)
-- [ ] 2 ground themes, 2 back props, 1 centrepiece, 1 floor accent in the slot system; poop/seed audits pass. (Claude)
-- [ ] Icon support; evolve-flash and sick/sleep checks. (Claude)
-- [ ] Extend `node tools/check-extension.mjs` (buy, equip, evolve with outfit, replant keeps wardrobe, start over keeps wardrobe). (Claude)
-- [ ] Version 1.1.0, store images, listing and privacy line updated. (Claude)
+- [x] 1 starter item in four sizes (free) plus 5 more items across Head, Face, Neck, Body. (Claude)
+- [x] Fit audit passes and the contact sheet is reviewed by Claude (4,928 dressed sprites). (Claude)
+- [ ] Look at the contact sheets yourself: `node tools/wardrobe-audit.mjs`, `node tools/garden-audit.mjs` → `dist/audit/`. (You)
+- [x] Earning rules and the welcome grant; `sim-economy` targets met. (Claude)
+- [x] Shop view, closet, size chips, outgrown moment, undo. (Claude)
+- [x] 2 ground themes, 2 back props, 1 centrepiece, 1 floor accent in the slot system; poop/seed audits pass. (Claude)
+- [x] Icon support; evolve-flash and sick/sleep checks. (Claude)
+- [x] Extend `node tools/check-extension.mjs` (buy, equip, evolve with outfit, replant keeps wardrobe, start over keeps wardrobe). (Claude)
+- [x] Version 1.1.0, store images, listing and privacy line updated. (Claude)
 - [ ] Playtest with 3–5 friends: is earning too slow, are sizes understood, do clothes look good? (You)
 
 ### Phase 2: full catalogue (about 20 clothes, 16 decor)
-- [ ] More items, sets, ambient effects (butterflies, fireflies, falling petals). (Claude)
+- [ ] More items and sets. Done so far: 11 clothes, 16 paid decor items, ambient effects (butterflies, fireflies, falling petals). (Claude)
 - [ ] Optional D7 discount on, if the playtest shows the grow-out moment stings. (Claude)
-- [ ] Accessibility pass (keyboard, screen reader, contrast). (Claude)
+- [ ] Accessibility pass (keyboard, screen reader, contrast). Done so far: tabs with arrow keys, labelled size chips and wallet, focus kept after each change, Escape and B shortcuts, reduced motion freezes ambient effects. Still to do: a screen-reader run-through. (Claude)
 
 ### Phase 3: later
 - [ ] Seasonal sets (no limited-time pressure: they come back every year).

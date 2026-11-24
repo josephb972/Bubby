@@ -1,46 +1,11 @@
 // Bubby's pixel art, drawn in code (ported from the original index.html).
 // Works with a DOM canvas in the popup and with OffscreenCanvas in the background service worker.
 
-export const INK = '#3b2f4a';
-export const SW = 100, SH = 75, GROUND = 67;
+import { INK, PAD, hex, mix, mk, E, ER, R, P, ring, outline, sprite } from './pixel.js';
+import { dress, eyewear } from './wardrobe.js';
+export { INK, PAD, hex, mix, mk, E, ER, R, P, outline, sprite };
 
-export function hex(c) { const n = parseInt(c.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
-export function mix(a, b, t) { const x = hex(a), y = hex(b); return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join(''); }
-export function mk(w, h) {
-  if (typeof document !== 'undefined') { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
-  return new OffscreenCanvas(w, h);
-}
-export function E(x, cx, cy, rx, ry, col, rot = 0) {
-  const Rr = Math.max(rx, ry) + 1, cs = Math.cos(rot), sn = Math.sin(rot), fn = typeof col === 'function';
-  if (!fn) x.fillStyle = col;
-  for (let py = Math.floor(cy - Rr); py <= Math.ceil(cy + Rr); py++) {
-    for (let px = Math.floor(cx - Rr); px <= Math.ceil(cx + Rr); px++) {
-      const dx = px + .5 - cx, dy = py + .5 - cy, u = (dx * cs + dy * sn) / rx, v = (-dx * sn + dy * cs) / ry;
-      if (u * u + v * v <= 1) {
-        if (fn) { const c = col(px, py); if (!c) continue; x.fillStyle = c; }
-        x.fillRect(px, py, 1, 1);
-      }
-    }
-  }
-}
-export function ER(x, cx, cy, rx, ry, ring, fill, rot = 0) { E(x, cx, cy, rx, ry, ring, rot); E(x, cx, cy, rx - 1, ry - 1, fill, rot); }
-export function R(x, px, py, w, h, col) { x.fillStyle = col; x.fillRect(px, py, w, h); }
-export function P(x, pts, col) { x.fillStyle = col; for (let i = 0; i < pts.length; i += 2) x.fillRect(pts[i], pts[i + 1], 1, 1); }
-function ring(x, cx, cy, r1, r2, col) {
-  x.fillStyle = col;
-  for (let py = Math.floor(cy - r2); py <= Math.ceil(cy + r2); py++) for (let px = Math.floor(cx - r2); px <= Math.ceil(cx + r2); px++) {
-    const d = Math.hypot(px + .5 - cx, py + .5 - cy); if (d >= r1 && d < r2) x.fillRect(px, py, 1, 1);
-  }
-}
-export function outline(c, col = INK) {
-  const x = c.getContext('2d'), w = c.width, h = c.height, d = x.getImageData(0, 0, w, h), s = d.data, o = new Uint8ClampedArray(s), [r, g, b] = hex(col);
-  for (let y = 0; y < h; y++) for (let X = 0; X < w; X++) {
-    const i = (y * w + X) * 4; if (s[i + 3] > 0) continue;
-    if ((X > 0 && s[i - 1] > 0) || (X < w - 1 && s[i + 7] > 0) || (y > 0 && s[i - w * 4 + 3] > 0) || (y < h - 1 && s[i + w * 4 + 3] > 0)) { o[i] = r; o[i + 1] = g; o[i + 2] = b; o[i + 3] = 255; }
-  }
-  d.data.set(o); x.putImageData(d, 0, 0); return c;
-}
-export function sprite(w, h, fn) { const c = mk(w, h); fn(c.getContext('2d')); return outline(c); }
+export const SW = 100, SH = 75, GROUND = 67;
 
 /* ---- Faces ---- */
 function face(x, cx, cy, o) {
@@ -64,6 +29,7 @@ function face(x, cx, cy, o) {
   else if (mouth === 'small') R(x, mx, my, 2, 1, INK);
   else if (mouth === 'flat') R(x, mx - 1, my, 4, 1, INK);
   if (m === 'sick') P(x, [cx + 7, cy - 4, cx + 7, cy - 3, cx + 6, cy - 3, cx + 8, cy - 3, cx + 7, cy - 2], '#6fb8ea');
+  if (o.eyewear) eyewear(x, o.eyewear, { e1, e2, ey, cx, cy, L, mood: m });
 }
 
 /* ---- Bubby at each stage (48×48, feet at y≈46) ---- */
@@ -88,10 +54,16 @@ function drawSeed(x, o) {
   P(x, [sx - 4, 29, sx - 4, 30, sx - 3, 28], '#b5cf86');
   if (o.crack) P(x, [sx - 1, 25, sx, 26, sx + 1, 27, sx, 28, sx + 1, 29, sx + 2, 28], INK);
 }
+// The parts of each body that clothes may cover (drawn exactly as in the full sprite, so they can be matched pixel by pixel).
+export function babyTorso(x) { ER(x, 24, 35, 11.5, 10, '#2a8580', '#4cb8af'); E(x, 19, 30, 3, 2, '#86dcd2'); }
+export function childTorso(x) {
+  ER(x, 14.5, 37, 2.6, 3.6, '#2f7d3a', '#5cbf5a', .3); ER(x, 33.5, 37, 2.6, 3.6, '#2f7d3a', '#5cbf5a', -.3);
+  ER(x, 24, 36, 9.5, 9, '#2f7d3a', '#5cbf5a');
+  E(x, 20, 31, 2.5, 1.6, '#8ad98a');
+}
 function drawBaby(x, o) {
   ER(x, 18.5, 44.5, 3.5, 2, '#23706b', '#2f8f8a'); ER(x, 29.5, 44.5, 3.5, 2, '#23706b', '#2f8f8a');
-  ER(x, 24, 35, 11.5, 10, '#2a8580', '#4cb8af');
-  E(x, 19, 30, 3, 2, '#86dcd2');
+  babyTorso(x);
   R(x, 23, 21, 2, 5, '#3c8f45');
   ER(x, 19, 21, 5, 2.6, '#2f7d3a', '#5cc46a', -.45);
   ER(x, 29, 20, 5.5, 2.8, '#2f7d3a', '#5cc46a', .45);
@@ -100,9 +72,7 @@ function drawBaby(x, o) {
 }
 function drawChild(x, o) {
   ER(x, 20, 45, 2.6, 2, '#2f7d3a', '#3f9a45'); ER(x, 28, 45, 2.6, 2, '#2f7d3a', '#3f9a45');
-  ER(x, 14.5, 37, 2.6, 3.6, '#2f7d3a', '#5cbf5a', .3); ER(x, 33.5, 37, 2.6, 3.6, '#2f7d3a', '#5cbf5a', -.3);
-  ER(x, 24, 36, 9.5, 9, '#2f7d3a', '#5cbf5a');
-  E(x, 20, 31, 2.5, 1.6, '#8ad98a');
+  childTorso(x);
   ER(x, 16, 25.5, 6.5, 2.6, '#2a6e35', '#47a852', -.4); ER(x, 32, 25.5, 6.5, 2.6, '#2a6e35', '#47a852', .4);
   ER(x, 24, 19, 6, 7.5, '#b9544a', '#f08f7a');
   R(x, 21, 15, 1, 9, '#d8705f'); R(x, 26, 15, 1, 9, '#d8705f');
@@ -111,10 +81,8 @@ function drawChild(x, o) {
   ER(x, 24, 26, 5, 2, '#2a6e35', '#4fae55');
   face(x, 24, 37, { ...o, blush: '#f59aa6' });
 }
-function drawAdult(x, o, senior) {
-  const pal = palette(o.variant, senior), ch = o.chubby ? 2 : 0, cx = 24, hy = 21, th = o.variant === 'thistle';
-  if (pal.wings) { ER(x, 12 - ch, 35, 6.5, 3.4, pal.wings[0], pal.wings[1], -.55); ER(x, 36 + ch, 35, 6.5, 3.4, pal.wings[0], pal.wings[1], .55); }
-  ER(x, 20.5, 45, 2.5, 1.8, pal.suit[0], pal.suit[0]); ER(x, 27.5, 45, 2.5, 1.8, pal.suit[0], pal.suit[0]);
+export function adultTorso(x, o, senior) {
+  const pal = palette(o.variant, senior), ch = o.chubby ? 2 : 0;
   ER(x, 16 - ch, 38.5, 2.6, 3.6, pal.suit[0], pal.suit[1], .35); ER(x, 32 + ch, 38.5, 2.6, 3.6, pal.suit[0], pal.suit[1], -.35);
   ER(x, 24, 39, 7.5 + ch, 6.5, pal.suit[0], pal.suit[1]);
   if (o.variant === 'radiant' && !senior) {
@@ -122,6 +90,13 @@ function drawAdult(x, o, senior) {
     P(x, [23, 39, 24, 39, 25, 39], '#ffe14a'); P(x, [23, 40, 25, 40], '#5fcf6a'); P(x, [22, 41, 26, 41], '#5aa8ff');
   }
   if (o.variant === 'daisy') { P(x, [21, 34, 22, 35, 23, 35, 24, 35, 25, 35, 26, 35, 27, 34], '#ffd54f'); }
+}
+export function adultPalette(variant, senior) { return palette(variant, senior); }
+function drawAdult(x, o, senior) {
+  const pal = palette(o.variant, senior), ch = o.chubby ? 2 : 0, cx = 24, hy = 21, th = o.variant === 'thistle';
+  if (pal.wings) { ER(x, 12 - ch, 35, 6.5, 3.4, pal.wings[0], pal.wings[1], -.55); ER(x, 36 + ch, 35, 6.5, 3.4, pal.wings[0], pal.wings[1], .55); }
+  ER(x, 20.5, 45, 2.5, 1.8, pal.suit[0], pal.suit[0]); ER(x, 27.5, 45, 2.5, 1.8, pal.suit[0], pal.suit[0]);
+  adultTorso(x, o, senior);
   if (senior) { R(x, 35 + ch, 36, 1, 10, '#7a4a24'); P(x, [35 + ch, 35, 36 + ch, 34, 37 + ch, 34, 38 + ch, 35], '#7a4a24'); }
   const n = th ? 10 : 8, pr = th ? 4 : 5, rad = th ? 11.5 : 10.5;
   for (let i = 0; i < n; i++) {
@@ -133,23 +108,34 @@ function drawAdult(x, o, senior) {
   if (senior) P(x, [15, 14, 32, 13, 12, 22, 36, 24, 18, 31, 30, 31], mix(pal.petal, '#8a5a40', .35));
   ER(x, cx, hy, 8.5, 8.5, pal.faceRing, pal.face);
   E(x, 20, 16.5, 2, 1.3, mix(pal.face, '#ffffff', .45));
-  face(x, cx, hy + 1, { ...o, blush: pal.blush, glasses: senior, skin: pal.face, mood: (th && (o.mood || 'normal') === 'normal') ? 'normal' : o.mood, mouth: o.mouth || (th && (!o.mood || o.mood === 'normal') ? 'flat' : undefined) });
+  face(x, cx, hy + 1, { ...o, blush: pal.blush, glasses: senior && !o.eyewear, skin: pal.face, mood: (th && (o.mood || 'normal') === 'normal') ? 'normal' : o.mood, mouth: o.mouth || (th && (!o.mood || o.mood === 'normal') ? 'flat' : undefined) });
 }
 
 // Sprites are cached: the scene asks for the same pose every frame.
+// o.outfit = { head, face, neck, body } item ids (already resolved to what Bubby owns in its current size).
 const cache = new Map();
+export function outfitKey(o) {
+  const f = o.outfit;
+  return f ? [f.head, f.face, f.neck, f.body].map(v => v || '').join('/') : '';
+}
 export function petSprite(stage, o = {}) {
-  const key = stage + '|' + [o.mood, o.mouth, o.variant, o.chubby, o.sick, o.blink, o.look, o.wobble, o.crack].join(',');
+  const fit = stage === 'seed' ? '' : outfitKey(o);
+  const key = stage + '|' + [o.mood, o.mouth, o.variant, o.chubby, o.sick, o.blink, o.look, o.wobble, o.crack, fit].join(',');
   let c = cache.get(key);
   if (c) return c;
-  c = mk(48, 48); const x = c.getContext('2d');
+  c = mk(48, 48 + PAD); const x = c.getContext('2d');
+  x.translate(0, PAD);
+  const oo = fit && o.outfit.face ? { ...o, eyewear: o.outfit.face } : o;
   if (stage === 'seed') drawSeed(x, o);
-  else if (stage === 'baby') drawBaby(x, o);
-  else if (stage === 'child') drawChild(x, o);
-  else drawAdult(x, o, stage === 'senior');
+  else if (stage === 'baby') drawBaby(x, oo);
+  else if (stage === 'child') drawChild(x, oo);
+  else drawAdult(x, oo, stage === 'senior');
+  x.setTransform(1, 0, 0, 1, 0, 0);
+  c.topY = null;
+  if (fit) dress(c, stage, o);
   outline(c);
-  if (o.sick) { x.globalCompositeOperation = 'source-atop'; x.fillStyle = 'rgba(140,190,60,.28)'; x.fillRect(0, 0, 48, 48); x.globalCompositeOperation = 'source-over'; }
-  if (cache.size > 300) cache.clear();
+  if (o.sick) { x.globalCompositeOperation = 'source-atop'; x.fillStyle = 'rgba(140,190,60,.28)'; x.fillRect(0, 0, 48, 48 + PAD); x.globalCompositeOperation = 'source-over'; }
+  if (cache.size > 1500) cache.clear();
   cache.set(key, c);
   return c;
 }

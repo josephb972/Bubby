@@ -341,3 +341,69 @@ body.win.toy .app { width: 468px; } /* the fallback window shows the whole toy p
 .hot:focus-visible { outline: 3px solid var(--urgent); outline-offset: 2px; }
 .hot.power { width: 28px; height: 28px; margin: -14px 0 0 -14px; }
 .hot.power[aria-pressed="true"] { background: rgba(255, 211, 74, .55); box-shadow: 0 0 0 2px rgba(217, 165, 32, .8); }
+
+/* ================= Shop ================= */
+.pshop { right: 58px; }
+.pshop svg, .shopbtn svg { stroke-width: 2.2; }
+.nudge:not(.pgear) { position: relative; }
+.nudge::after { content: ""; position: absolute; top: -1px; right: -1px; width: 9px; height: 9px; border-radius: 50%; background: var(--urgent); box-shadow: 0 0 0 2px var(--cream-hi); }
+.pt { width: 11px; height: 11px; image-rendering: pixelated; vertical-align: -1px; margin-right: 2px; }
+
+.shop { position: relative; display: flex; flex-direction: column; gap: 7px; height: 560px; }
+.app.toy .shop { padding: 10px 14px; height: 600px; }
+.wallet { display: inline-flex; align-items: center; gap: 2px; font: 600 15px/1 var(--font-pixel); color: var(--ink);
+  background: var(--cream-hi); border: 2px solid #e9679f; border-radius: 999px; padding: 6px 10px 5px 8px; }
+.wallet .pt { width: 14px; height: 14px; margin-right: 4px; }
+.stage { display: grid; justify-items: center; gap: 3px; }
+#shopScene { width: 200px; height: 150px; border: 4px solid var(--screen-rim); border-radius: 10px; background: #9ad67f; }
+.forms { width: 200px; height: 150px; display: flex; align-items: center; justify-content: center; gap: 2px;
+  border: 4px solid var(--screen-rim); border-radius: 10px; background: #9ad67f; box-sizing: content-box; }
+.forms canvas { width: 64px; height: 75px; }
+.caption { margin: 0; min-height: 15px; font: 400 11.5px/1.25 var(--font-pixel); color: var(--ink-2); text-align: center; }
+.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.tabs [role="tab"] { font: 600 13px/1 var(--font-pixel); padding: 7px 0 6px; background: var(--cream-hi); border: 2px solid var(--mint-line); border-bottom-width: 4px; border-radius: 10px; }
+.tabs [aria-selected="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+.shop-list { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 6px; padding: 0 2px 44px; }
+.shop-list h3 { margin: 6px 2px 0; font: 600 12px/1 var(--font-pixel); color: var(--ink-2); text-transform: uppercase; letter-spacing: .6px; }
+.item { background: rgba(255, 252, 243, .92); border: 2px solid rgba(94, 151, 140, .55); border-radius: 12px; padding: 7px 8px; display: flex; flex-direction: column; gap: 6px; }
+.item.worn { border-color: var(--ok); }
+.item-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.item-name { min-width: 0; }
+.item-name b { font: 600 14px/1.1 var(--font-display); }
+.item-name small { display: block; margin-top: 2px; font-size: 11.5px; color: var(--ink-2); line-height: 1.25; }
+.tag { display: inline-block; font: 400 10px/1 var(--font-pixel); padding: 2px 5px 1px; border-radius: 999px; vertical-align: 1px; background: #e8e2ee; color: var(--ink); }
+.tag.gift { background: #ffd6e6; } .tag.rare { background: #d6e6ff; } .tag.epic { background: #e3d8ff; } .tag.on { background: #d9f0d2; color: var(--ok-d); }
+.buy { flex: none; font: 600 12px/1 var(--font-pixel); padding: 7px 9px 6px; border-radius: 9px; background: var(--ok); color: #fff; border: 2px solid var(--ok-d); border-bottom-width: 4px; max-width: 150px; }
+.buy:active { border-bottom-width: 2px; transform: translateY(2px); }
+.buy.hot { background: var(--warn); border-color: var(--warn-d); color: var(--ink); }
+.buy[data-act="off"], .buy[data-act="remove"] { background: #fff; color: var(--ink); border-color: var(--mint-line); }
+.buy:disabled { background: #eee8e2; color: var(--ink-2); border-color: #d6cdbf; cursor: default; transform: none; border-bottom-width: 4px; }
+.buy .pt { filter: brightness(1.15); }
+.sizes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.size { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 3px 0 4px; background: #fff; border: 2px solid #e4ddd0; border-radius: 9px; font-family: var(--font-pixel); }
+.size canvas { width: 48px; height: 56px; }
+.size span { font-size: 11px; color: var(--ink); }
+.size em { font-style: normal; font-size: 11px; color: var(--ink-2); }
+.size.own em { color: var(--ok-d); font-weight: 600; }
+.size.now { background: #fff8e6; }
+.size.now span::after { content: " ●"; color: var(--warn); font-size: 8px; vertical-align: 2px; }
+.size[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 2px 0 var(--ink); }
+.item.home { display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 8px; }
+.thumb { width: 48px; height: 48px; background: #9ad67f; border-radius: 8px; border: 2px solid rgba(94, 151, 140, .55); }
+.banner { margin: 0; font-size: 12px; line-height: 1.35; padding: 6px 9px; border-radius: 10px; background: #fff1c9; border: 2px solid var(--warn); }
+.earn { font-size: 11.5px; color: var(--ink-2); padding: 0 2px; }
+.earn summary { cursor: pointer; font: 600 12px/1.2 var(--font-pixel); color: var(--ink); }
+.earn p { margin: 4px 0 0; line-height: 1.35; }
+.closet h3 { margin: 8px 2px 4px; }
+.closet ul { list-style: none; margin: 0 0 6px; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.closet li { display: flex; align-items: center; gap: 8px; background: rgba(255, 252, 243, .92); border: 2px solid rgba(94, 151, 140, .45); border-radius: 10px; padding: 5px 8px; font-size: 12.5px; }
+.closet li b { width: 84px; flex: none; font: 600 12px/1 var(--font-pixel); color: var(--ink-2); }
+.closet li span { flex: 1; min-width: 0; }
+.closet .dim { color: #9a90a6; }
+.closet .warn { font-style: normal; color: var(--warn-d); font-size: 11.5px; }
+.chip.small { padding: 5px 8px; font-size: 11px; }
+.snack { position: absolute; left: 14px; right: 14px; bottom: 10px; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  background: var(--ink); color: #fff; border-radius: 10px; padding: 7px 8px 7px 12px; font: 400 12.5px/1.25 var(--font-pixel); box-shadow: 0 4px 12px rgba(59, 47, 74, .25); }
+.snack .chip { background: #ffd34a; border-color: #ffd34a; color: var(--ink); }
+.codebox textarea { width: 100%; font: 400 11px/1.3 ui-monospace, monospace; border: 2px solid var(--mint-line); border-radius: 8px; padding: 5px; resize: none; color: var(--ink); }
+@media (prefers-reduced-motion: reduce) { .buy:active, .size:active { transform: none; } }
