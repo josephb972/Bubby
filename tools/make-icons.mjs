@@ -19,7 +19,7 @@ await page.route('http://bubby.local/**', async route => {
 });
 await page.goto('http://bubby.local/');
 const pngs = await page.evaluate(async () => {
-  const { petSprite } = await import('/art/sprites.js');
+  const { petSprite, PAD } = await import('/art/sprites.js');
   const { iconCanvas } = await import('/art/icon.js');
   const out = {};
   const face = { stage: 'baby', o: { mood: 'happy' } };
@@ -31,7 +31,7 @@ const pngs = await page.evaluate(async () => {
     x.fillStyle = '#bfe6db'; x.strokeStyle = '#5e978c'; x.lineWidth = s / 32;
     x.beginPath(); x.arc(s / 2, s / 2, s / 2 - x.lineWidth, 0, Math.PI * 2); x.fill(); x.stroke();
     const spr = petSprite('baby', { mood: 'happy' }), w = 48 * scale;
-    x.drawImage(spr, (s - w) / 2, (s - w) / 2 - scale * 2, w, w);
+    x.drawImage(spr, 0, PAD, 48, 48, (s - w) / 2, (s - w) / 2 - scale * 2, w, w); // the 48×48 body box (sprites have hat headroom above it)
     out[s] = c.toDataURL('image/png');
   }
   return out;
